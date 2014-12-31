@@ -1,28 +1,43 @@
+/*
+*   TODO licence
+*/
 
-const St = imports.gi.St;
+const Lang = imports.lang;
 const Main = imports.ui.main;
-const Tweener = imports.ui.tweener;
+const PanelMenu = imports.ui.panelMenu;
+const PopupMenu = imports.ui.popupMenu;
+const St = imports.gi.St;
 
-let button;
 
+/* Main extension class */
+const RssFeedButton = new Lang.Class({
+
+    Name: 'RssFeedMenuButton',
+    Extends: PanelMenu.Button,
+
+    _init: function() {
+        this.parent(0.0, "RSS Feed");
+
+        let icon = new St.Icon({
+            icon_name: 'application-rss+xml-symbolic',
+            style_class: 'system-status-icon'
+        });
+
+        this.actor.add_actor(icon);
+    }
+});
+
+let rssFeedButton;
 
 function init() {
-    button = new St.Bin({ style_class: 'panel-button',
-                          reactive: true,
-                          can_focus: true,
-                          x_fill: true,
-                          y_fill: false,
-                          track_hover: true });
-    let icon = new St.Icon({ icon_name: 'application-rss+xml-symbolic',
-                             style_class: 'system-status-icon' });
 
-    button.set_child(icon);
 }
 
 function enable() {
-    Main.panel._rightBox.insert_child_at_index(button, 0);
+    rssFeedButton = new RssFeedButton();
+    Main.panel.addToStatusArea('rssFeedMenu', rssFeedButton, 0, 'right');
 }
 
 function disable() {
-    Main.panel._rightBox.remove_child(button);
+    rssFeedButton.destroy();
 }
