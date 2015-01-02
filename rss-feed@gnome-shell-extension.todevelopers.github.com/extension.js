@@ -6,6 +6,7 @@ const Lang = imports.lang;
 const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
+const Soup = imports.gi.Soup;
 const St = imports.gi.St;
 
 
@@ -17,6 +18,8 @@ const RssFeedButton = new Lang.Class({
 
     _init: function() {
         this.parent(0.0, "RSS Feed");
+
+        this._httpSession = null;
 
         /* top panel button */
         let icon = new St.Icon({
@@ -52,7 +55,51 @@ const RssFeedButton = new Lang.Class({
         buttonMenu.actor.add_actor(refreshBtn);
         buttonMenu.actor.add_actor(settingsBtn);
 
+        refreshBtn.connect('clicked', Lang.bind(this, this._onRefreshBtnClicked));
+
         this.menu.addMenuItem(buttonMenu);
+    },
+
+    stop: function() {
+
+        if (this._httpSession != null)
+            this._httpSession.abort();
+
+        this._httpSession = null;
+    },
+
+    _onRefreshBtnClicked: function() {
+
+        //let params = { };
+        //this._getRssFeedAsync('http://www.root.cz/rss/clanky', params, null);
+
+        let params = { format: 'xml' };
+        this._getRssFeedAsync('http://feeds.feedburner.com/webupd8', params, null);
+    },
+
+    _getRssFeedAsync: function(url, params, callback) {
+
+        if (this._httpSession == null)
+            this._httpSession = new Soup.Session();
+
+        let request = Soup.form_request_new_from_hash('GET', url, params);
+
+        this._httpSession.queue_message(request, function(httpSession,     message) {
+
+            Main.notify('rss-feed', message.response_body.data.substring(0, 256));
+            //callback.call(message.response_body.data);
+                /*try {http://feeds.feedburner.com/webupd8
+                    if (!message.response_body.data) {
+                        fun.call(this, 0);
+                        return;
+                    }
+                    let jp = JSON.parse(message.response_body.data);
+                    fun.call(this, jp);
+                } catch (e) {
+                    fun.call(this, 0);
+                    return;
+                }*/
+        });
     }
 });
 
@@ -68,5 +115,6 @@ function enable() {
 }
 
 function disable() {
+    rssFeedBtn.stop();
     rssFeedBtn.destroy();
 }
