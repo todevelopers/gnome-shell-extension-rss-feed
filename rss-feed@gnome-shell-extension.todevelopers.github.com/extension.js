@@ -9,6 +9,8 @@ const PopupMenu = imports.ui.popupMenu;
 const Soup = imports.gi.Soup;
 const St = imports.gi.St;
 
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const XML = Me.imports.rexml;
 
 /* Main extension class */
 const RssFeedButton = new Lang.Class({
@@ -73,8 +75,28 @@ const RssFeedButton = new Lang.Class({
         //let params = { };
         //this._getRssFeedAsync('http://www.root.cz/rss/clanky', params, null);
 
-        let params = { format: 'xml' };
-        this._getRssFeedAsync('http://feeds.feedburner.com/webupd8', params, null);
+        //let params = { format: 'xml' };
+        //this._getRssFeedAsync('http://feeds.feedburner.com/webupd8', params, null);
+
+        /*let dbg = '';
+
+        for (let s in Sax)
+            dbg += s + '\n';
+
+        Main.notify('rss-feed', dbg);*/
+
+        let stringContainingXMLSource = '<note><to>Tove</to><from>Jani</from><heading>Reminder</heading><body>Dont forget me this weekend!</body></note>';
+
+        try {
+            let xdoc = new XML.REXML(stringContainingXMLSource);
+            // xdoc.rootElement.ChildElement('number').text;
+            global.log(xdoc.rootElement.name);
+            //Main.notify('rss-feed', xdoc.rootElement.name);
+        }
+        catch(e) {
+            Main.notify('rss-feed', e.toString());
+        }
+
     },
 
     _getRssFeedAsync: function(url, params, callback) {
@@ -84,7 +106,7 @@ const RssFeedButton = new Lang.Class({
 
         let request = Soup.form_request_new_from_hash('GET', url, params);
 
-        this._httpSession.queue_message(request, function(httpSession,     message) {
+        this._httpSession.queue_message(request, Lang.bind(this, function(httpSession, message) {
 
             Main.notify('rss-feed', message.response_body.data.substring(0, 256));
             //callback.call(message.response_body.data);
@@ -99,7 +121,7 @@ const RssFeedButton = new Lang.Class({
                     fun.call(this, 0);
                     return;
                 }*/
-        });
+        }));
     }
 });
 
