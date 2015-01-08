@@ -85,16 +85,22 @@ const RssFeedButton = new Lang.Class({
 
         Main.notify('rss-feed', dbg);*/
 
-        let stringContainingXMLSource = '<note><to>Tove</to><from>Jani</from><heading>Reminder</heading><body>Dont forget me this weekend!</body></note>';
+        let stringContainingXMLSource = '<?xml version="1.0" encoding="UTF-8"?><note><to>Tove</to><from><name>Jani</name><lastname>Brown</lastname></from><heading>Reminder</heading><body>Dont forget me this weekend!</body></note>';
 
         try {
             let xdoc = new XML.REXML(stringContainingXMLSource);
-            // xdoc.rootElement.ChildElement('number').text;
-            global.log(xdoc.rootElement.name);
-            //Main.notify('rss-feed', xdoc.rootElement.name);
+
+            for (let i = 0; i < xdoc.rootElement.childElements.length; i++) {
+                log(xdoc.rootElement.childElements[i].name);
+                if (xdoc.rootElement.childElements[i].name == 'from') {
+                    for (let j = 0; j < xdoc.rootElement.childElements[i].childElements.length; j++) {
+                        log(xdoc.rootElement.childElements[i].childElements[j].name);
+                    }
+                }
+            }
         }
         catch(e) {
-            Main.notify('rss-feed', e.toString());
+            logError(e);
         }
 
     },
