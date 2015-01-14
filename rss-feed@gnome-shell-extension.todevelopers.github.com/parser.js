@@ -5,6 +5,8 @@ const XML = Me.imports.rexml;
 
 const RssFeedParser = new Lang.Class({
 
+    Name: 'RssFeedParserClass',
+
     RssFeedItem: [],
     Publisher: {
         Title: '',
@@ -13,33 +15,41 @@ const RssFeedParser = new Lang.Class({
     },
     PublishDate: '',
 
+    _init: function() {
+
+    },
+
     parse: function(xmlDoc) {
 
         try {
-            xdoc = new XML.REXML(xmlDoc);
+
+            let xdoc = new XML.REXML(xmlDoc);
+            this._parsePublisher(xdoc.rootElement.childElements[0].childElements);   // rss -> channel
+            log('atribute xmlns:feedburner: ' + xdoc.rootElement.attribute('xmlns:feedburner'));
         }
         catch(e) {
+
             logError(e);
         }
-
-        this._parsePublisher(xdoc.rootElement.childElements[0].childElements);   // rss -> channel
-    }
+    },
 
     _parsePublisher: function(childElements) {
 
         for (let i = 0; i < childElements.length; i++) {
 
+            //log(childElements[i].name);
+
             if (childElements[i].name == 'title') {
-                Publisher.Title = childElements[i].text;
+                this.Publisher.Title = childElements[i].text;
             }
             else if (childElements[i].name == 'link') {
-                Publisher.HttpLink = childElements[i].text;
+                this.Publisher.HttpLink = childElements[i].text;
             }
             else if (childElements[i].name == 'description') {
-                Publisher.Description = childElements[i].text;
+                this.Publisher.Description = childElements[i].text;
             }
             else if (childElements[i].name == 'pubDate') {
-                PublishDate = childElements[i].text;
+                this.PublishDate = childElements[i].text;
             }
         }
     }

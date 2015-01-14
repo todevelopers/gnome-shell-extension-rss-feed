@@ -10,7 +10,7 @@ const Soup = imports.gi.Soup;
 const St = imports.gi.St;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const XML = Me.imports.rexml;
+const Parser = Me.imports.parser;
 
 /* Main extension class */
 const RssFeedButton = new Lang.Class({
@@ -72,49 +72,23 @@ const RssFeedButton = new Lang.Class({
 
     _onRefreshBtnClicked: function() {
 
-        //let params = { };
-        //this._getRssFeedAsync('http://www.root.cz/rss/clanky', params, null);
-
-        //let params = { format: 'xml' };
-        //this._getRssFeedAsync('http://feeds.feedburner.com/webupd8', params, null);
-
-        /*let dbg = '';
-
-        for (let s in Sax)
-            dbg += s + '\n';
-
-        Main.notify('rss-feed', dbg);*/
-
-        let stringContainingXMLSource = '<?xml version="1.0" encoding="UTF-8"?><note><to>Tove</to><from><name>Jani</name><lastname>Brown</lastname></from><heading>Reminder</heading><body>Dont forget me this weekend!</body></note>';
-
-        try {
-            let xdoc = new XML.REXML(stringContainingXMLSource);
-
-            for (let i = 0; i < xdoc.rootElement.childElements.length; i++) {
-                log(xdoc.rootElement.childElements[i].name);
-                if (xdoc.rootElement.childElements[i].name == 'from') {
-                    for (let j = 0; j < xdoc.rootElement.childElements[i].childElements.length; j++) {
-                        log(xdoc.rootElement.childElements[i].childElements[j].name);
-                    }
-                }
-            }
-        }
-        catch(e) {
-            logError(e);
-        }
-
+        this._httpGetRequestAsync('http://www.root.cz/rss/clanky', {}, Lang.bind(this, this._onDownload));
+        this._httpGetRequestAsync('http://feeds.feedburner.com/webupd8?format=xml', {}, Lang.bind(this, this._onDownload));
     },
 
-    _getRssFeedAsync: function(url, params, callback) {
+    _httpGetRequestAsync: function(url, params, callback) {
 
         if (this._httpSession == null)
             this._httpSession = new Soup.Session();
 
         let request = Soup.form_request_new_from_hash('GET', url, params);
 
+
+
         this._httpSession.queue_message(request, Lang.bind(this, function(httpSession, message) {
 
-            Main.notify('rss-feed', message.response_body.data.substring(0, 256));
+            //Main.notify('rss-feed', message.response_body.data.substring(0, 256));
+            callback(message.response_body.data);
             //callback.call(message.response_body.data);
                 /*try {http://feeds.feedburner.com/webupd8
                     if (!message.response_body.data) {
@@ -128,6 +102,23 @@ const RssFeedButton = new Lang.Class({
                     return;
                 }*/
         }));
+    },
+
+    _onDownload: function(responseData) {
+
+        let rssParser = new Parser.RssFeedParser();
+
+        // remove XML declarations, could be more lines
+        responseData = responseData.split(/\<\?\s*xml(.*?).*\?\>/).join('');
+
+        //log(responseData);
+
+        rssParser.parse(responseData);
+
+        log('title: ' + rssParser.Publisher.Title);
+        log('link: ' + rssParser.Publisher.HttpLink);
+        log('description: ' + rssParser.Publisher.Description);
+        log('publish date: ' + rssParser.PublishDate);
     }
 });
 
