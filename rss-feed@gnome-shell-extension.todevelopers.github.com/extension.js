@@ -106,14 +106,8 @@ const RssFeedButton = new Lang.Class({
 
     _onDownload: function(responseData) {
 
-        let rssParser = new Parser.RssFeedParser();
-
-        // remove XML declarations, could be more lines
-        responseData = responseData.split(/\<\?\s*xml(.*?).*\?\>/).join('');
-
-        //log(responseData);
-
-        rssParser.parse(responseData);
+        let rssParser = new Parser.createRssParser(responseData);
+        rssParser.parse();
 
         log('title: ' + rssParser.Publisher.Title);
         log('link: ' + rssParser.Publisher.HttpLink);
