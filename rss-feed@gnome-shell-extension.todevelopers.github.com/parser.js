@@ -3,9 +3,10 @@ const Lang = imports.lang;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const XML = Me.imports.rexml;
 
-const FeedburnerRssParser = new Lang.Class({
+// base class for RSS parser
+const BaseParser = new Lang.Class({
 
-    Name: 'FeedburnerRssParserClass',
+    Name: 'BaseParserClass',
 
     RssFeedItem: [],
     Publisher: {
@@ -26,7 +27,19 @@ const FeedburnerRssParser = new Lang.Class({
     },
 
     _parsePublisher: function(childElements) {
+        // child classes implements this function
+    }
+});
 
+// special class for Feedburner RSS feed
+const FeedburnerRssParser = new Lang.Class({
+
+    Name: 'FeedburnerRssParserClass',
+    Extends: BaseParser,
+
+    _parsePublisher: function(childElements) {
+
+        log('FeedburnerRssParserClass');
         for (let i = 0; i < childElements.length; i++) {
 
             //log(childElements[i].name);
@@ -47,33 +60,19 @@ const FeedburnerRssParser = new Lang.Class({
     }
 });
 
+// default rss parser class
 const DefaultRssParser = new Lang.Class({
 
     Name: 'DefaultRssParserClass',
-
-    RssFeedItem: [],
-    Publisher: {
-        Title: '',
-        HttpLink: '',
-        Description: ''
-    },
-    PublishDate: '',
-
-    _init: function(root) {
-
-        this._root = root;
-    },
-
-    parse: function() {
-
-        this._parsePublisher(this._root.childElements[0].childElements);   // root=rss -> channel
-    },
+    Extends: BaseParser,
 
     _parsePublisher: function(childElements) {
 
+        log('DefaultRssParserClass');
         for (let i = 0; i < childElements.length; i++) {
 
             //log(childElements[i].name);
+
 
             if (childElements[i].name == 'title') {
                 this.Publisher.Title = childElements[i].text;
