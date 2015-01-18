@@ -8,13 +8,13 @@ const BaseParser = new Lang.Class({
 
     Name: 'BaseParserClass',
 
-    RssFeedItem: [],
+    Items: [],
     Publisher: {
         Title: '',
         HttpLink: '',
-        Description: ''
+        Description: '',
+        PublishDate: ''
     },
-    PublishDate: '',
 
     _init: function(root) {
 
@@ -27,6 +27,10 @@ const BaseParser = new Lang.Class({
     },
 
     _parsePublisher: function(childElements) {
+        // child classes implements this function
+    },
+
+    _parseItem: function(itemElements) {
         // child classes implements this function
     }
 });
@@ -42,8 +46,6 @@ const FeedburnerRssParser = new Lang.Class({
         log('FeedburnerRssParserClass');
         for (let i = 0; i < childElements.length; i++) {
 
-            //log(childElements[i].name);
-
             if (childElements[i].name == 'title') {
                 this.Publisher.Title = childElements[i].text;
             }
@@ -53,10 +55,45 @@ const FeedburnerRssParser = new Lang.Class({
             else if (childElements[i].name == 'description') {
                 this.Publisher.Description = childElements[i].text;
             }
-            else if (childElements[i].name == 'pubDate') {
-                this.PublishDate = childElements[i].text;
+            else if (childElements[i].name == 'lastBuildDate') {
+                this.Publisher.PublishDate = childElements[i].text;
+            }
+            else if (childElements[i].name == 'item') {
+                this._parseItem(childElements[i].childElements);
             }
         }
+    },
+
+    _parseItem: function(itemElements) {
+
+        let item = {
+            Title: '',
+            HttpLink: '',
+            Description: '',
+            Author: '',
+            PublishDate: ''
+        };
+
+        for (let i = 0; i < itemElements.length; i++) {
+
+            if (itemElements[i].name == 'title') {
+                item.Title = itemElements[i].text;
+            }
+            else if (itemElements[i].name == 'link') {
+                item.HttpLink = itemElements[i].text;
+            }
+            else if (itemElements[i].name == 'description') {
+                item.Description = itemElements[i].text;
+            }
+            else if (itemElements[i].name == 'pubDate') {
+                item.PublishDate = itemElements[i].text;
+            }
+            else if (itemElements[i].name == 'author') {
+                item.Author = itemElements[i].text;
+            }
+        }
+
+        this.Items.push(item);
     }
 });
 
@@ -68,11 +105,7 @@ const DefaultRssParser = new Lang.Class({
 
     _parsePublisher: function(childElements) {
 
-        log('DefaultRssParserClass');
         for (let i = 0; i < childElements.length; i++) {
-
-            //log(childElements[i].name);
-
 
             if (childElements[i].name == 'title') {
                 this.Publisher.Title = childElements[i].text;
@@ -84,9 +117,44 @@ const DefaultRssParser = new Lang.Class({
                 this.Publisher.Description = childElements[i].text;
             }
             else if (childElements[i].name == 'pubDate') {
-                this.PublishDate = childElements[i].text;
+                this.Publisher.PublishDate = childElements[i].text;
+            }
+            else if (childElements[i].name == 'item') {
+                this._parseItem(childElements[i].childElements);
             }
         }
+    },
+
+    _parseItem: function(itemElements) {
+
+        let item = {
+            Title: '',
+            HttpLink: '',
+            Description: '',
+            Author: '',
+            PublishDate: ''
+        };
+
+        for (let i = 0; i < itemElements.length; i++) {
+
+            if (itemElements[i].name == 'title') {
+                item.Title = itemElements[i].text;
+            }
+            else if (itemElements[i].name == 'link') {
+                item.HttpLink = itemElements[i].text;
+            }
+            else if (itemElements[i].name == 'description') {
+                item.Description = itemElements[i].text;
+            }
+            else if (itemElements[i].name == 'pubDate') {
+                item.PublishDate = itemElements[i].text;
+            }
+            else if (itemElements[i].name == 'author') {
+                item.Author = itemElements[i].text;
+            }
+        }
+
+        this.Items.push(item);
     }
 });
 

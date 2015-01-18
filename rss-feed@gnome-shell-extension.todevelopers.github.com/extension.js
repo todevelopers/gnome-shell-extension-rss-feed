@@ -72,7 +72,7 @@ const RssFeedButton = new Lang.Class({
 
     _onRefreshBtnClicked: function() {
 
-        this._httpGetRequestAsync('http://www.root.cz/rss/clanky', {}, Lang.bind(this, this._onDownload));
+        //this._httpGetRequestAsync('http://www.root.cz/rss/clanky', {}, Lang.bind(this, this._onDownload));
         this._httpGetRequestAsync('http://feeds.feedburner.com/webupd8?format=xml', {}, Lang.bind(this, this._onDownload));
     },
 
@@ -112,7 +112,16 @@ const RssFeedButton = new Lang.Class({
         log('title: ' + rssParser.Publisher.Title);
         log('link: ' + rssParser.Publisher.HttpLink);
         log('description: ' + rssParser.Publisher.Description);
-        log('publish date: ' + rssParser.PublishDate);
+        log('publish date: ' + rssParser.Publisher.PublishDate);
+
+        for (let i = 0; i < rssParser.Items.length; i++) {
+            log('item ' + i);
+            log('title: ' + rssParser.Items[i].Title);
+            log('link: ' + rssParser.Items[i].HttpLink);
+            log('description: ' + rssParser.Items[i].Description);
+            log('publish date: ' + rssParser.Items[i].PublishDate);
+            log('author: ' + rssParser.Items[i].Author);
+        }
     }
 });
 
