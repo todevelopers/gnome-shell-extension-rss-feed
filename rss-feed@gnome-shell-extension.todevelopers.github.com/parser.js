@@ -8,7 +8,16 @@ const BaseParser = new Lang.Class({
 
     Name: 'BaseParserClass',
 
-    Items: [],
+    /*
+    Item: {
+        Title: '',
+        HttpLink: '',
+        Description: '',
+        Author: '',
+        PublishDate: ''
+    } */
+
+    Items: [],  // array of Item
     Publisher: {
         Title: '',
         HttpLink: '',

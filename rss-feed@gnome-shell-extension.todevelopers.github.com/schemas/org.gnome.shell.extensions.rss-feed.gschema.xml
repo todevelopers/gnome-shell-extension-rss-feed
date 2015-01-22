@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="rss-feed-gnome-shell">
+   <schema path="/org/gnome/shell/extensions/rss-feed/" id="org.gnome.shell.extensions.rss-feed">
+    <key type="i" name="update-interval">
+      <default>15</default>
+      <summary>Update interval</summary>
+      <description>Download interval (in minutes) for all RSS feeds.</description>
+    </key>
+  </schema>
+</schemalist>
