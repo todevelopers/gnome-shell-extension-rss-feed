@@ -8,6 +8,7 @@ const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Soup = imports.gi.Soup;
 const St = imports.gi.St;
+const Util = imports.misc.util;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Parser = Me.imports.parser;
@@ -58,6 +59,7 @@ const RssFeedButton = new Lang.Class({
         buttonMenu.actor.add_actor(settingsBtn);
 
         refreshBtn.connect('clicked', Lang.bind(this, this._onRefreshBtnClicked));
+        settingsBtn.connect('clicked', Lang.bind(this, this._onSettingsBtnClicked));
 
         this.menu.addMenuItem(buttonMenu);
     },
@@ -74,6 +76,12 @@ const RssFeedButton = new Lang.Class({
 
         //this._httpGetRequestAsync('http://www.root.cz/rss/clanky', {}, Lang.bind(this, this._onDownload));
         this._httpGetRequestAsync('http://feeds.feedburner.com/webupd8?format=xml', {}, Lang.bind(this, this._onDownload));
+    },
+
+    _onSettingsBtnClicked: function() {
+
+        this.menu.actor.hide();
+        Util.spawn(["gnome-shell-extension-prefs", "rss-feed@gnome-shell-extension.todevelopers.github.com"]);
     },
 
     _httpGetRequestAsync: function(url, params, callback) {

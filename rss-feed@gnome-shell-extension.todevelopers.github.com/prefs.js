@@ -27,6 +27,7 @@ const RssFeedSettingsWidget = new GObject.Class({
 
 		let settings = Convenience.getSettings();
 
+		// update interval
 		let box = new Gtk.Box( { orientation: Gtk.Orientation.HORIZONTAL, spacing: 6 } );
 		box.add(new Gtk.Label( { label: 'Update interval (minutes):' } ));
 
@@ -36,6 +37,9 @@ const RssFeedSettingsWidget = new GObject.Class({
 
 		box.add(spinbtn);
 		this.add(box);
+
+		// separator
+		this.add(new Gtk.HSeparator({margin_bottom: 5, margin_top: 5}));
 	}
 });
 
