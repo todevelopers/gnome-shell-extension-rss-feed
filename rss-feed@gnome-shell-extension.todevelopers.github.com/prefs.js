@@ -48,24 +48,24 @@ const RssFeedSettingsWidget = new GObject.Class({
 		scrolledWindow.set_border_width(0);
 		scrolledWindow.set_shadow_type(1);
 
-		let store = new Gtk.ListStore();
-		store.set_column_types([GObject.TYPE_STRING]);
+		this._store = new Gtk.ListStore();
+		this._store.set_column_types([GObject.TYPE_STRING]);
 
-		let actor = new Gtk.TreeView({ model: store,
+		this._actor = new Gtk.TreeView({ model: this._store,
 									   headers_visible: false,
 									   reorderable: true,
 									   hexpand: true,
 									   vexpand: true });
-		actor.get_selection().set_mode(Gtk.SelectionMode.SINGLE);
+		this._actor.get_selection().set_mode(Gtk.SelectionMode.SINGLE);
 
 		let column = new Gtk.TreeViewColumn();
 
 		let cell = new Gtk.CellRendererText({ editable: false });
 		column.pack_start(cell, true);
 		column.add_attribute(cell, "text", COLUMN_ID);
-		actor.append_column(column);
+		this._actor.append_column(column);
 
-		scrolledWindow.add(actor);
+		scrolledWindow.add(this._actor);
 		this.add(scrolledWindow);
 
 		let toolbar = new Gtk.Toolbar();
@@ -73,11 +73,11 @@ const RssFeedSettingsWidget = new GObject.Class({
 		toolbar.set_icon_size(1);
 
 		let delButton = new Gtk.ToolButton({ icon_name: 'list-remove-symbolic' });
-		//delButton.connect('clicked', Lang.bind(this, this._deleteSelected));
+		delButton.connect('clicked', Lang.bind(this, this._deleteSelected));
 		toolbar.add(delButton);
 
 		let editButton = new Gtk.ToolButton({ icon_name: 'edit-symbolic' });
-		//editButton.connect('clicked', Lang.bind(this, this._editSelected));
+		editButton.connect('clicked', Lang.bind(this, this._editSelected));
 		toolbar.add(editButton);
 
 		let newButton = new Gtk.ToolButton({ icon_name: 'list-add-symbolic' });
@@ -85,42 +85,74 @@ const RssFeedSettingsWidget = new GObject.Class({
 		toolbar.add(newButton);
 
 		this.add(toolbar);
-
-		/*// add fake data
-		let iter = store.append();
-		store.set_value(iter, COLUMN_ID, "http://mysite.com/1/rss");*/
 	},
 
-	_createNew: function() {
+	_createDialog: function(title, text, onOkButton) {
 
-		let dialog = new Gtk.Dialog({title: "New RSS Feed source"});
+		let dialog = new Gtk.Dialog({title: title});
 		dialog.set_modal(true);
 		dialog.set_resizable(false);
 		dialog.set_border_width(12);
 
-		let entry = new Gtk.Entry();
-		//entry.margin_top = 12;
-		entry.margin_bottom = 12;
-		entry.width_chars = 40;
+		this._entry = new Gtk.Entry({text: text});
+		//this._entry.margin_top = 12;
+		this._entry.margin_bottom = 12;
+		this._entry.width_chars = 40;
 
 		dialog.add_button(Gtk.STOCK_CANCEL, 0);
-		dialog.add_button(Gtk.STOCK_OK, 1);	// default
-
+		let okButton = dialog.add_button(Gtk.STOCK_OK, 1);	// default
+		okButton.set_can_default(true);
+		dialog.set_default(okButton);
+		this._entry.activates_default = true;
 
 		let dialog_area = dialog.get_content_area();
 		//dialog_area.pack_start(label, 0, 0, 0);
-		dialog_area.pack_start(entry, 0, 0, 0);
+		dialog_area.pack_start(this._entry, 0, 0, 0);
 
 		dialog.connect("response", Lang.bind(this, function(w, response_id) {
 
 			if (response_id) {	// button OK
-
+				onOkButton();
 			}
 
 			dialog.hide();
 		}));
 
 		dialog.show_all();
+	},
+
+	_createNew: function() {
+
+		this._createDialog('New RSS Feed source', '', Lang.bind(this, function() {
+
+			let iter = this._store.append();
+			this._store.set_value(iter, COLUMN_ID, this._entry.get_text());
+		}));
+	},
+
+	_editSelected: function() {
+
+		let [any, model, iter] = this._actor.get_selection().get_selected();
+
+		if (any) {
+
+			this._createDialog('Edit RSS Feed source', this._store.get_value(iter, COLUMN_ID),
+			Lang.bind(this, function() {
+
+				this._store.set_value(iter, COLUMN_ID, this._entry.get_text());
+			}));
+		}
+
+	},
+
+	_deleteSelected: function() {
+
+		let [any, model, iter] = this._actor.get_selection().get_selected();
+
+		if (any) {
+
+			this._store.remove(iter);
+		}
 	}
 });
 
