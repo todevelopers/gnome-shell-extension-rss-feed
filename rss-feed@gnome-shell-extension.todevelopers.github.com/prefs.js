@@ -14,6 +14,9 @@ const Convenience = Me.imports.convenience;
 const MAX_UPDATE_INTERVAL = 1440;
 const COLUMN_ID = 0;
 
+const UPDATE_INTERVAL_KEY = 'update-interval';
+const RSS_FEEDS_LIST_KEY = 'rss-feeds-list';
+
 
 const RssFeedSettingsWidget = new GObject.Class({
 
@@ -28,7 +31,7 @@ const RssFeedSettingsWidget = new GObject.Class({
 		this.margin = 12;
 		//this.spacing = 6;
 
-		let settings = Convenience.getSettings();
+		this._settings = Convenience.getSettings();
 
 		// update interval
 		let box = new Gtk.Box( { orientation: Gtk.Orientation.HORIZONTAL, spacing: 6 } );
@@ -37,8 +40,8 @@ const RssFeedSettingsWidget = new GObject.Class({
 		box.pack_start(label, true, true, 0);
 
 		let spinbtn = Gtk.SpinButton.new_with_range(1, MAX_UPDATE_INTERVAL, 1);
-		spinbtn.set_value(settings.get_int('update-interval'));
-		settings.bind('update-interval', spinbtn, 'value', Gio.SettingsBindFlags.DEFAULT);
+		spinbtn.set_value(this._settings.get_int(UPDATE_INTERVAL_KEY));
+		this._settings.bind(UPDATE_INTERVAL_KEY, spinbtn, 'value', Gio.SettingsBindFlags.DEFAULT);
 
 		box.add(spinbtn);
 		this.add(box);
@@ -50,10 +53,11 @@ const RssFeedSettingsWidget = new GObject.Class({
 
 		this._store = new Gtk.ListStore();
 		this._store.set_column_types([GObject.TYPE_STRING]);
+		this._loadStoreFromSettings();
 
 		this._actor = new Gtk.TreeView({ model: this._store,
 									   headers_visible: false,
-									   reorderable: true,
+									   reorderable: false,
 									   hexpand: true,
 									   vexpand: true });
 		this._actor.get_selection().set_mode(Gtk.SelectionMode.SINGLE);
@@ -99,10 +103,19 @@ const RssFeedSettingsWidget = new GObject.Class({
 		this._entry.margin_bottom = 12;
 		this._entry.width_chars = 40;
 
+		this._entry.connect("changed", Lang.bind(this, function() {
+
+			if (this._entry.get_text().length == 0)
+				this._okButton.sensitive = false;
+			else
+				this._okButton.sensitive = true;
+		}));
+
 		dialog.add_button(Gtk.STOCK_CANCEL, 0);
-		let okButton = dialog.add_button(Gtk.STOCK_OK, 1);	// default
-		okButton.set_can_default(true);
-		dialog.set_default(okButton);
+		this._okButton = dialog.add_button(Gtk.STOCK_OK, 1);	// default
+		this._okButton.set_can_default(true);
+		this._okButton.sensitive = false;
+		dialog.set_default(this._okButton);
 		this._entry.activates_default = true;
 
 		let dialog_area = dialog.get_content_area();
@@ -125,8 +138,17 @@ const RssFeedSettingsWidget = new GObject.Class({
 
 		this._createDialog('New RSS Feed source', '', Lang.bind(this, function() {
 
+			// update tree view
 			let iter = this._store.append();
 			this._store.set_value(iter, COLUMN_ID, this._entry.get_text());
+
+			// update settings
+			let feeds = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
+			if (feeds == null)
+				feeds = new Array();
+
+			feeds.push(this._entry.get_text());
+			this._settings.set_strv(RSS_FEEDS_LIST_KEY, feeds);
 		}));
 	},
 
@@ -135,14 +157,23 @@ const RssFeedSettingsWidget = new GObject.Class({
 		let [any, model, iter] = this._actor.get_selection().get_selected();
 
 		if (any) {
-
-			this._createDialog('Edit RSS Feed source', this._store.get_value(iter, COLUMN_ID),
+			this._createDialog('Edit RSS Feed source', model.get_value(iter, COLUMN_ID),
 			Lang.bind(this, function() {
-
+				// update tree view
 				this._store.set_value(iter, COLUMN_ID, this._entry.get_text());
+
+				// update settings
+				let index = model.get_path(iter).get_indices();
+				let feeds = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
+				if (feeds == null)
+					feeds = new Array();
+
+				if (index < feeds.length) {
+					feeds[index] = this._entry.get_text();
+					this._settings.set_strv(RSS_FEEDS_LIST_KEY, feeds);
+				}
 			}));
 		}
-
 	},
 
 	_deleteSelected: function() {
@@ -150,9 +181,39 @@ const RssFeedSettingsWidget = new GObject.Class({
 		let [any, model, iter] = this._actor.get_selection().get_selected();
 
 		if (any) {
-
+			// must call before remove
+			let index = model.get_path(iter).get_indices();
+			// update tree view
 			this._store.remove(iter);
+
+			// update settings
+			let feeds = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
+			if (feeds == null)
+				feeds = new Array();
+
+			if (index < feeds.length) {
+				feeds.splice(index, 1);
+				this._settings.set_strv(RSS_FEEDS_LIST_KEY, feeds);
+			}
 		}
+	},
+
+	_loadStoreFromSettings: function() {
+
+		let feeds = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
+		if (feeds == null)
+			feeds = new Array();
+
+		for (let i = 0; i < feeds.length; i++) {
+
+			if (feeds[i]) {	// test on empty string
+
+				let iter = this._store.append();
+				this._store.set_value(iter, COLUMN_ID, feeds[i]);
+			}
+		}
+
+		this._settings.set_strv(RSS_FEEDS_LIST_KEY, feeds);
 	}
 });
 
