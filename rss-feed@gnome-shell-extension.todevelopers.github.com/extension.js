@@ -4,6 +4,7 @@
 
 const Lang = imports.lang;
 const Main = imports.ui.main;
+const Mainloop = imports.mainloop;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Soup = imports.gi.Soup;
@@ -12,6 +13,10 @@ const Util = imports.misc.util;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Parser = Me.imports.parser;
+const Convenience = Me.imports.convenience;
+
+const UPDATE_INTERVAL_KEY = 'update-interval';
+const RSS_FEEDS_LIST_KEY = 'rss-feeds-list';
 
 /* Main extension class */
 const RssFeedButton = new Lang.Class({
@@ -23,6 +28,9 @@ const RssFeedButton = new Lang.Class({
         this.parent(0.0, "RSS Feed");
 
         this._httpSession = null;
+        this._settings = Convenience.getSettings();
+
+        this._scid = this._settings.connect('changed', Lang.bind(this, this._onSettingsChanged));
 
         /* top panel button */
         let icon = new St.Icon({
@@ -53,35 +61,59 @@ const RssFeedButton = new Lang.Class({
 
         let systemMenu = Main.panel.statusArea.aggregateMenu._system;
 
-        let refreshBtn = systemMenu._createActionButton('view-refresh-symbolic', "Refresh");
+        let reloadBtn = systemMenu._createActionButton('view-refresh-symbolic', "Reload RSS Feeds");
         let settingsBtn = systemMenu._createActionButton('preferences-system-symbolic', "RSS Feed Settings");
-        buttonMenu.actor.add_actor(refreshBtn);
+        buttonMenu.actor.add_actor(reloadBtn);
         buttonMenu.actor.add_actor(settingsBtn);
 
-        refreshBtn.connect('clicked', Lang.bind(this, this._onRefreshBtnClicked));
+        reloadBtn.connect('clicked', Lang.bind(this, this._realoadRssFeeds));
         settingsBtn.connect('clicked', Lang.bind(this, this._onSettingsBtnClicked));
 
         this.menu.addMenuItem(buttonMenu);
+
+        this._updateInterval = this._settings.get_int(UPDATE_INTERVAL_KEY);
+        this._rssFeeds = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
+        this._realoadRssFeeds();
     },
 
     stop: function() {
 
-        if (this._httpSession != null)
+        if (this._httpSession)
             this._httpSession.abort();
-
         this._httpSession = null;
-    },
 
-    _onRefreshBtnClicked: function() {
+        if (this._scid)
+            this._settings.disconnect(this._scid);
 
-        //this._httpGetRequestAsync('http://www.root.cz/rss/clanky', {}, Lang.bind(this, this._onDownload));
-        this._httpGetRequestAsync('http://feeds.feedburner.com/webupd8?format=xml', {}, Lang.bind(this, this._onDownload));
+        if (this._timeout)
+            Mainloop.source_remove(this._timeout);
     },
 
     _onSettingsBtnClicked: function() {
 
         this.menu.actor.hide();
         Util.spawn(["gnome-shell-extension-prefs", "rss-feed@gnome-shell-extension.todevelopers.github.com"]);
+    },
+
+    _onSettingsChanged: function() {
+
+        this._updateInterval = this._settings.get_int(UPDATE_INTERVAL_KEY);
+        this._rssFeeds = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
+        this._realoadRssFeeds();
+    },
+
+    _realoadRssFeeds: function() {
+
+        if (this._timeout)
+            Mainloop.source_remove(this._timeout);
+
+        if (this._rssFeeds) {
+
+            for (let i = 0; i < this._rssFeeds.length; i++)
+                this._httpGetRequestAsync(this._rssFeeds[i], {}, Lang.bind(this, this._onDownload));
+        }
+
+        this._timeout = Mainloop.timeout_add_seconds(this._updateInterval*60, Lang.bind(this, this._realoadRssFeeds));
     },
 
     _httpGetRequestAsync: function(url, params, callback) {
@@ -91,24 +123,9 @@ const RssFeedButton = new Lang.Class({
 
         let request = Soup.form_request_new_from_hash('GET', url, params);
 
-
-
         this._httpSession.queue_message(request, Lang.bind(this, function(httpSession, message) {
 
-            //Main.notify('rss-feed', message.response_body.data.substring(0, 256));
             callback(message.response_body.data);
-            //callback.call(message.response_body.data);
-                /*try {http://feeds.feedburner.com/webupd8
-                    if (!message.response_body.data) {
-                        fun.call(this, 0);
-                        return;
-                    }
-                    let jp = JSON.parse(message.response_body.data);
-                    fun.call(this, jp);
-                } catch (e) {
-                    fun.call(this, 0);
-                    return;
-                }*/
         }));
     },
 
@@ -118,7 +135,7 @@ const RssFeedButton = new Lang.Class({
         rssParser.parse();
 
         log('title: ' + rssParser.Publisher.Title);
-        log('link: ' + rssParser.Publisher.HttpLink);
+        /*log('link: ' + rssParser.Publisher.HttpLink);
         log('description: ' + rssParser.Publisher.Description);
         log('publish date: ' + rssParser.Publisher.PublishDate);
 
@@ -129,7 +146,7 @@ const RssFeedButton = new Lang.Class({
             log('description: ' + rssParser.Items[i].Description);
             log('publish date: ' + rssParser.Items[i].PublishDate);
             log('author: ' + rssParser.Items[i].Author);
-        }
+        }*/
     }
 });
 

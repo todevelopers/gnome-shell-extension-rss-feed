@@ -52,7 +52,6 @@ const FeedburnerRssParser = new Lang.Class({
 
     _parsePublisher: function(childElements) {
 
-        log('FeedburnerRssParserClass');
         for (let i = 0; i < childElements.length; i++) {
 
             if (childElements[i].name == 'title') {

@@ -17,7 +17,6 @@ const COLUMN_ID = 0;
 const UPDATE_INTERVAL_KEY = 'update-interval';
 const RSS_FEEDS_LIST_KEY = 'rss-feeds-list';
 
-
 const RssFeedSettingsWidget = new GObject.Class({
 
 	Name: 'RssFeed.Prefs.RssFeedSettingsWidget',
@@ -201,19 +200,18 @@ const RssFeedSettingsWidget = new GObject.Class({
 	_loadStoreFromSettings: function() {
 
 		let feeds = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
-		if (feeds == null)
-			feeds = new Array();
 
-		for (let i = 0; i < feeds.length; i++) {
+		if (feeds) {
+			
+			for (let i = 0; i < feeds.length; i++) {
 
-			if (feeds[i]) {	// test on empty string
+				if (feeds[i]) {	// test on empty string
 
-				let iter = this._store.append();
-				this._store.set_value(iter, COLUMN_ID, feeds[i]);
+					let iter = this._store.append();
+					this._store.set_value(iter, COLUMN_ID, feeds[i]);
+				}
 			}
 		}
-
-		this._settings.set_strv(RSS_FEEDS_LIST_KEY, feeds);
 	}
 });
 
