@@ -30,6 +30,16 @@ const BaseParser = new Lang.Class({
         this._root = root;
     },
 
+    clear: function() {
+
+        while(this.Items.length > 0)
+            this.Items.pop();
+        this.Publisher.Title = '';
+        this.Publisher.HttpLink = '';
+        this.Publisher.Description = '';
+        this.Publisher.PublishDate = '';
+    },
+
     parse: function() {
 
         this._parsePublisher(this._root.childElements[0].childElements);   // root=rss -> channel

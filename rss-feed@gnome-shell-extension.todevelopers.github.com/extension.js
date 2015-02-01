@@ -41,19 +41,47 @@ const RssFeedButton = new Lang.Class({
         this.actor.add_actor(icon);
 
         /* menu items*/
-        let testarea = new PopupMenu.PopupBaseMenuItem({
+        let testarea = new PopupMenu.PopupMenu();
+
+        this._feedsBox = new St.BoxLayout({
+            vertical: true,
             reactive: false
         });
+
+        this._feedsSection = new PopupMenu.PopupMenuSection();
+
+        let scrollView = new St.ScrollView();
+        scrollView.add_actor(this._feedsSection.actor);
 
         let testlabel = new St.Label({
             text: 'Lorem ipsum dolor sit amet'
         });
 
-        testarea.actor.add_actor(testlabel);
-        this.menu.addMenuItem(testarea);
+        let testlabel2 = new St.Label({
+            text: 'duni dunaj a luna za lunou sa vali'
+        });
 
-        let item = new PopupMenu.PopupSeparatorMenuItem();
-        this.menu.addMenuItem(item);
+        let popupitem = new PopupMenu.PopupSubMenuMenuItem("Lorem ipsum dolor sit amet");
+        let popupitem2 = new PopupMenu.PopupSubMenuMenuItem("Duni Dunaj a vlna za vlnou sa vali");
+
+        popupitem.menu.addMenuItem(new PopupMenu.PopupMenuItem("consectetur adipiscing elit"));
+        popupitem.menu.addMenuItem(new PopupMenu.PopupMenuItem("sed do eiusmod tempor incididunt ut labore"));
+
+        let boxItem = new PopupMenu.PopupBaseMenuItem({
+            reactive: false
+        });
+
+        boxItem.actor.add_actor(scrollView);
+
+        //this.menu.addMenuItem(popupitem);
+        //this.menu.addMenuItem(popupitem2);
+
+        this.menu.addMenuItem(boxItem);
+
+        //this.menu.addMenuItem(this._feedsSection);
+
+        let separator = new PopupMenu.PopupSeparatorMenuItem();
+        this.menu.addMenuItem(separator);
 
         let buttonMenu = new PopupMenu.PopupBaseMenuItem({
             reactive: false
@@ -134,7 +162,18 @@ const RssFeedButton = new Lang.Class({
         let rssParser = new Parser.createRssParser(responseData);
         rssParser.parse();
 
-        log('title: ' + rssParser.Publisher.Title);
+        let nItems = rssParser.Items.length;
+        let subMenu = new PopupMenu.PopupSubMenuMenuItem(rssParser.Publisher.Title + ' (' + nItems + ')');
+
+        for (let i = 0; i < nItems; i++) {
+            let menuItem = new PopupMenu.PopupMenuItem(rssParser.Items[i].Title);
+            subMenu.menu.addMenuItem(menuItem);
+        }
+
+        this._feedsSection.addMenuItem(subMenu);
+
+        rssParser.clear();
+
         /*log('link: ' + rssParser.Publisher.HttpLink);
         log('description: ' + rssParser.Publisher.Description);
         log('publish date: ' + rssParser.Publisher.PublishDate);
