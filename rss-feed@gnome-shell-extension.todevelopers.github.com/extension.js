@@ -29,6 +29,7 @@ const RssFeedButton = new Lang.Class({
 
         this._httpSession = null;
         this._settings = Convenience.getSettings();
+        this._feedsArray = new Array();
 
         this._scid = this._settings.connect('changed', Lang.bind(this, this._onSettingsChanged));
 
@@ -50,8 +51,8 @@ const RssFeedButton = new Lang.Class({
 
         this._feedsSection = new PopupMenu.PopupMenuSection();
 
-        let scrollView = new St.ScrollView();
-        scrollView.add_actor(this._feedsSection.actor);
+        //let scrollView = new St.ScrollView();
+        //scrollView.add_actor(this._feedsSection.actor);
 
         let testlabel = new St.Label({
             text: 'Lorem ipsum dolor sit amet'
@@ -71,12 +72,12 @@ const RssFeedButton = new Lang.Class({
             reactive: false
         });
 
-        boxItem.actor.add_actor(scrollView);
+        //boxItem.actor.add_actor(scrollView);
 
         //this.menu.addMenuItem(popupitem);
         //this.menu.addMenuItem(popupitem2);
 
-        this.menu.addMenuItem(boxItem);
+        this.menu.addMenuItem(this._feedsSection);
 
         //this.menu.addMenuItem(this._feedsSection);
 
@@ -138,39 +139,53 @@ const RssFeedButton = new Lang.Class({
         if (this._rssFeeds) {
 
             for (let i = 0; i < this._rssFeeds.length; i++)
-                this._httpGetRequestAsync(this._rssFeeds[i], {}, Lang.bind(this, this._onDownload));
+                this._httpGetRequestAsync(this._rssFeeds[i], i, Lang.bind(this, this._onDownload));
         }
 
         this._timeout = Mainloop.timeout_add_seconds(this._updateInterval*60, Lang.bind(this, this._realoadRssFeeds));
     },
 
-    _httpGetRequestAsync: function(url, params, callback) {
+    _httpGetRequestAsync: function(url, position, callback) {
 
         if (this._httpSession == null)
             this._httpSession = new Soup.Session();
 
-        let request = Soup.form_request_new_from_hash('GET', url, params);
+        let request = Soup.form_request_new_from_hash('GET', url, {});
 
         this._httpSession.queue_message(request, Lang.bind(this, function(httpSession, message) {
 
-            callback(message.response_body.data);
+            callback(message.response_body.data, position);
         }));
     },
 
-    _onDownload: function(responseData) {
+    _onDownload: function(responseData, position) {
 
         let rssParser = new Parser.createRssParser(responseData);
         rssParser.parse();
 
         let nItems = rssParser.Items.length;
-        let subMenu = new PopupMenu.PopupSubMenuMenuItem(rssParser.Publisher.Title + ' (' + nItems + ')');
+
+        //log(position + ' ' + nItems + ' ' + rssParser.Publisher.Title);
+
+        //if (this._feedsArray[position]) {
+
+        this._feedsArray[position] = rssParser.Publisher.Title + ' (' + nItems + ')';
+        //}
+        //else {
+
+        //this._feedsArray.splice(position, 0, rssParser.Publisher.Title + ' (' + nItems + ')');
+        //}
+
+        /*let subMenu = new PopupMenu.PopupSubMenuMenuItem(rssParser.Publisher.Title + ' (' + nItems + ')');
 
         for (let i = 0; i < nItems; i++) {
             let menuItem = new PopupMenu.PopupMenuItem(rssParser.Items[i].Title);
             subMenu.menu.addMenuItem(menuItem);
         }
 
-        this._feedsSection.addMenuItem(subMenu);
+        this._feedsSection.addMenuItem(subMenu);*/
+
+        this._refreshExtensionUI();
 
         rssParser.clear();
 
@@ -186,6 +201,19 @@ const RssFeedButton = new Lang.Class({
             log('publish date: ' + rssParser.Items[i].PublishDate);
             log('author: ' + rssParser.Items[i].Author);
         }*/
+    },
+
+    _refreshExtensionUI: function() {
+
+        this._feedsSection.removeAll();
+
+        for (let i = 0; i < this._feedsArray.length; i++) {
+
+            if (this._feedsArray[i]) {
+                let subMenu = new PopupMenu.PopupSubMenuMenuItem(this._feedsArray[i]);
+                this._feedsSection.addMenuItem(subMenu);
+            }
+        }
     }
 });
 
