@@ -2,26 +2,54 @@
 *   TODO licence
 */
 
+const Gio = imports.gi.Gio;
 const Lang = imports.lang;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
+const Me = imports.misc.extensionUtils.getCurrentExtension();
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Soup = imports.gi.Soup;
 const St = imports.gi.St;
 const Util = imports.misc.util;
 
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Parser = Me.imports.parser;
 const Convenience = Me.imports.convenience;
+const Parser = Me.imports.parser;
 
-const UPDATE_INTERVAL_KEY = 'update-interval';
 const RSS_FEEDS_LIST_KEY = 'rss-feeds-list';
+const UPDATE_INTERVAL_KEY = 'update-interval';
+
+/* class that extend PopupMenuItem class of rss feed functionality*/
+const PopupRssFeedMenuItem = new Lang.Class({
+
+    Name: 'PopupRssFeedMenuItem',
+    Extends: PopupMenu.PopupMenuItem,
+
+    _init: function(link, title) {
+        this.parent(title);
+
+        this._link = link;
+
+        try {
+            // try to get default browser
+            this._browser = Gio.app_info_get_default_for_uri_scheme("http").get_executable();
+        }
+        catch (err) {
+            logError(err + ' (get default browser error)');
+            throw 'get default browser error';
+            return;
+        }
+
+        this.connect('activate', Lang.bind(this, function() {
+            Util.trySpawnCommandLine(this._browser + ' ' + this._link);
+        }));
+    }
+});
 
 /* Main extension class */
 const RssFeedButton = new Lang.Class({
 
-    Name: 'RssFeedMenuButton',
+    Name: 'RssFeedButton',
     Extends: PanelMenu.Button,
 
     _init: function() {
@@ -103,6 +131,8 @@ const RssFeedButton = new Lang.Class({
         this._updateInterval = this._settings.get_int(UPDATE_INTERVAL_KEY);
         this._rssFeeds = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
         this._realoadRssFeeds();
+        this._refreshExtensionUI();
+        this._feedsArray.length = this._rssFeeds.length;
     },
 
     stop: function() {
@@ -163,18 +193,24 @@ const RssFeedButton = new Lang.Class({
         let rssParser = new Parser.createRssParser(responseData);
         rssParser.parse();
 
-        let nItems = rssParser.Items.length;
+        let rssFeed = {
+            Publisher: {
+                Title: ''
+            },
+            Items: []
+        };
+        rssFeed.Publisher.Title = rssParser.Publisher.Title;
+        for (let i = 0; i < rssParser.Items.length; i++) {
+            let item = {
+                Title: '',
+                HttpLink: ''
+            };
+            item.Title = rssParser.Items[i].Title;
+            item.HttpLink = rssParser.Items[i].HttpLink;
+            rssFeed.Items.push(item);
+        }
+        this._feedsArray[position] = rssFeed;
 
-        //log(position + ' ' + nItems + ' ' + rssParser.Publisher.Title);
-
-        //if (this._feedsArray[position]) {
-
-        this._feedsArray[position] = rssParser.Publisher.Title + ' (' + nItems + ')';
-        //}
-        //else {
-
-        //this._feedsArray.splice(position, 0, rssParser.Publisher.Title + ' (' + nItems + ')');
-        //}
 
         /*let subMenu = new PopupMenu.PopupSubMenuMenuItem(rssParser.Publisher.Title + ' (' + nItems + ')');
 
@@ -209,10 +245,26 @@ const RssFeedButton = new Lang.Class({
 
         for (let i = 0; i < this._feedsArray.length; i++) {
 
-            if (this._feedsArray[i]) {
-                let subMenu = new PopupMenu.PopupSubMenuMenuItem(this._feedsArray[i]);
+            let nItems = this._feedsArray[i].Items.length;
+
+            if (this._feedsArray[i] && nItems > 0) {
+
+                let subMenu = new PopupMenu.PopupSubMenuMenuItem(this._feedsArray[i].Publisher.Title + ' (' + nItems + ')');
+
+                for (let j = 0; j < nItems; j++) {
+
+                    let menuItem = new PopupRssFeedMenuItem(this._feedsArray[i].Items[j].HttpLink, this._feedsArray[i].Items[j].Title);
+                    subMenu.menu.addMenuItem(menuItem);
+                }
+
                 this._feedsSection.addMenuItem(subMenu);
             }
+            else {
+
+                let subMenu = new PopupMenu.PopupSubMenuMenuItem('loading...');
+                this._feedsSection.addMenuItem(subMenu);
+            }
+
         }
     }
 });

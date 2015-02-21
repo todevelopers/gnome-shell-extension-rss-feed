@@ -2,21 +2,22 @@
 *	TODO licence
 */
 
-const Gio = imports.gi.Gio;
-const Gtk = imports.gi.Gtk;
-const GObject = imports.gi.GObject;
 const ExtensionUtils = imports.misc.extensionUtils;
+const Gio = imports.gi.Gio;
+const GObject = imports.gi.GObject;
+const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
+const Me = imports.misc.extensionUtils.getCurrentExtension();
 
-const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = Me.imports.convenience;
 
-const MAX_UPDATE_INTERVAL = 1440;
 const COLUMN_ID = 0;
+const MAX_UPDATE_INTERVAL = 1440;
 
-const UPDATE_INTERVAL_KEY = 'update-interval';
 const RSS_FEEDS_LIST_KEY = 'rss-feeds-list';
+const UPDATE_INTERVAL_KEY = 'update-interval';
 
+/* class for settings widget design and behavior */
 const RssFeedSettingsWidget = new GObject.Class({
 
 	Name: 'RssFeed.Prefs.RssFeedSettingsWidget',
@@ -202,7 +203,7 @@ const RssFeedSettingsWidget = new GObject.Class({
 		let feeds = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
 
 		if (feeds) {
-			
+
 			for (let i = 0; i < feeds.length; i++) {
 
 				if (feeds[i]) {	// test on empty string
