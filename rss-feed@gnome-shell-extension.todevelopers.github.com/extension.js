@@ -57,6 +57,8 @@ const RssFeedButton = new Lang.Class({
 
         this._httpSession = null;
         this._settings = Convenience.getSettings();
+
+        // data from all sources
         this._feedsArray = new Array();
 
         this._scid = this._settings.connect('changed', Lang.bind(this, this._onSettingsChanged));
@@ -128,11 +130,14 @@ const RssFeedButton = new Lang.Class({
 
         this.menu.addMenuItem(buttonMenu);
 
+        // load from settings
+        // interval for updates
         this._updateInterval = this._settings.get_int(UPDATE_INTERVAL_KEY);
-        this._rssFeeds = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
+        // http sources for rss feeds
+        this._rssFeedsSources = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
         this._realoadRssFeeds();
-        this._refreshExtensionUI();
-        this._feedsArray.length = this._rssFeeds.length;
+
+        //this._feedsArray.length = this._rssFeedsSourcesSources.length;
     },
 
     stop: function() {
@@ -157,7 +162,7 @@ const RssFeedButton = new Lang.Class({
     _onSettingsChanged: function() {
 
         this._updateInterval = this._settings.get_int(UPDATE_INTERVAL_KEY);
-        this._rssFeeds = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
+        this._rssFeedsSources = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
         this._realoadRssFeeds();
     },
 
@@ -166,10 +171,10 @@ const RssFeedButton = new Lang.Class({
         if (this._timeout)
             Mainloop.source_remove(this._timeout);
 
-        if (this._rssFeeds) {
+        if (this._rssFeedsSources) {
 
-            for (let i = 0; i < this._rssFeeds.length; i++)
-                this._httpGetRequestAsync(this._rssFeeds[i], i, Lang.bind(this, this._onDownload));
+            for (let i = 0; i < this._rssFeedsSources.length; i++)
+                this._httpGetRequestAsync(this._rssFeedsSources[i], i, Lang.bind(this, this._onDownload));
         }
 
         this._timeout = Mainloop.timeout_add_seconds(this._updateInterval*60, Lang.bind(this, this._realoadRssFeeds));
@@ -184,7 +189,8 @@ const RssFeedButton = new Lang.Class({
 
         this._httpSession.queue_message(request, Lang.bind(this, function(httpSession, message) {
 
-            callback(message.response_body.data, position);
+            if (message.response_body.data)
+                callback(message.response_body.data, position);
         }));
     },
 
@@ -200,6 +206,7 @@ const RssFeedButton = new Lang.Class({
             Items: []
         };
         rssFeed.Publisher.Title = rssParser.Publisher.Title;
+        log(rssParser.Items.length);
         for (let i = 0; i < rssParser.Items.length; i++) {
             let item = {
                 Title: '',
@@ -211,32 +218,9 @@ const RssFeedButton = new Lang.Class({
         }
         this._feedsArray[position] = rssFeed;
 
-
-        /*let subMenu = new PopupMenu.PopupSubMenuMenuItem(rssParser.Publisher.Title + ' (' + nItems + ')');
-
-        for (let i = 0; i < nItems; i++) {
-            let menuItem = new PopupMenu.PopupMenuItem(rssParser.Items[i].Title);
-            subMenu.menu.addMenuItem(menuItem);
-        }
-
-        this._feedsSection.addMenuItem(subMenu);*/
-
         this._refreshExtensionUI();
 
         rssParser.clear();
-
-        /*log('link: ' + rssParser.Publisher.HttpLink);
-        log('description: ' + rssParser.Publisher.Description);
-        log('publish date: ' + rssParser.Publisher.PublishDate);
-
-        for (let i = 0; i < rssParser.Items.length; i++) {
-            log('item ' + i);
-            log('title: ' + rssParser.Items[i].Title);
-            log('link: ' + rssParser.Items[i].HttpLink);
-            log('description: ' + rssParser.Items[i].Description);
-            log('publish date: ' + rssParser.Items[i].PublishDate);
-            log('author: ' + rssParser.Items[i].Author);
-        }*/
     },
 
     _refreshExtensionUI: function() {
@@ -245,9 +229,9 @@ const RssFeedButton = new Lang.Class({
 
         for (let i = 0; i < this._feedsArray.length; i++) {
 
-            let nItems = this._feedsArray[i].Items.length;
+            if (this._feedsArray[i] && this._feedsArray[i].Items) {
 
-            if (this._feedsArray[i] && nItems > 0) {
+                let nItems = this._feedsArray[i].Items.length;
 
                 let subMenu = new PopupMenu.PopupSubMenuMenuItem(this._feedsArray[i].Publisher.Title + ' (' + nItems + ')');
 
