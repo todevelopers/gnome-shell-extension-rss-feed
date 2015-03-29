@@ -68,9 +68,6 @@ const RssFeedButton = new Lang.Class({
 
         this.actor.add_actor(icon);
 
-        /* menu items*/
-        let testarea = new PopupMenu.PopupMenu();
-
         this._feedsBox = new St.BoxLayout({
             vertical: true,
             reactive: false
@@ -78,54 +75,29 @@ const RssFeedButton = new Lang.Class({
 
         this._feedsSection = new PopupMenu.PopupMenuSection();
 
-        //let scrollView = new St.ScrollView();
-        //scrollView.add_actor(this._feedsSection.actor);
-
-        let testlabel = new St.Label({
-            text: 'Lorem ipsum dolor sit amet'
-        });
-
-        let testlabel2 = new St.Label({
-            text: 'duni dunaj a luna za lunou sa vali'
-        });
-
-        let popupitem = new PopupMenu.PopupSubMenuMenuItem("Lorem ipsum dolor sit amet");
-        let popupitem2 = new PopupMenu.PopupSubMenuMenuItem("Duni Dunaj a vlna za vlnou sa vali");
-
-        popupitem.menu.addMenuItem(new PopupMenu.PopupMenuItem("consectetur adipiscing elit"));
-        popupitem.menu.addMenuItem(new PopupMenu.PopupMenuItem("sed do eiusmod tempor incididunt ut labore"));
-
-        let boxItem = new PopupMenu.PopupBaseMenuItem({
-            reactive: false
-        });
-
-        //boxItem.actor.add_actor(scrollView);
-
-        //this.menu.addMenuItem(popupitem);
-        //this.menu.addMenuItem(popupitem2);
-
         this.menu.addMenuItem(this._feedsSection);
-
-        //this.menu.addMenuItem(this._feedsSection);
 
         let separator = new PopupMenu.PopupSeparatorMenuItem();
         this.menu.addMenuItem(separator);
 
-        let buttonMenu = new PopupMenu.PopupBaseMenuItem({
+        this._buttonMenu = new PopupMenu.PopupBaseMenuItem({
             reactive: false
         });
 
         let systemMenu = Main.panel.statusArea.aggregateMenu._system;
-
         let reloadBtn = systemMenu._createActionButton('view-refresh-symbolic', "Reload RSS Feeds");
         let settingsBtn = systemMenu._createActionButton('preferences-system-symbolic', "RSS Feed Settings");
-        buttonMenu.actor.add_actor(reloadBtn);
-        buttonMenu.actor.add_actor(settingsBtn);
+
+        this._lastUpdateTime = new St.Button({label: 'Last update: --:--'});
+
+        this._buttonMenu.actor.add_actor(settingsBtn);
+        this._buttonMenu.actor.add_actor(reloadBtn);
+        this._buttonMenu.actor.add_actor(this._lastUpdateTime);
 
         reloadBtn.connect('clicked', Lang.bind(this, this._realoadRssFeeds));
         settingsBtn.connect('clicked', Lang.bind(this, this._onSettingsBtnClicked));
 
-        this.menu.addMenuItem(buttonMenu);
+        this.menu.addMenuItem(this._buttonMenu);
 
         // load from settings
         // interval for updates
@@ -166,7 +138,7 @@ const RssFeedButton = new Lang.Class({
         this._rssFeedsSources = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
 
         this._feedsArray = new Array(this._rssFeedsSources.length);
-        
+
         this._realoadRssFeeds();
     },
 
@@ -228,6 +200,12 @@ const RssFeedButton = new Lang.Class({
         }));
     },
 
+    _pad: function (num, size) {
+        let s = num + "";
+        while (s.length < size) s = "0" + s;
+        return s;
+    },
+
     _onDownload: function(responseData, position) {
 
         let rssParser = new Parser.createRssParser(responseData);
@@ -257,6 +235,11 @@ const RssFeedButton = new Lang.Class({
         this._feedsArray[position] = rssFeed;
 
         this._refreshExtensionUI();
+
+        // update last download time
+        let time = new Date();
+        this._lastUpdateTime.set_label('Last update: ' + this._pad(time.getHours(), 2)
+            + ':' + this._pad(time.getMinutes(), 2));
 
         rssParser.clear();
     },
