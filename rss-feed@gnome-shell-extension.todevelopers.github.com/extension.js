@@ -58,9 +58,6 @@ const RssFeedButton = new Lang.Class({
         this._httpSession = null;
         this._settings = Convenience.getSettings();
 
-        // data from all sources
-        this._feedsArray = new Array();
-
         this._scid = this._settings.connect('changed', Lang.bind(this, this._onSettingsChanged));
 
         /* top panel button */
@@ -135,9 +132,13 @@ const RssFeedButton = new Lang.Class({
         this._updateInterval = this._settings.get_int(UPDATE_INTERVAL_KEY);
         // http sources for rss feeds
         this._rssFeedsSources = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
-        this._realoadRssFeeds();
 
-        //this._feedsArray.length = this._rssFeedsSourcesSources.length;
+
+        // array for GUI purposes
+        this._feedsArray = new Array(this._rssFeedsSources.length);
+
+        // loading data on startup
+        this._realoadRssFeeds();
     },
 
     stop: function() {
@@ -163,6 +164,9 @@ const RssFeedButton = new Lang.Class({
 
         this._updateInterval = this._settings.get_int(UPDATE_INTERVAL_KEY);
         this._rssFeedsSources = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
+
+        this._feedsArray = new Array(this._rssFeedsSources.length);
+        
         this._realoadRssFeeds();
     },
 
@@ -184,7 +188,7 @@ const RssFeedButton = new Lang.Class({
         }
         jsonObj += "}";
 
-        log("JSON object >>> " + jsonObj);
+        //log("JSON object >>> " + jsonObj);
         return jsonObj;
     },
 
@@ -279,7 +283,7 @@ const RssFeedButton = new Lang.Class({
             }
             else {
 
-                let subMenu = new PopupMenu.PopupSubMenuMenuItem('loading...');
+                let subMenu = new PopupMenu.PopupMenuItem('loading...');
                 this._feedsSection.addMenuItem(subMenu);
             }
 
