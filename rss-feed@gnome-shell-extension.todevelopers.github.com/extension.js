@@ -166,6 +166,28 @@ const RssFeedButton = new Lang.Class({
         this._realoadRssFeeds();
     },
 
+    _getParametersAsJson: function(url) {
+
+        if (url.indexOf('?') == -1)
+            return "{}";
+
+        let urlParams = url.substr(url.indexOf('?') + 1);
+        let params = urlParams.split('&');
+
+        let jsonObj = "{";
+        for (let i = 0; i < params.length; i++)
+        {
+            let pair = params[i].split('=');
+            jsonObj += '"' + pair[0] + '":' + '"' + pair[1] + '"';
+            if (i != params.length -1)
+                jsonObj += ',';
+        }
+        jsonObj += "}";
+
+        log("JSON object >>> " + jsonObj);
+        return jsonObj;
+    },
+
     _realoadRssFeeds: function() {
 
         if (this._timeout)
@@ -174,21 +196,29 @@ const RssFeedButton = new Lang.Class({
         if (this._rssFeedsSources) {
 
             for (let i = 0; i < this._rssFeedsSources.length; i++)
-                this._httpGetRequestAsync(this._rssFeedsSources[i], i, Lang.bind(this, this._onDownload));
+            {
+                let url = this._rssFeedsSources[i];
+                let jsonObj = this._getParametersAsJson(url);
+
+                if (url.indexOf('?') != -1)
+                    url = url.substr(0, url.indexOf('?'));
+
+                this._httpGetRequestAsync(url, JSON.parse(jsonObj), i, Lang.bind(this, this._onDownload));
+            }
         }
 
         this._timeout = Mainloop.timeout_add_seconds(this._updateInterval*60, Lang.bind(this, this._realoadRssFeeds));
     },
 
-    _httpGetRequestAsync: function(url, position, callback) {
+    _httpGetRequestAsync: function(url, params, position, callback) {
 
         if (this._httpSession == null)
             this._httpSession = new Soup.Session();
 
-        let request = Soup.form_request_new_from_hash('GET', url, {});
+        let request = Soup.form_request_new_from_hash('GET', url, params);
 
         this._httpSession.queue_message(request, Lang.bind(this, function(httpSession, message) {
-
+            log(JSON.stringify(message.response));
             if (message.response_body.data)
                 callback(message.response_body.data, position);
         }));
@@ -199,6 +229,10 @@ const RssFeedButton = new Lang.Class({
         let rssParser = new Parser.createRssParser(responseData);
         rssParser.parse();
 
+
+        //log("Title: " + rssParser.Publisher.Title);
+        //log("HttpLink: " + rssParser.Publisher.HttpLink);
+
         let rssFeed = {
             Publisher: {
                 Title: ''
@@ -206,7 +240,7 @@ const RssFeedButton = new Lang.Class({
             Items: []
         };
         rssFeed.Publisher.Title = rssParser.Publisher.Title;
-        log(rssParser.Items.length);
+        //log(rssParser.Items.length);
         for (let i = 0; i < rssParser.Items.length; i++) {
             let item = {
                 Title: '',
