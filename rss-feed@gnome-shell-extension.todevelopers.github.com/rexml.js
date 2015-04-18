@@ -2,7 +2,7 @@
 //////     Regular Expression-based XML parser    /////////////
 //////     Ver 1.2 Jun 18 2001                    /////////////
 //////     Copyright 2000 Peter Tracey            /////////////
-//////     http://jsxml.homestead.com/            /////////////
+//////     http://jsxml.sourceforge.net/          /////////////
 
 function REXML(XML) {
 	this.XML = XML;
@@ -117,7 +117,7 @@ function REXML(XML) {
 				return L;
 			} else return "";
 		}
-		
+
 		function REXML_XMLElement_childElement(strElementName) {
 			for (var i=0; i<this.childElements.length; i++) if (this.childElements[i].name == strElementName) return this.childElements[i];
 			return null;
