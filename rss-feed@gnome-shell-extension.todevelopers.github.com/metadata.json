@@ -1,0 +1,8 @@
+{
+"shell-version": ["3.12", "3.14", "3.16"],
+"uuid": "rss-feed@gnome-shell-extension.todevelopers.github.com",
+"settings-schema": "org.gnome.shell.extensions.rss-feed",
+"name": "RSS Feed",
+"description": "RSS Feed reader for GNOME Shell",
+"version": "1.0"
+}
