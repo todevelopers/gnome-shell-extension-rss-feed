@@ -16,6 +16,7 @@ const MAX_UPDATE_INTERVAL = 1440;
 
 const RSS_FEEDS_LIST_KEY = 'rss-feeds-list';
 const UPDATE_INTERVAL_KEY = 'update-interval';
+const ITEMS_VISIBLE_KEY = 'items-visible';
 
 /* class for settings widget design and behavior */
 const RssFeedSettingsWidget = new GObject.Class({
@@ -45,6 +46,20 @@ const RssFeedSettingsWidget = new GObject.Class({
 
 		box.add(spinbtn);
 		this.add(box);
+
+
+		// items visible per page
+		let box2 = new Gtk.Box( { orientation: Gtk.Orientation.HORIZONTAL, spacing: 6 } );
+		box2.set_margin_bottom(6);
+		let label2 = new Gtk.Label({ xalign: 0, label: 'RSS sources per page:' });
+		box2.pack_start(label2, true, true, 0);
+
+		let spinbtn2 = Gtk.SpinButton.new_with_range(1, MAX_UPDATE_INTERVAL, 1);
+		spinbtn2.set_value(this._settings.get_int(ITEMS_VISIBLE_KEY));
+		this._settings.bind(ITEMS_VISIBLE_KEY, spinbtn2, 'value', Gio.SettingsBindFlags.DEFAULT);
+
+		box2.add(spinbtn2);
+		this.add(box2);
 
 		// rss feed sources
 		let scrolledWindow = new Gtk.ScrolledWindow();

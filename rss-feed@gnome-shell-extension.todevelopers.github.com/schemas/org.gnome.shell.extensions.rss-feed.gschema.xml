@@ -6,6 +6,11 @@
       <summary>Update interval</summary>
       <description>Download interval (in minutes) for all RSS feeds.</description>
     </key>
+    <key type="i" name="items-visible">
+      <default>5</default>
+      <summary>RSS Sources per page</summary>
+      <description>Number of RSS Sources visible per page.</description>
+    </key>
     <key type="as" name="rss-feeds-list">
       <default>[]</default>
       <summary>RSS feeds</summary>

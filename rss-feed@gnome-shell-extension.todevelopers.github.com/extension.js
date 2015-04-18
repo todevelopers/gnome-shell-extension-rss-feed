@@ -18,6 +18,7 @@ const Parser = Me.imports.parser;
 
 const RSS_FEEDS_LIST_KEY = 'rss-feeds-list';
 const UPDATE_INTERVAL_KEY = 'update-interval';
+const ITEMS_VISIBLE_KEY = 'items-visible';
 
 /* class that extend PopupMenuItem class of rss feed functionality*/
 const PopupRssFeedMenuItem = new Lang.Class({
@@ -85,15 +86,33 @@ const RssFeedButton = new Lang.Class({
         });
 
         let systemMenu = Main.panel.statusArea.aggregateMenu._system;
+        let prevBtn = systemMenu._createActionButton('go-previous-symbolic', "Previous");
+        let nextBtn = systemMenu._createActionButton('go-next-symbolic', "Next");
         let reloadBtn = systemMenu._createActionButton('view-refresh-symbolic', "Reload RSS Feeds");
         let settingsBtn = systemMenu._createActionButton('preferences-system-symbolic', "RSS Feed Settings");
 
         this._lastUpdateTime = new St.Button({label: 'Last update: --:--'});
 
-        this._buttonMenu.actor.add_actor(settingsBtn);
-        this._buttonMenu.actor.add_actor(reloadBtn);
+        this._buttonMenu.actor.add_actor(prevBtn);
+        this._buttonMenu.actor.add_actor(nextBtn);
         this._buttonMenu.actor.add_actor(this._lastUpdateTime);
+        this._buttonMenu.actor.add_actor(reloadBtn);
+        this._buttonMenu.actor.add_actor(settingsBtn);
 
+        prevBtn.connect('clicked', Lang.bind(this, function() {
+            this._startIndex -= this._itemsVisible;
+            if (this._startIndex < 0)
+                this._startIndex = 0
+            this._refreshExtensionUI();
+        }));
+        nextBtn.connect('clicked', Lang.bind(this, function() {
+
+            if (this._startIndex + this._itemsVisible < this._rssFeedsSources.length)
+            {
+                this._startIndex += this._itemsVisible;
+                this._refreshExtensionUI();
+            }
+        }));
         reloadBtn.connect('clicked', Lang.bind(this, this._realoadRssFeeds));
         settingsBtn.connect('clicked', Lang.bind(this, this._onSettingsBtnClicked));
 
@@ -102,9 +121,13 @@ const RssFeedButton = new Lang.Class({
         // load from settings
         // interval for updates
         this._updateInterval = this._settings.get_int(UPDATE_INTERVAL_KEY);
+        // rss sources visible per page
+        this._itemsVisible = this._settings.get_int(ITEMS_VISIBLE_KEY);
         // http sources for rss feeds
         this._rssFeedsSources = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
 
+
+        this._startIndex = 0;
 
         // array for GUI purposes
         this._feedsArray = new Array(this._rssFeedsSources.length);
@@ -135,6 +158,7 @@ const RssFeedButton = new Lang.Class({
     _onSettingsChanged: function() {
 
         this._updateInterval = this._settings.get_int(UPDATE_INTERVAL_KEY);
+        this._itemsVisible = this._settings.get_int(ITEMS_VISIBLE_KEY);
         this._rssFeedsSources = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
 
         this._feedsArray = new Array(this._rssFeedsSources.length);
@@ -248,7 +272,9 @@ const RssFeedButton = new Lang.Class({
 
         this._feedsSection.removeAll();
 
-        for (let i = 0; i < this._feedsArray.length; i++) {
+        let counter = 0;
+
+        for (let i = this._startIndex; i < this._feedsArray.length; i++) {
 
             if (this._feedsArray[i] && this._feedsArray[i].Items) {
 
@@ -266,9 +292,14 @@ const RssFeedButton = new Lang.Class({
             }
             else {
 
-                let subMenu = new PopupMenu.PopupMenuItem('loading...');
+                let subMenu = new PopupMenu.PopupMenuItem('No data available');
                 this._feedsSection.addMenuItem(subMenu);
             }
+
+            counter++;
+
+            if (counter == this._itemsVisible)
+                break;
 
         }
     }
