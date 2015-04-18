@@ -18,19 +18,23 @@ const RSS_FEEDS_LIST_KEY = 'rss-feeds-list';
 const UPDATE_INTERVAL_KEY = 'update-interval';
 const ITEMS_VISIBLE_KEY = 'items-visible';
 
-/* class for settings widget design and behavior */
+/*
+ *	RssFeedSettingsWidget class for settings widget
+ */
 const RssFeedSettingsWidget = new GObject.Class({
 
 	Name: 'RssFeed.Prefs.RssFeedSettingsWidget',
 	GTypeName: 'RssFeedSettingsWidget',
 	Extends: Gtk.Box,
 
+	/*
+	 *	Initialize new instance of RssFeedSettingsWidget class
+	 */
 	_init : function(params) {
 
 		this.parent(params);
 		this.orientation = Gtk.Orientation.VERTICAL;
 		this.margin = 12;
-		//this.spacing = 6;
 
 		this._settings = Convenience.getSettings();
 
@@ -106,6 +110,12 @@ const RssFeedSettingsWidget = new GObject.Class({
 		this.add(toolbar);
 	},
 
+	/*
+	 *	Creates modal dialog when adding new or editing RSS source
+	 *	title - dialog title
+	 *	text - text in dialog
+	 *	onOkButton - callback on OK button clicked
+	 */
 	_createDialog: function(title, text, onOkButton) {
 
 		let dialog = new Gtk.Dialog({title: title});
@@ -149,6 +159,9 @@ const RssFeedSettingsWidget = new GObject.Class({
 		dialog.show_all();
 	},
 
+	/*
+	 *	On create new clicked callback
+	 */
 	_createNew: function() {
 
 		this._createDialog('New RSS Feed source', '', Lang.bind(this, function() {
@@ -167,6 +180,9 @@ const RssFeedSettingsWidget = new GObject.Class({
 		}));
 	},
 
+	/*
+	 *	On edit clicked callback
+	 */
 	_editSelected: function() {
 
 		let [any, model, iter] = this._actor.get_selection().get_selected();
@@ -191,6 +207,9 @@ const RssFeedSettingsWidget = new GObject.Class({
 		}
 	},
 
+	/*
+	 *	On delete clicked callback
+	 */
 	_deleteSelected: function() {
 
 		let [any, model, iter] = this._actor.get_selection().get_selected();
@@ -213,6 +232,9 @@ const RssFeedSettingsWidget = new GObject.Class({
 		}
 	},
 
+	/*
+	 *	Loads RSS feeds entries from gsettings structure
+	 */
 	_loadStoreFromSettings: function() {
 
 		let feeds = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
@@ -231,9 +253,15 @@ const RssFeedSettingsWidget = new GObject.Class({
 	}
 });
 
+/*
+ *	Initialize the settings widget
+ */
 function init() {
 }
 
+/*
+ *	Builds settings widget
+ */
 function buildPrefsWidget() {
 
 	let widget = new RssFeedSettingsWidget();

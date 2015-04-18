@@ -20,12 +20,20 @@ const RSS_FEEDS_LIST_KEY = 'rss-feeds-list';
 const UPDATE_INTERVAL_KEY = 'update-interval';
 const ITEMS_VISIBLE_KEY = 'items-visible';
 
-/* class that extend PopupMenuItem class of rss feed functionality*/
+/*
+ *  PopupRssFeedMenuItem class that extends PopupMenuItem to provide RSS feed specific functionality
+ *  After click on this popum menu item, default browser is opened with RSS item
+ */
 const PopupRssFeedMenuItem = new Lang.Class({
 
     Name: 'PopupRssFeedMenuItem',
     Extends: PopupMenu.PopupMenuItem,
 
+    /*
+     *  Initialize instance of PopupRssFeedMenuItem class
+     *  link - URL on RSS article
+     *  title - RSS title to display in widget
+     */
     _init: function(link, title) {
         this.parent(title);
 
@@ -47,12 +55,17 @@ const PopupRssFeedMenuItem = new Lang.Class({
     }
 });
 
-/* Main extension class */
+/*
+ *  Main RSS Feed extension class
+ */
 const RssFeedButton = new Lang.Class({
 
     Name: 'RssFeedButton',
     Extends: PanelMenu.Button,
 
+    /*
+     *  Initialize instance of RssFeedButton class
+     */
     _init: function() {
         this.parent(0.0, "RSS Feed");
 
@@ -61,7 +74,7 @@ const RssFeedButton = new Lang.Class({
 
         this._scid = this._settings.connect('changed', Lang.bind(this, this._onSettingsChanged));
 
-        /* top panel button */
+        // top panel button
         let icon = new St.Icon({
             icon_name: 'application-rss+xml-symbolic',
             style_class: 'system-status-icon'
@@ -81,6 +94,7 @@ const RssFeedButton = new Lang.Class({
         let separator = new PopupMenu.PopupSeparatorMenuItem();
         this.menu.addMenuItem(separator);
 
+        // buttons in bottom menu bar
         this._buttonMenu = new PopupMenu.PopupBaseMenuItem({
             reactive: false
         });
@@ -99,20 +113,8 @@ const RssFeedButton = new Lang.Class({
         this._buttonMenu.actor.add_actor(reloadBtn);
         this._buttonMenu.actor.add_actor(settingsBtn);
 
-        prevBtn.connect('clicked', Lang.bind(this, function() {
-            this._startIndex -= this._itemsVisible;
-            if (this._startIndex < 0)
-                this._startIndex = 0
-            this._refreshExtensionUI();
-        }));
-        nextBtn.connect('clicked', Lang.bind(this, function() {
-
-            if (this._startIndex + this._itemsVisible < this._rssFeedsSources.length)
-            {
-                this._startIndex += this._itemsVisible;
-                this._refreshExtensionUI();
-            }
-        }));
+        prevBtn.connect('clicked', Lang.bind(this, this._onPreviousBtnClicked));
+        nextBtn.connect('clicked', Lang.bind(this, this._onNextBtnClicked));
         reloadBtn.connect('clicked', Lang.bind(this, this._realoadRssFeeds));
         settingsBtn.connect('clicked', Lang.bind(this, this._onSettingsBtnClicked));
 
@@ -136,6 +138,9 @@ const RssFeedButton = new Lang.Class({
         this._realoadRssFeeds();
     },
 
+    /*
+     *  Frees resources of extension
+     */
     stop: function() {
 
         if (this._httpSession)
@@ -149,12 +154,41 @@ const RssFeedButton = new Lang.Class({
             Mainloop.source_remove(this._timeout);
     },
 
+    /*
+     *  On settings button clicked callback
+     */
     _onSettingsBtnClicked: function() {
 
         this.menu.actor.hide();
         Util.spawn(["gnome-shell-extension-prefs", "rss-feed@gnome-shell-extension.todevelopers.github.com"]);
     },
 
+    /*
+     *  On previous button clicked callback
+     */
+    _onPreviousBtnClicked: function() {
+
+        this._startIndex -= this._itemsVisible;
+        if (this._startIndex < 0)
+            this._startIndex = 0
+        this._refreshExtensionUI();
+    },
+
+    /*
+     *  On next button clicked callback
+     */
+    _onNextBtnClicked: function() {
+
+        if (this._startIndex + this._itemsVisible < this._rssFeedsSources.length)
+        {
+            this._startIndex += this._itemsVisible;
+            this._refreshExtensionUI();
+        }
+    },
+
+    /*
+     *  On settings changed callback
+     */
     _onSettingsChanged: function() {
 
         this._updateInterval = this._settings.get_int(UPDATE_INTERVAL_KEY);
@@ -166,6 +200,11 @@ const RssFeedButton = new Lang.Class({
         this._realoadRssFeeds();
     },
 
+    /*
+     *  Returns JSON object that represents HTTP (GET method) parameters
+     *  stored in URL
+     *  url - HTTP request URL
+     */
     _getParametersAsJson: function(url) {
 
         if (url.indexOf('?') == -1)
@@ -184,10 +223,12 @@ const RssFeedButton = new Lang.Class({
         }
         jsonObj += "}";
 
-        //log("JSON object >>> " + jsonObj);
         return jsonObj;
     },
 
+    /*
+     *  Scheduled reload of RSS feeds from sources set in settings
+     */
     _realoadRssFeeds: function() {
 
         if (this._timeout)
@@ -210,6 +251,13 @@ const RssFeedButton = new Lang.Class({
         this._timeout = Mainloop.timeout_add_seconds(this._updateInterval*60, Lang.bind(this, this._realoadRssFeeds));
     },
 
+    /*
+     *  Creates asynchronous HTTP GET request through Soup interface
+     *  url - HTTP request URL without parameters
+     *  params - JSON object of HTTP GET request parameters
+     *  position - Position in RSS sources list
+     *  callback - calls on HTTP GET request response
+     */
     _httpGetRequestAsync: function(url, params, position, callback) {
 
         if (this._httpSession == null)
@@ -224,20 +272,26 @@ const RssFeedButton = new Lang.Class({
         }));
     },
 
+    /*
+     *  Lead number with zeros
+     *  num - input number
+     *  size - size of number liadign with zeros
+     */
     _pad: function (num, size) {
         let s = num + "";
         while (s.length < size) s = "0" + s;
         return s;
     },
 
+    /*
+     *  On HTTP request response download callback
+     *  responseData - response data
+     *  position - Position in RSS sources list
+     */
     _onDownload: function(responseData, position) {
 
         let rssParser = new Parser.createRssParser(responseData);
         rssParser.parse();
-
-
-        //log("Title: " + rssParser.Publisher.Title);
-        //log("HttpLink: " + rssParser.Publisher.HttpLink);
 
         let rssFeed = {
             Publisher: {
@@ -246,7 +300,7 @@ const RssFeedButton = new Lang.Class({
             Items: []
         };
         rssFeed.Publisher.Title = rssParser.Publisher.Title;
-        //log(rssParser.Items.length);
+
         for (let i = 0; i < rssParser.Items.length; i++) {
             let item = {
                 Title: '',
@@ -268,6 +322,9 @@ const RssFeedButton = new Lang.Class({
         rssParser.clear();
     },
 
+    /*
+     *  Reloads feeds section
+     */
     _refreshExtensionUI: function() {
 
         this._feedsSection.removeAll();
@@ -305,17 +362,29 @@ const RssFeedButton = new Lang.Class({
     }
 });
 
+/*
+ *  Extension widget instance
+ */
 let rssFeedBtn;
 
+/*
+ *  Initialize the extension
+ */
 function init() {
 
 }
 
+/*
+ *  Enable the extension
+ */
 function enable() {
     rssFeedBtn = new RssFeedButton();
     Main.panel.addToStatusArea('rssFeedMenu', rssFeedBtn, 0, 'right');
 }
 
+/*
+ *  Disable the exten
+ */
 function disable() {
     rssFeedBtn.stop();
     rssFeedBtn.destroy();

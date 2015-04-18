@@ -3,19 +3,12 @@ const Lang = imports.lang;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const XML = Me.imports.rexml;
 
-// base class for RSS parser
+/*
+ *  Base class for RSS parser
+ */
 const BaseParser = new Lang.Class({
 
     Name: 'BaseParserClass',
-
-    /*
-    Item: {
-        Title: '',
-        HttpLink: '',
-        Description: '',
-        Author: '',
-        PublishDate: ''
-    } */
 
     Items: [],  // array of Item
     Publisher: {
@@ -54,7 +47,9 @@ const BaseParser = new Lang.Class({
     }
 });
 
-// special class for Feedburner RSS feed
+/*
+ *  special class for Feedburner RSS feed
+ */
 const FeedburnerRssParser = new Lang.Class({
 
     Name: 'FeedburnerRssParserClass',
@@ -115,7 +110,9 @@ const FeedburnerRssParser = new Lang.Class({
     }
 });
 
-// default rss parser class
+/*
+ *  default rss parser class
+ */
 const DefaultRssParser = new Lang.Class({
 
     Name: 'DefaultRssParserClass',
@@ -176,11 +173,13 @@ const DefaultRssParser = new Lang.Class({
     }
 });
 
-// factory function that creates correct RSS parser class instance
+/*
+ *  Factory function that initialize correct RSS parser class instance
+ */
 function createRssParser(rawXml) {
 
     try {
-        // remove XML declarations because REXML library does not parse it
+        // remove XML declarations because the REXML library isnt able to parse it
         // more lines possibility
         let cleanXml = rawXml.split(/\<\?\s*xml(.*?).*\?\>/).join('');
 
