@@ -213,7 +213,7 @@ const RssFeedButton = new Lang.Class({
     _httpGetRequestAsync: function(url, params, position, callback) {
 
         if (this._httpSession == null)
-            this._httpSession = new Soup.Session();
+            this._httpSession = new Soup.SessionAsync();
 
         let request = Soup.form_request_new_from_hash('GET', url, params);
 
