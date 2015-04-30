@@ -271,7 +271,8 @@ const RssFeedButton = new Lang.Class({
             }
         }
 
-        this._timeout = Mainloop.timeout_add_seconds(this._updateInterval*60, Lang.bind(this, this._realoadRssFeeds));
+        if (this._updateInterval > 0)
+            this._timeout = Mainloop.timeout_add_seconds(this._updateInterval*60, Lang.bind(this, this._realoadRssFeeds));
     },
 
     /*

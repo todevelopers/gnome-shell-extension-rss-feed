@@ -35,6 +35,7 @@ const Convenience = Me.imports.convenience;
 
 const COLUMN_ID = 0;
 const MAX_UPDATE_INTERVAL = 1440;
+const MAX_SOURCES_LIMIT = 1024;
 
 const RSS_FEEDS_LIST_KEY = 'rss-feeds-list';
 const UPDATE_INTERVAL_KEY = 'update-interval';
@@ -66,7 +67,7 @@ const RssFeedSettingsWidget = new GObject.Class({
 		let label = new Gtk.Label({ xalign: 0, label: 'Update interval (minutes):' });
 		box.pack_start(label, true, true, 0);
 
-		let spinbtn = Gtk.SpinButton.new_with_range(1, MAX_UPDATE_INTERVAL, 1);
+		let spinbtn = Gtk.SpinButton.new_with_range(0, MAX_UPDATE_INTERVAL, 1);
 		spinbtn.set_value(this._settings.get_int(UPDATE_INTERVAL_KEY));
 		this._settings.bind(UPDATE_INTERVAL_KEY, spinbtn, 'value', Gio.SettingsBindFlags.DEFAULT);
 
@@ -80,7 +81,7 @@ const RssFeedSettingsWidget = new GObject.Class({
 		let label2 = new Gtk.Label({ xalign: 0, label: 'RSS sources per page:' });
 		box2.pack_start(label2, true, true, 0);
 
-		let spinbtn2 = Gtk.SpinButton.new_with_range(1, MAX_UPDATE_INTERVAL, 1);
+		let spinbtn2 = Gtk.SpinButton.new_with_range(1, MAX_SOURCES_LIMIT, 1);
 		spinbtn2.set_value(this._settings.get_int(ITEMS_VISIBLE_KEY));
 		this._settings.bind(ITEMS_VISIBLE_KEY, spinbtn2, 'value', Gio.SettingsBindFlags.DEFAULT);
 
