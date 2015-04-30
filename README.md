@@ -11,7 +11,8 @@ This version does not support GZIP content encoding.
 ## Future plans
 
 * Support for GZIP content
-* Verification of RSS source availability in Settings tab
+* Verification of RSS source availability in Settings widget
+* Rework of Settings widget
 * Notifications for new articles
 * Mark articles read / unread
 * Categories for RSS Feeds
