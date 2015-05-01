@@ -288,8 +288,8 @@ const RssFeedButton = new Lang.Class({
 
         if (this._httpSession == null)
             this._httpSession = new Soup.SessionAsync();
-            
-        Log.Debug("Soup HTTP GET request. URL: " + url + " parameters: " + params);
+
+        Log.Debug("[" + position + "] Soup HTTP GET request. URL: " + url + " parameters: " + JSON.stringify(params));
 
         let request = Soup.form_request_new_from_hash('GET', url, params);
 
@@ -317,6 +317,10 @@ const RssFeedButton = new Lang.Class({
      *  position - Position in RSS sources list
      */
     _onDownload: function(responseData, position) {
+
+        Log.Debug("[" + position + "] Soup HTTP GET reponse.");
+
+        //Log.Debug(responseData);
 
         let rssParser = new Parser.createRssParser(responseData);
         rssParser.parse();

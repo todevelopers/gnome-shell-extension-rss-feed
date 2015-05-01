@@ -59,7 +59,7 @@ const BaseParser = new Lang.Class({
 
     parse: function() {
 
-        this._parsePublisher(this._root.childElements[0].childElements);   // root=rss -> channel
+        this._parsePublisher(this._root.childElements[0].childElements);   // root = rss -> channel
     },
 
     _parsePublisher: function(childElements) {
@@ -93,6 +93,76 @@ const FeedburnerRssParser = new Lang.Class({
                 this.Publisher.Description = childElements[i].text;
             }
             else if (childElements[i].name == 'lastBuildDate') {
+                this.Publisher.PublishDate = childElements[i].text;
+            }
+            else if (childElements[i].name == 'item') {
+                this._parseItem(childElements[i].childElements);
+            }
+        }
+    },
+
+    _parseItem: function(itemElements) {
+
+        let item = {
+            Title: '',
+            HttpLink: '',
+            Description: '',
+            Author: '',
+            PublishDate: ''
+        };
+
+        for (let i = 0; i < itemElements.length; i++) {
+
+            if (itemElements[i].name == 'title') {
+                item.Title = itemElements[i].text;
+            }
+            else if (itemElements[i].name == 'link') {
+                item.HttpLink = itemElements[i].text;
+            }
+            else if (itemElements[i].name == 'description') {
+                item.Description = itemElements[i].text;
+            }
+            else if (itemElements[i].name == 'pubDate') {
+                item.PublishDate = itemElements[i].text;
+            }
+            else if (itemElements[i].name == 'author') {
+                item.Author = itemElements[i].text;
+            }
+        }
+
+        this.Items.push(item);
+    }
+});
+
+/*
+ *  RDF parser class
+ */
+const RdfRssParser = new Lang.Class({
+
+    Name: 'RdfRssParserClass',
+    Extends: BaseParser,
+
+    parse: function() {
+
+        this._parsePublisher(this._root.childElements);   // root = rdf
+    },
+
+    _parsePublisher: function(childElements) {
+
+        Log.Debug("RDF parse publisher elements " + childElements.length);
+
+        for (let i = 0; i < childElements.length; i++) {
+
+            if (childElements[i].name == 'title') {
+                this.Publisher.Title = childElements[i].text;
+            }
+            else if (childElements[i].name == 'link') {
+                this.Publisher.HttpLink = childElements[i].text;
+            }
+            else if (childElements[i].name == 'description') {
+                this.Publisher.Description = childElements[i].text;
+            }
+            else if (childElements[i].name == 'pubDate') {
                 this.Publisher.PublishDate = childElements[i].text;
             }
             else if (childElements[i].name == 'item') {
@@ -211,10 +281,13 @@ function createRssParser(rawXml) {
 
         if (xdoc.rootElement.attribute('xmlns:feedburner') == 'http://rssnamespace.org/feedburner/ext/1.0')
             return new FeedburnerRssParser(xdoc.rootElement);
+        else if (xdoc.rootElement.name == 'rdf:RDF')
+            return new RdfRssParser(xdoc.rootElement);
         else
             return new DefaultRssParser(xdoc.rootElement);
     }
     catch (e) {
         Log.Error(e);
+        return null;
     }
 }
