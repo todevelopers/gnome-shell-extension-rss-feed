@@ -70,12 +70,13 @@ const PopupRssFeedMenuItem = new Lang.Class({
             this._browser = Gio.app_info_get_default_for_uri_scheme("http").get_executable();
         }
         catch (err) {
-            logError(err + ' (get default browser error)');
-            throw 'get default browser error';
+            Log.Error(err + ' (get default browser error)');
             return;
         }
 
         this.connect('activate', Lang.bind(this, function() {
+
+            Log.Debug("Opening browser with link " + this._link);
             Util.trySpawnCommandLine(this._browser + ' ' + this._link);
         }));
     }
@@ -96,9 +97,8 @@ const RssFeedButton = new Lang.Class({
         this.parent(0.0, "RSS Feed");
 
         this._httpSession = null;
-        this._settings = Convenience.getSettings();
 
-        this._scid = this._settings.connect('changed', Lang.bind(this, this._onSettingsChanged));
+        this._scid = Settings.connect('changed', Lang.bind(this, this._onSettingsChanged));
 
         // top panel button
         let icon = new St.Icon({
@@ -148,11 +148,11 @@ const RssFeedButton = new Lang.Class({
 
         // load from settings
         // interval for updates
-        this._updateInterval = this._settings.get_int(UPDATE_INTERVAL_KEY);
+        this._updateInterval = Settings.get_int(UPDATE_INTERVAL_KEY);
         // rss sources visible per page
-        this._itemsVisible = this._settings.get_int(ITEMS_VISIBLE_KEY);
+        this._itemsVisible = Settings.get_int(ITEMS_VISIBLE_KEY);
         // http sources for rss feeds
-        this._rssFeedsSources = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
+        this._rssFeedsSources = Settings.get_strv(RSS_FEEDS_LIST_KEY);
 
 
         this._startIndex = 0;
@@ -174,7 +174,7 @@ const RssFeedButton = new Lang.Class({
         this._httpSession = null;
 
         if (this._scid)
-            this._settings.disconnect(this._scid);
+            Settings.disconnect(this._scid);
 
         if (this._timeout)
             Mainloop.source_remove(this._timeout);
@@ -217,9 +217,9 @@ const RssFeedButton = new Lang.Class({
      */
     _onSettingsChanged: function() {
 
-        this._updateInterval = this._settings.get_int(UPDATE_INTERVAL_KEY);
-        this._itemsVisible = this._settings.get_int(ITEMS_VISIBLE_KEY);
-        this._rssFeedsSources = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
+        this._updateInterval = Settings.get_int(UPDATE_INTERVAL_KEY);
+        this._itemsVisible = Settings.get_int(ITEMS_VISIBLE_KEY);
+        this._rssFeedsSources = Settings.get_strv(RSS_FEEDS_LIST_KEY);
 
         this._feedsArray = new Array(this._rssFeedsSources.length);
 
@@ -293,7 +293,7 @@ const RssFeedButton = new Lang.Class({
         let request = Soup.form_request_new_from_hash('GET', url, params);
 
         this._httpSession.queue_message(request, Lang.bind(this, function(httpSession, message) {
-            log(JSON.stringify(message.response));
+
             if (message.response_body.data)
                 callback(message.response_body.data, position);
         }));

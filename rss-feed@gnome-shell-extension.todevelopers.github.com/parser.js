@@ -24,6 +24,7 @@
 const Lang = imports.lang;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Log = Me.imports.logger;
 const XML = Me.imports.rexml;
 
 /*
@@ -214,6 +215,6 @@ function createRssParser(rawXml) {
             return new DefaultRssParser(xdoc.rootElement);
     }
     catch (e) {
-        logError(e);
+        Log.Error(e);
     }
 }

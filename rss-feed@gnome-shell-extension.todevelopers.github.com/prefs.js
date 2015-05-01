@@ -30,8 +30,7 @@ const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-
-const Convenience = Me.imports.convenience;
+const Settings = Me.imports.convenience.getSettings();
 
 const COLUMN_ID = 0;
 const MAX_UPDATE_INTERVAL = 1440;
@@ -59,8 +58,6 @@ const RssFeedSettingsWidget = new GObject.Class({
 		this.orientation = Gtk.Orientation.VERTICAL;
 		this.margin = 12;
 
-		this._settings = Convenience.getSettings();
-
 		// update interval
 		let box = new Gtk.Box( { orientation: Gtk.Orientation.HORIZONTAL, spacing: 6 } );
 		box.set_margin_bottom(6);
@@ -68,8 +65,8 @@ const RssFeedSettingsWidget = new GObject.Class({
 		box.pack_start(label, true, true, 0);
 
 		let spinbtn = Gtk.SpinButton.new_with_range(0, MAX_UPDATE_INTERVAL, 1);
-		spinbtn.set_value(this._settings.get_int(UPDATE_INTERVAL_KEY));
-		this._settings.bind(UPDATE_INTERVAL_KEY, spinbtn, 'value', Gio.SettingsBindFlags.DEFAULT);
+		spinbtn.set_value(Settings.get_int(UPDATE_INTERVAL_KEY));
+		Settings.bind(UPDATE_INTERVAL_KEY, spinbtn, 'value', Gio.SettingsBindFlags.DEFAULT);
 
 		box.add(spinbtn);
 		this.add(box);
@@ -81,8 +78,8 @@ const RssFeedSettingsWidget = new GObject.Class({
 		box2.pack_start(label2, true, true, 0);
 
 		let spinbtn2 = Gtk.SpinButton.new_with_range(1, MAX_SOURCES_LIMIT, 1);
-		spinbtn2.set_value(this._settings.get_int(ITEMS_VISIBLE_KEY));
-		this._settings.bind(ITEMS_VISIBLE_KEY, spinbtn2, 'value', Gio.SettingsBindFlags.DEFAULT);
+		spinbtn2.set_value(Settings.get_int(ITEMS_VISIBLE_KEY));
+		Settings.bind(ITEMS_VISIBLE_KEY, spinbtn2, 'value', Gio.SettingsBindFlags.DEFAULT);
 
 		box2.add(spinbtn2);
 		this.add(box2);
@@ -193,12 +190,12 @@ const RssFeedSettingsWidget = new GObject.Class({
 			this._store.set_value(iter, COLUMN_ID, this._entry.get_text());
 
 			// update settings
-			let feeds = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
+			let feeds = Settings.get_strv(RSS_FEEDS_LIST_KEY);
 			if (feeds == null)
 				feeds = new Array();
 
 			feeds.push(this._entry.get_text());
-			this._settings.set_strv(RSS_FEEDS_LIST_KEY, feeds);
+			Settings.set_strv(RSS_FEEDS_LIST_KEY, feeds);
 		}));
 	},
 
@@ -217,13 +214,13 @@ const RssFeedSettingsWidget = new GObject.Class({
 
 				// update settings
 				let index = model.get_path(iter).get_indices();
-				let feeds = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
+				let feeds = Settings.get_strv(RSS_FEEDS_LIST_KEY);
 				if (feeds == null)
 					feeds = new Array();
 
 				if (index < feeds.length) {
 					feeds[index] = this._entry.get_text();
-					this._settings.set_strv(RSS_FEEDS_LIST_KEY, feeds);
+					Settings.set_strv(RSS_FEEDS_LIST_KEY, feeds);
 				}
 			}));
 		}
@@ -243,13 +240,13 @@ const RssFeedSettingsWidget = new GObject.Class({
 			this._store.remove(iter);
 
 			// update settings
-			let feeds = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
+			let feeds = Settings.get_strv(RSS_FEEDS_LIST_KEY);
 			if (feeds == null)
 				feeds = new Array();
 
 			if (index < feeds.length) {
 				feeds.splice(index, 1);
-				this._settings.set_strv(RSS_FEEDS_LIST_KEY, feeds);
+				Settings.set_strv(RSS_FEEDS_LIST_KEY, feeds);
 			}
 		}
 	},
@@ -259,7 +256,7 @@ const RssFeedSettingsWidget = new GObject.Class({
 	 */
 	_loadStoreFromSettings: function() {
 
-		let feeds = this._settings.get_strv(RSS_FEEDS_LIST_KEY);
+		let feeds = Settings.get_strv(RSS_FEEDS_LIST_KEY);
 
 		if (feeds) {
 
