@@ -74,7 +74,6 @@ const RssFeedSettingsWidget = new GObject.Class({
 		box.add(spinbtn);
 		this.add(box);
 
-
 		// items visible per page
 		let box2 = new Gtk.Box( { orientation: Gtk.Orientation.HORIZONTAL, spacing: 6 } );
 		box2.set_margin_bottom(6);
@@ -153,7 +152,7 @@ const RssFeedSettingsWidget = new GObject.Class({
 
 		this._entry.connect("changed", Lang.bind(this, function() {
 
-			if (this._entry.get_text().length == 0)
+			if (this._entry.get_text().length === 0)
 				this._okButton.sensitive = false;
 			else
 				this._okButton.sensitive = true;

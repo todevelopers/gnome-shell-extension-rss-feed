@@ -38,10 +38,13 @@ const Util = imports.misc.util;
 
 const Convenience = Me.imports.convenience;
 const Parser = Me.imports.parser;
+const Log = Me.imports.logger;
+const Settings = Convenience.getSettings();
 
 const RSS_FEEDS_LIST_KEY = 'rss-feeds-list';
 const UPDATE_INTERVAL_KEY = 'update-interval';
 const ITEMS_VISIBLE_KEY = 'items-visible';
+const DEBUG_ENABLED_KEY = 'enable-debug';
 
 /*
  *  PopupRssFeedMenuItem class that extends PopupMenuItem to provide RSS feed specific functionality
@@ -396,20 +399,29 @@ let rssFeedBtn;
  */
 function init() {
 
+    // hack for dconf
+    let enabled = Settings.get_boolean(DEBUG_ENABLED_KEY);
+    Settings.set_boolean(DEBUG_ENABLED_KEY, enabled);
+
+    Log.Debug("Extension initialized.");
 }
 
 /*
  *  Enable the extension
  */
 function enable() {
+    Log.Debug("Extension enabled.");
+
     rssFeedBtn = new RssFeedButton();
     Main.panel.addToStatusArea('rssFeedMenu', rssFeedBtn, 0, 'right');
 }
 
 /*
- *  Disable the exten
+ *  Disable the extension
  */
 function disable() {
+    Log.Debug("Extension disabled.");
+
     rssFeedBtn.stop();
     rssFeedBtn.destroy();
 }
