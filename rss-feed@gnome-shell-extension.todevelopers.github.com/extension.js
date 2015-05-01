@@ -97,8 +97,7 @@ const RssFeedButton = new Lang.Class({
         this.parent(0.0, "RSS Feed");
 
         this._httpSession = null;
-
-        this._scid = Settings.connect('changed', Lang.bind(this, this._onSettingsChanged));
+        this._startIndex = 0;
 
         // top panel button
         let icon = new St.Icon({
@@ -146,20 +145,6 @@ const RssFeedButton = new Lang.Class({
 
         this.menu.addMenuItem(this._buttonMenu);
 
-        // load from settings
-        // interval for updates
-        this._updateInterval = Settings.get_int(UPDATE_INTERVAL_KEY);
-        // rss sources visible per page
-        this._itemsVisible = Settings.get_int(ITEMS_VISIBLE_KEY);
-        // http sources for rss feeds
-        this._rssFeedsSources = Settings.get_strv(RSS_FEEDS_LIST_KEY);
-
-
-        this._startIndex = 0;
-
-        // array for GUI purposes
-        this._feedsArray = new Array(this._rssFeedsSources.length);
-
         // loading data on startup
         this._realoadRssFeeds();
     },
@@ -178,6 +163,25 @@ const RssFeedButton = new Lang.Class({
 
         if (this._timeout)
             Mainloop.source_remove(this._timeout);
+    },
+
+    /*
+     *  Get variables from GSettings
+     */
+    _getSettings: function() {
+
+        Log.Debug("Get variables from GSettings");
+
+        // interval for updates
+        this._updateInterval = Settings.get_int(UPDATE_INTERVAL_KEY);
+        // rss sources visible per page
+        this._itemsVisible = Settings.get_int(ITEMS_VISIBLE_KEY);
+        // http sources for rss feeds
+        this._rssFeedsSources = Settings.get_strv(RSS_FEEDS_LIST_KEY);
+
+        Log.Debug("Update interval: " + this._updateInterval +
+                  " Visible items: " + this._itemsVisible +
+                  " RSS sources: " + this._rssFeedsSources);
     },
 
     /*
@@ -213,20 +217,6 @@ const RssFeedButton = new Lang.Class({
     },
 
     /*
-     *  On settings changed callback
-     */
-    _onSettingsChanged: function() {
-
-        this._updateInterval = Settings.get_int(UPDATE_INTERVAL_KEY);
-        this._itemsVisible = Settings.get_int(ITEMS_VISIBLE_KEY);
-        this._rssFeedsSources = Settings.get_strv(RSS_FEEDS_LIST_KEY);
-
-        this._feedsArray = new Array(this._rssFeedsSources.length);
-
-        this._realoadRssFeeds();
-    },
-
-    /*
      *  Returns JSON object that represents HTTP (GET method) parameters
      *  stored in URL
      *  url - HTTP request URL
@@ -257,6 +247,14 @@ const RssFeedButton = new Lang.Class({
      */
     _realoadRssFeeds: function() {
 
+        this._getSettings();
+
+        // array for GUI purposes
+        // TODO check if realocate of this array is necesary after change in sources
+        // TODO try to forget this array and do bussines without it
+        this._feedsArray = new Array(this._rssFeedsSources.length);
+
+        // remove timeout
         if (this._timeout)
             Mainloop.source_remove(this._timeout);
 
@@ -274,6 +272,7 @@ const RssFeedButton = new Lang.Class({
             }
         }
 
+        // set timeout if enabled
         if (this._updateInterval > 0)
             this._timeout = Mainloop.timeout_add_seconds(this._updateInterval*60, Lang.bind(this, this._realoadRssFeeds));
     },
@@ -289,6 +288,8 @@ const RssFeedButton = new Lang.Class({
 
         if (this._httpSession == null)
             this._httpSession = new Soup.SessionAsync();
+            
+        Log.Debug("Soup HTTP GET request. URL: " + url + " parameters: " + params);
 
         let request = Soup.form_request_new_from_hash('GET', url, params);
 
