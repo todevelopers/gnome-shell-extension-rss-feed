@@ -234,7 +234,7 @@ const RdfRssParser = new Lang.Class({
 });
 
 /*
- *  default rss parser class
+ *  default rss parser class (format RSS 2.0)
  */
 const DefaultRssParser = new Lang.Class({
 
@@ -296,6 +296,74 @@ const DefaultRssParser = new Lang.Class({
 });
 
 /*
+ *  Atom 1.0 format parser class
+ */
+const AtomRssParser = new Lang.Class({
+
+    Name: 'AtomRssParserClass',
+    Extends: BaseParser,
+
+    _init: function(root) {
+        this.parent(root);
+        Log.Debug("Feed RSS parser");
+    },
+
+    parse: function() {
+
+        this._parsePublisher(this._root.childElements);   // root = feed
+        Log.Debug("Atom root child elements: " + this._root.childElements.length);
+    },
+
+    _parsePublisher: function(childElements) {
+
+        for (let i = 0; i < childElements.length; i++) {
+
+            if (childElements[i].name == 'title') {
+                this.Publisher.Title = childElements[i].text;
+            }
+            else if (childElements[i].name == 'link' && childElements[i].attribute('rel') != 'self') {
+                this.Publisher.HttpLink = childElements[i].attribute('href');
+            }
+            else if (childElements[i].name == 'description') {
+                this.Publisher.Description = childElements[i].text;
+            }
+            else if (childElements[i].name == 'updated') {
+                this.Publisher.PublishDate = childElements[i].text;
+            }
+            else if (childElements[i].name == 'entry') {
+                this._parseItem(childElements[i].childElements);
+            }
+        }
+    },
+
+    _parseItem: function(itemElements) {
+
+        let item = this._initItem();
+
+        for (let i = 0; i < itemElements.length; i++) {
+
+            if (itemElements[i].name == 'title') {
+                item.Title = itemElements[i].text;
+            }
+            else if (itemElements[i].name == 'link') {
+                item.HttpLink = itemElements[i].attribute('href');
+            }
+            else if (itemElements[i].name == 'description') {
+                item.Description = itemElements[i].text;
+            }
+            else if (itemElements[i].name == 'published') {
+                item.PublishDate = itemElements[i].text;
+            }
+            else if (itemElements[i].name == 'author') {
+                item.Author = itemElements[i].childElements[0].text;
+            }
+        }
+
+        this.Items.push(item);
+    }
+});
+
+/*
  *  Factory function that initialize correct RSS parser class instance
  */
 function createRssParser(rawXml) {
@@ -312,6 +380,9 @@ function createRssParser(rawXml) {
 
         if (xdoc.rootElement.name == 'rdf:RDF')
             return new RdfRssParser(xdoc.rootElement);
+
+        if (xdoc.rootElement.name == 'feed')
+            return new AtomRssParser(xdoc.rootElement);
 
         if (xdoc.rootElement.name.toLowerCase() == 'rss')
             return new DefaultRssParser(xdoc.rootElement);
