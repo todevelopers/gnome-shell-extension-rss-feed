@@ -323,26 +323,33 @@ const RssFeedButton = new Lang.Class({
         //Log.Debug(responseData);
 
         let rssParser = new Parser.createRssParser(responseData);
+
+        if (rssParser == null)
+            return;
+
         rssParser.parse();
 
-        let rssFeed = {
-            Publisher: {
-                Title: ''
-            },
-            Items: []
-        };
-        rssFeed.Publisher.Title = rssParser.Publisher.Title;
-
-        for (let i = 0; i < rssParser.Items.length; i++) {
-            let item = {
-                Title: '',
-                HttpLink: ''
+        if (rssParser.Items.length > 0)
+        {
+            let rssFeed = {
+                Publisher: {
+                    Title: ''
+                },
+                Items: []
             };
-            item.Title = rssParser.Items[i].Title;
-            item.HttpLink = rssParser.Items[i].HttpLink;
-            rssFeed.Items.push(item);
+            rssFeed.Publisher.Title = rssParser.Publisher.Title;
+
+            for (let i = 0; i < rssParser.Items.length; i++) {
+                let item = {
+                    Title: '',
+                    HttpLink: ''
+                };
+                item.Title = rssParser.Items[i].Title;
+                item.HttpLink = rssParser.Items[i].HttpLink;
+                rssFeed.Items.push(item);
+            }
+            this._feedsArray[position] = rssFeed;
         }
-        this._feedsArray[position] = rssFeed;
 
         this._refreshExtensionUI();
 

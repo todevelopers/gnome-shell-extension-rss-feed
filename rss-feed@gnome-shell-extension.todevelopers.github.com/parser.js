@@ -47,6 +47,20 @@ const BaseParser = new Lang.Class({
         this._root = root;
     },
 
+    _initItem: function() {
+
+        let item = {
+            Title: '',
+            HttpLink: '',
+            Description: '',
+            Author: '',
+            Contributor: '',
+            PublishDate: ''
+        };
+
+        return item;
+    },
+
     clear: function() {
 
         while(this.Items.length > 0)
@@ -79,6 +93,11 @@ const FeedburnerRssParser = new Lang.Class({
     Name: 'FeedburnerRssParserClass',
     Extends: BaseParser,
 
+    _init: function(root) {
+        this.parent(root);
+        Log.Debug("Feedburner RSS parser");
+    },
+
     _parsePublisher: function(childElements) {
 
         for (let i = 0; i < childElements.length; i++) {
@@ -103,13 +122,7 @@ const FeedburnerRssParser = new Lang.Class({
 
     _parseItem: function(itemElements) {
 
-        let item = {
-            Title: '',
-            HttpLink: '',
-            Description: '',
-            Author: '',
-            PublishDate: ''
-        };
+        let item = this._initItem();
 
         for (let i = 0; i < itemElements.length; i++) {
 
@@ -142,14 +155,25 @@ const RdfRssParser = new Lang.Class({
     Name: 'RdfRssParserClass',
     Extends: BaseParser,
 
+    _init: function(root) {
+        this.parent(root);
+        Log.Debug("RDF RSS parser");
+    },
+
     parse: function() {
 
-        this._parsePublisher(this._root.childElements);   // root = rdf
+        for (let i = 0; i < this._root.childElements.length; i++) {
+
+            if (this._root.childElements[i].name == 'channel') {
+                this._parsePublisher(this._root.childElements[i].childElements);
+            }
+            else if (this._root.childElements[i].name == 'item') {
+                this._parseItem(this._root.childElements[i].childElements);
+            }
+        }
     },
 
     _parsePublisher: function(childElements) {
-
-        Log.Debug("RDF parse publisher elements " + childElements.length);
 
         for (let i = 0; i < childElements.length; i++) {
 
@@ -162,24 +186,20 @@ const RdfRssParser = new Lang.Class({
             else if (childElements[i].name == 'description') {
                 this.Publisher.Description = childElements[i].text;
             }
-            else if (childElements[i].name == 'pubDate') {
+            else if (childElements[i].name == 'dc:date') {
                 this.Publisher.PublishDate = childElements[i].text;
             }
-            else if (childElements[i].name == 'item') {
-                this._parseItem(childElements[i].childElements);
-            }
         }
+
+        //Log.Debug("Publisher Title: " + this.Publisher.Title);
+        //Log.Debug("Publisher Link: " + this.Publisher.HttpLink);
+        //Log.Debug("Publisher Description: " + this.Publisher.Description);
+        //Log.Debug("Publisher Date: " + this.Publisher.PublishDate);
     },
 
     _parseItem: function(itemElements) {
 
-        let item = {
-            Title: '',
-            HttpLink: '',
-            Description: '',
-            Author: '',
-            PublishDate: ''
-        };
+        let item = this._initItem();
 
         for (let i = 0; i < itemElements.length; i++) {
 
@@ -192,13 +212,22 @@ const RdfRssParser = new Lang.Class({
             else if (itemElements[i].name == 'description') {
                 item.Description = itemElements[i].text;
             }
-            else if (itemElements[i].name == 'pubDate') {
+            else if (itemElements[i].name == 'dc:date') {
                 item.PublishDate = itemElements[i].text;
             }
-            else if (itemElements[i].name == 'author') {
+            else if (itemElements[i].name == 'dc:creator') {
                 item.Author = itemElements[i].text;
             }
+            else if (itemElements[i].name == 'dc:contributor') {
+                item.Contributor = itemElements[i].childElements[0].childElements[0].text;
+            }
         }
+
+        //Log.Debug("Item Title: " + item.Title);
+        //Log.Debug("Item Link: " + item.HttpLink);
+        //Log.Debug("Item Description: " + item.Description);
+        //Log.Debug("Item Date: " + item.PublishDate);
+        //Log.Debug("Item Author: " + item.Author);
 
         this.Items.push(item);
     }
@@ -212,6 +241,11 @@ const DefaultRssParser = new Lang.Class({
     Name: 'DefaultRssParserClass',
     Extends: BaseParser,
 
+    _init: function(root) {
+        this.parent(root);
+        Log.Debug("Default RSS parser");
+    },
+
     _parsePublisher: function(childElements) {
 
         for (let i = 0; i < childElements.length; i++) {
@@ -236,13 +270,7 @@ const DefaultRssParser = new Lang.Class({
 
     _parseItem: function(itemElements) {
 
-        let item = {
-            Title: '',
-            HttpLink: '',
-            Description: '',
-            Author: '',
-            PublishDate: ''
-        };
+        let item = this._initItem();
 
         for (let i = 0; i < itemElements.length; i++) {
 
@@ -281,13 +309,16 @@ function createRssParser(rawXml) {
 
         if (xdoc.rootElement.attribute('xmlns:feedburner') == 'http://rssnamespace.org/feedburner/ext/1.0')
             return new FeedburnerRssParser(xdoc.rootElement);
-        else if (xdoc.rootElement.name == 'rdf:RDF')
+
+        if (xdoc.rootElement.name == 'rdf:RDF')
             return new RdfRssParser(xdoc.rootElement);
-        else
+
+        if (xdoc.rootElement.name.toLowerCase() == 'rss')
             return new DefaultRssParser(xdoc.rootElement);
     }
     catch (e) {
         Log.Error(e);
-        return null;
     }
+
+    return null;
 }
