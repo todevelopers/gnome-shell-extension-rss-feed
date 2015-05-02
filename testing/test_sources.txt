@@ -1,0 +1,11 @@
+RSS 2.0 format:
+http://www.root.cz/rss/clanky/
+
+Atom 1.0 format:
+http://renass.unistra.fr/rss
+
+RDF format:
+https://wiki.gnome.org/action/rss_rc/RecentChanges?action=rss_rc&unique=1&ddiffs=1
+
+Feedburner format:
+http://feeds.feedburner.com/Noobslab?format=xml
