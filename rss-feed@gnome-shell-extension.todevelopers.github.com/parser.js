@@ -369,9 +369,12 @@ const AtomRssParser = new Lang.Class({
 function createRssParser(rawXml) {
 
     try {
-        // remove XML declarations because the REXML library isnt able to parse it
+        // remove XML declarations because the REXML library is not able to parse it
         // more lines possibility
         let cleanXml = rawXml.split(/\<\?\s*xml(.*?).*\?\>/).join('');
+
+        // remove HTML comments. REXML library could not handle it (especially when couple of lines are commented)
+        cleanXml = cleanXml.split(/<!--[\s\S]*?-->/g).join('');
 
         let xdoc = new XML.REXML(cleanXml);
 

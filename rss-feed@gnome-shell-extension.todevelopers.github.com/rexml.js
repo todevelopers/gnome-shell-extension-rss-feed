@@ -4,6 +4,9 @@
 //////     Copyright 2000 Peter Tracey            /////////////
 //////     http://jsxml.sourceforge.net/          /////////////
 
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Log = Me.imports.logger;
+
 function REXML(XML) {
 	this.XML = XML;
 
