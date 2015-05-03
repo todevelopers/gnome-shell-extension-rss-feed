@@ -305,13 +305,12 @@ const AtomRssParser = new Lang.Class({
 
     _init: function(root) {
         this.parent(root);
-        Log.Debug("Feed RSS parser");
+        Log.Debug("Atom RSS parser");
     },
 
     parse: function() {
 
         this._parsePublisher(this._root.childElements);   // root = feed
-        Log.Debug("Atom root child elements: " + this._root.childElements.length);
     },
 
     _parsePublisher: function(childElements) {

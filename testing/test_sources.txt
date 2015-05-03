@@ -9,3 +9,6 @@ https://wiki.gnome.org/action/rss_rc/RecentChanges?action=rss_rc&unique=1&ddiffs
 
 Feedburner format:
 http://feeds.feedburner.com/Noobslab?format=xml
+
+GZIP content:
+http://rss.sme.sk/rss/rss.asp?sek=smeonline&rub=online_zahr

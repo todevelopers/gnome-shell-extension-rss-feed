@@ -1,5 +1,16 @@
 ## Changelog
 
+### v1.1 (03.05.2015)
+
+*Patch version with new formats support*
+
+* main feature: Atom format support
+* main feature: RDF format support
+* feature: Disable scheduled Update interval by seting it to 0
+* feature: Debug messages for extension. Should be turned on in dconf
+* performance: Settings widget works better. Extension must be reloaded after changes made in Settings tab
+* bugfix: Reported sources now works
+
 ### v1.0 (18.04.2015)
 
 *First release with base functionality*
