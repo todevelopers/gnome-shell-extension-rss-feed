@@ -21,26 +21,27 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+const Lang = imports.lang;
+const PopupMenu = imports.ui.popupMenu;
+
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Settings = Me.imports.convenience.getSettings();
-
-const DEBUG_ENABLED_KEY = 'enable-debug';
-
-/*
- *  Logs error messages.
- */
-function Error(message) {
-    logError(message);
-}
+const Log = Me.imports.logger;
+const Encoder = Me.imports.encoder.getInstance();
 
 /*
- *  If debug extension is enabled logs debug messages.
+ *  RssPopupSubMenuMenuItem class that extends PopupSubMenuMenuItem. Holds RSS feed articles
  */
-function Debug(message) {
+const RssPopupSubMenuMenuItem = new Lang.Class({
 
-    let enabled = Settings.get_boolean(DEBUG_ENABLED_KEY);
+    Name: 'RssPopupSubMenuMenuItem',
+    Extends: PopupMenu.PopupSubMenuMenuItem,
 
-    if (enabled == true) {
-          log("rss-feed@gnome-shell-extension: " + message);
+    /*
+     *  Initialize instance of RssPopupSubMenuMenuItem class
+     *  publisher - RSS feed publisher
+     *  nitems - number of articles
+     */
+    _init: function(publisher, nitems) {
+        this.parent(Encoder.htmlDecode(publisher.Title) + ' (' + nitems + ')');
     }
-}
+});

@@ -1,9 +1,5 @@
 /*
- *  RSS Feed extension for GNOME Shell
- *  - Adds button with RSS logo in GNOME Shell panel.
- *  - Displays RSS soruces in popoup after click on panel button.
- *  - For each RSS source displays list of articles.
- *  - On click on RSS article opens default web browser with article link
+ * RSS Feed extension for GNOME Shell
  *
  * Copyright (C) 2015
  *     Tomas Gazovic <gazovic.tomasgmail.com>,
@@ -25,7 +21,6 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const Gio = imports.gi.Gio;
 const Lang = imports.lang;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
@@ -41,46 +36,15 @@ const Parser = Me.imports.parser;
 const Log = Me.imports.logger;
 const Settings = Convenience.getSettings();
 
+const ExtensionGui = {
+    RssPopupMenuItem: Me.imports.extensiongui.rsspopupmenuitem.RssPopupMenuItem,
+    RssPopupSubMenuMenuItem: Me.imports.extensiongui.rsspopupsubmenumenuitem.RssPopupSubMenuMenuItem
+};
+
 const RSS_FEEDS_LIST_KEY = 'rss-feeds-list';
 const UPDATE_INTERVAL_KEY = 'update-interval';
 const ITEMS_VISIBLE_KEY = 'items-visible';
 const DEBUG_ENABLED_KEY = 'enable-debug';
-
-/*
- *  PopupRssFeedMenuItem class that extends PopupMenuItem to provide RSS feed specific functionality
- *  After click on this popum menu item, default browser is opened with RSS item
- */
-const PopupRssFeedMenuItem = new Lang.Class({
-
-    Name: 'PopupRssFeedMenuItem',
-    Extends: PopupMenu.PopupMenuItem,
-
-    /*
-     *  Initialize instance of PopupRssFeedMenuItem class
-     *  link - URL on RSS article
-     *  title - RSS title to display in widget
-     */
-    _init: function(link, title) {
-        this.parent(title);
-
-        this._link = link;
-
-        try {
-            // try to get default browser
-            this._browser = Gio.app_info_get_default_for_uri_scheme("http").get_executable();
-        }
-        catch (err) {
-            Log.Error(err + ' (get default browser error)');
-            return;
-        }
-
-        this.connect('activate', Lang.bind(this, function() {
-
-            Log.Debug("Opening browser with link " + this._link);
-            Util.trySpawnCommandLine(this._browser + ' ' + this._link);
-        }));
-    }
-});
 
 /*
  *  Main RSS Feed extension class
@@ -295,6 +259,12 @@ const RssFeedButton = new Lang.Class({
 
         this._httpSession.queue_message(request, Lang.bind(this, function(httpSession, message) {
 
+            //Log.Debug("[" + position + "] Soup HTTP GET reponse. Status code: " + message.status_code);
+
+            //Log.Debug("Content Encoding: " + message.response_headers.get_one("Content-Type"));
+
+            //Log.Debug(message.response_body.data.length);
+
             if (message.response_body.data)
                 callback(message.response_body.data, position);
         }));
@@ -317,8 +287,6 @@ const RssFeedButton = new Lang.Class({
      *  position - Position in RSS sources list
      */
     _onDownload: function(responseData, position) {
-
-        Log.Debug("[" + position + "] Soup HTTP GET reponse.");
 
         //Log.Debug(responseData);
 
@@ -376,11 +344,11 @@ const RssFeedButton = new Lang.Class({
 
                 let nItems = this._feedsArray[i].Items.length;
 
-                let subMenu = new PopupMenu.PopupSubMenuMenuItem(this._feedsArray[i].Publisher.Title + ' (' + nItems + ')');
+                let subMenu = new ExtensionGui.RssPopupSubMenuMenuItem(this._feedsArray[i].Publisher, nItems);
 
                 for (let j = 0; j < nItems; j++) {
 
-                    let menuItem = new PopupRssFeedMenuItem(this._feedsArray[i].Items[j].HttpLink, this._feedsArray[i].Items[j].Title);
+                    let menuItem = new ExtensionGui.RssPopupMenuItem(this._feedsArray[i].Items[j]);
                     subMenu.menu.addMenuItem(menuItem);
                 }
 

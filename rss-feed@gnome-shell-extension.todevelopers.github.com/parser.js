@@ -1,5 +1,5 @@
 /*
- * XML Parser wrapper class for RSS Feed extension
+ * RSS Feed extension for GNOME Shell
  *
  * Copyright (C) 2015
  *     Tomas Gazovic <gazovic.tomasgmail.com>,
