@@ -179,22 +179,21 @@ const RdfRssParser = new Lang.Class({
 
             if (childElements[i].name == 'title') {
                 this.Publisher.Title = childElements[i].text;
+                //Log.Debug("Publisher Title: " + this.Publisher.Title);
             }
             else if (childElements[i].name == 'link') {
                 this.Publisher.HttpLink = childElements[i].text;
+                //Log.Debug("Publisher Link: " + this.Publisher.HttpLink);
             }
             else if (childElements[i].name == 'description') {
                 this.Publisher.Description = childElements[i].text;
+                //Log.Debug("Publisher Description: " + this.Publisher.Description);
             }
             else if (childElements[i].name == 'dc:date') {
                 this.Publisher.PublishDate = childElements[i].text;
+                //Log.Debug("Publisher Date: " + this.Publisher.PublishDate);
             }
         }
-
-        //Log.Debug("Publisher Title: " + this.Publisher.Title);
-        //Log.Debug("Publisher Link: " + this.Publisher.HttpLink);
-        //Log.Debug("Publisher Description: " + this.Publisher.Description);
-        //Log.Debug("Publisher Date: " + this.Publisher.PublishDate);
     },
 
     _parseItem: function(itemElements) {
@@ -205,29 +204,29 @@ const RdfRssParser = new Lang.Class({
 
             if (itemElements[i].name == 'title') {
                 item.Title = itemElements[i].text;
+                //Log.Debug("Item Title: " + item.Title);
             }
             else if (itemElements[i].name == 'link') {
                 item.HttpLink = itemElements[i].text;
+                //Log.Debug("Item Link: " + item.HttpLink);
             }
             else if (itemElements[i].name == 'description') {
                 item.Description = itemElements[i].text;
+                //Log.Debug("Item Description: " + item.Description);
             }
             else if (itemElements[i].name == 'dc:date') {
                 item.PublishDate = itemElements[i].text;
+                //Log.Debug("Item Date: " + item.PublishDate);
             }
             else if (itemElements[i].name == 'dc:creator') {
                 item.Author = itemElements[i].text;
+                //Log.Debug("Item Author: " + item.Author);
             }
             else if (itemElements[i].name == 'dc:contributor') {
                 item.Contributor = itemElements[i].childElements[0].childElements[0].text;
+                //Log.Debug("Item Author: " + item.Contributor);
             }
         }
-
-        //Log.Debug("Item Title: " + item.Title);
-        //Log.Debug("Item Link: " + item.HttpLink);
-        //Log.Debug("Item Description: " + item.Description);
-        //Log.Debug("Item Date: " + item.PublishDate);
-        //Log.Debug("Item Author: " + item.Author);
 
         this.Items.push(item);
     }
@@ -380,13 +379,18 @@ function createRssParser(rawXml) {
         if (xdoc.rootElement.attribute('xmlns:feedburner') == 'http://rssnamespace.org/feedburner/ext/1.0')
             return new FeedburnerRssParser(xdoc.rootElement);
 
-        if (xdoc.rootElement.name == 'rdf:RDF')
+        let test;
+
+        test = 'rdf:RDF';
+        if (xdoc.rootElement.name.slice(0, test.length) == test)
             return new RdfRssParser(xdoc.rootElement);
 
-        if (xdoc.rootElement.name == 'feed')
+        test = 'feed';
+        if (xdoc.rootElement.name.toLowerCase().slice(0, test.length) == test)
             return new AtomRssParser(xdoc.rootElement);
 
-        if (xdoc.rootElement.name.toLowerCase() == 'rss')
+        test = 'rss';
+        if (xdoc.rootElement.name.toLowerCase().slice(0, test.length) == test)
             return new DefaultRssParser(xdoc.rootElement);
     }
     catch (e) {

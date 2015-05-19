@@ -213,6 +213,8 @@ const RssFeedButton = new Lang.Class({
 
         this._getSettings();
 
+        Log.Debug("Reload RSS Feeds");
+
         // array for GUI purposes
         // TODO check if realocate of this array is necesary after change in sources
         // TODO try to forget this array and do bussines without it
@@ -237,8 +239,10 @@ const RssFeedButton = new Lang.Class({
         }
 
         // set timeout if enabled
-        if (this._updateInterval > 0)
+        if (this._updateInterval > 0) {
+            Log.Debug("Next scheduled reload after " + this._updateInterval*60 + " seconds");
             this._timeout = Mainloop.timeout_add_seconds(this._updateInterval*60, Lang.bind(this, this._realoadRssFeeds));
+        }
     },
 
     /*
@@ -259,11 +263,8 @@ const RssFeedButton = new Lang.Class({
 
         this._httpSession.queue_message(request, Lang.bind(this, function(httpSession, message) {
 
-            //Log.Debug("[" + position + "] Soup HTTP GET reponse. Status code: " + message.status_code);
-
-            //Log.Debug("Content Encoding: " + message.response_headers.get_one("Content-Type"));
-
-            //Log.Debug(message.response_body.data.length);
+            Log.Debug("[" + position + "] Soup HTTP GET reponse. Status code: " + message.status_code +
+            " Content Type: " + message.response_headers.get_one("Content-Type"));
 
             if (message.response_body.data)
                 callback(message.response_body.data, position);
@@ -273,7 +274,7 @@ const RssFeedButton = new Lang.Class({
     /*
      *  Lead number with zeros
      *  num - input number
-     *  size - size of number liadign with zeros
+     *  size - size of number leadign with zeros
      */
     _pad: function (num, size) {
         let s = num + "";
@@ -287,8 +288,6 @@ const RssFeedButton = new Lang.Class({
      *  position - Position in RSS sources list
      */
     _onDownload: function(responseData, position) {
-
-        //Log.Debug(responseData);
 
         let rssParser = new Parser.createRssParser(responseData);
 
@@ -390,18 +389,20 @@ function init() {
  *  Enable the extension
  */
 function enable() {
-    Log.Debug("Extension enabled.");
 
     rssFeedBtn = new RssFeedButton();
     Main.panel.addToStatusArea('rssFeedMenu', rssFeedBtn, 0, 'right');
+
+    Log.Debug("Extension enabled.");
 }
 
 /*
  *  Disable the extension
  */
 function disable() {
-    Log.Debug("Extension disabled.");
 
     rssFeedBtn.stop();
     rssFeedBtn.destroy();
+
+    Log.Debug("Extension disabled.");
 }

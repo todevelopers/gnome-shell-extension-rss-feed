@@ -1,5 +1,12 @@
 ## Changelog
 
+### v1.2
+
+*Version is under heavy development*
+
+* bugfix: Escaped XML/HTML characters displaying improperly. [#2](https://github.com/todevelopers/gnome-shell-extension-rss-feed/issues/2)
+* bugfix: some feeds do not work: no data available [#3](https://github.com/todevelopers/gnome-shell-extension-rss-feed/issues/3)
+
 ### v1.1 (03.05.2015)
 
 *Patch version with new formats support*
@@ -9,7 +16,8 @@
 * feature: Disable scheduled Update interval by seting it to 0
 * feature: Debug messages for extension. Should be turned on in dconf
 * performance: Settings widget works better. Extension must be reloaded after changes made in Settings tab
-* bugfix: Reported sources now works
+* bugfix: Reported sources through GNOME Shell extensions portal now works
+* bugfix: feed gives 0 status [#1](https://github.com/todevelopers/gnome-shell-extension-rss-feed/issues/1)
 
 ### v1.0 (18.04.2015)
 
