@@ -44,7 +44,12 @@ const RssPopupMenuItem = new Lang.Class({
      *  item - RSS feed item
      */
     _init: function(item) {
-        this.parent(Encoder.htmlDecode(item.Title));
+
+        let title = item.Title;
+        if (title.length > 128)
+            title = title.substr(0, 128) + "...";
+
+        this.parent(Encoder.htmlDecode(title));
 
         this._link = item.HttpLink;
 

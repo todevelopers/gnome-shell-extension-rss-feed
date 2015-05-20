@@ -14,8 +14,7 @@ You can add URL links of your RSS sources in Settings tab. Also you can adjust r
 
 ## Future plans
 
-* Support for GZIP content
-* KML format support
+* Support for different content encoding then UTF-8
 * Verification of RSS source availability in Settings widget
 * Rework of Settings widget
 * Notifications for new articles

@@ -6,6 +6,7 @@
 
 * bugfix: Escaped XML/HTML characters displaying improperly. [#2](https://github.com/todevelopers/gnome-shell-extension-rss-feed/issues/2)
 * bugfix: some feeds do not work: no data available [#3](https://github.com/todevelopers/gnome-shell-extension-rss-feed/issues/3)
+* bugfix: Too long strings cut to 128 characters maximum length
 
 ### v1.1 (03.05.2015)
 

@@ -42,6 +42,11 @@ const RssPopupSubMenuMenuItem = new Lang.Class({
      *  nitems - number of articles
      */
     _init: function(publisher, nitems) {
-        this.parent(Encoder.htmlDecode(publisher.Title) + ' (' + nitems + ')');
+
+        let title = publisher.Title;
+        if (title.length > 128)
+            title = title.substr(0, 128) + "...";
+
+        this.parent(Encoder.htmlDecode(title) + ' (' + nitems + ')');
     }
 });
