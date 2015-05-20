@@ -32,7 +32,7 @@ const St = imports.gi.St;
 const Util = imports.misc.util;
 
 const Convenience = Me.imports.convenience;
-const Parser = Me.imports.parser;
+const Parser = Me.imports.parsers.factory;
 const Log = Me.imports.logger;
 const Settings = Convenience.getSettings();
 

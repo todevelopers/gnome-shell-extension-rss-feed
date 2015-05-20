@@ -6,6 +6,7 @@ http://renass.unistra.fr/rss
 
 RDF format:
 https://wiki.gnome.org/action/rss_rc/RecentChanges?action=rss_rc&unique=1&ddiffs=1
+http://rss.orf.at/tirol.xml
 
 Feedburner format:
 http://feeds.feedburner.com/Noobslab?format=xml

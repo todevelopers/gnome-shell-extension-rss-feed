@@ -6,6 +6,12 @@ This extension adds button (RSS icon) to the GNOME Shell panel. After click on i
 
 You can add URL links of your RSS sources in Settings tab. Also you can adjust refreshing interval in minutes or set how many RSS Feeds will be displayed per page.
 
+#### Supported formats:
+
+* RSS 1.0 (RDF) format
+* RSS 2.0 format
+* Atom format
+
 ## Future plans
 
 * Support for GZIP content
