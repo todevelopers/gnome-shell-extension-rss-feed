@@ -257,6 +257,13 @@ const RssFeedButton = new Lang.Class({
         if (this._httpSession == null)
             this._httpSession = new Soup.SessionAsync();
 
+        // Lours974 Vitry David
+        // This makes the session work under a proxy. The funky syntax here
+        // is required because of another libsoup quirk, where there's a gobject
+        // property called 'add-feature', designed as a construct property for
+        // C convenience.
+        Soup.Session.prototype.add_feature.call(this._httpSession, new Soup.ProxyResolverDefault());
+
         Log.Debug("[" + position + "] Soup HTTP GET request. URL: " + url + " parameters: " + JSON.stringify(params));
 
         let request = Soup.form_request_new_from_hash('GET', url, params);

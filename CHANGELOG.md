@@ -1,9 +1,10 @@
 ## Changelog
 
-### v1.2
+### v1.2 (24.05.2015)
 
-*Version is under heavy development*
+*Hotfix version*
 
+* feature: Behind proxy use [#4](https://github.com/todevelopers/gnome-shell-extension-rss-feed/issues/4)
 * bugfix: Escaped XML/HTML characters displaying improperly. [#2](https://github.com/todevelopers/gnome-shell-extension-rss-feed/issues/2)
 * bugfix: some feeds do not work: no data available [#3](https://github.com/todevelopers/gnome-shell-extension-rss-feed/issues/3)
 * bugfix: Too long strings cut to 128 characters maximum length
