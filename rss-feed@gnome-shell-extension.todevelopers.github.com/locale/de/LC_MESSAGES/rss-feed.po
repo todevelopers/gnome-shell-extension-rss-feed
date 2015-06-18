@@ -1,0 +1,60 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: RSS Feed GNOME Shell Extension\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-06-18 11:03-0300\n"
+"PO-Revision-Date: 2015-06-18 11:03-0300\n"
+"Last-Translator: Jonatan Zeidler <jonatan_zeidler@gmx.de>\n"
+"Language-Team: German <jonatan_zeidler@gmx.de>\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 1.7.5\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+
+#: extension.js:95
+msgid "Previous"
+msgstr "Zurück"
+
+#: extension.js:96
+msgid "Next"
+msgstr "Weiter"
+
+#: extension.js:97
+msgid "Reload RSS Feeds"
+msgstr "RSS-Quellen abrufen"
+
+#: extension.js:98
+msgid "RSS Feed Settings"
+msgstr "Einstellungen der RSS-Quellen"
+
+#: extension.js:100 extension.js:335
+msgid "Last update"
+msgstr "Zuletzt aktualisiert"
+
+#: extension.js:368
+msgid "No data available"
+msgstr "Keine Daten verfügbar"
+
+#: prefs.js:65
+msgid "Update interval (minutes):"
+msgstr "Aktualisierungsintervall (Minuten):"
+
+#: prefs.js:78
+msgid "RSS sources per page:"
+msgstr "RSS-Quellen pro Seite:"
+
+#: prefs.js:187
+msgid "New RSS Feed source"
+msgstr "Neue RSS-Quelle"
+
+#: prefs.js:211
+msgid "Edit RSS Feed source"
+msgstr "RSS-Quelle bearbeiten"

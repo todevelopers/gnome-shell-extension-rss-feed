@@ -29,6 +29,10 @@ const Lang = imports.lang;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Settings = Me.imports.convenience.getSettings();
 
+const Convenience = Me.imports.convenience;
+const Gettext = imports.gettext.domain('rss-feed');
+const _ = Gettext.gettext;
+
 const COLUMN_ID = 0;
 const MAX_UPDATE_INTERVAL = 1440;
 const MAX_SOURCES_LIMIT = 1024;
@@ -58,7 +62,7 @@ const RssFeedSettingsWidget = new GObject.Class({
 		// update interval
 		let box = new Gtk.Box( { orientation: Gtk.Orientation.HORIZONTAL, spacing: 6 } );
 		box.set_margin_bottom(6);
-		let label = new Gtk.Label({ xalign: 0, label: 'Update interval (minutes):' });
+		let label = new Gtk.Label({ xalign: 0, label: _("Update interval (minutes):") });
 		box.pack_start(label, true, true, 0);
 
 		let spinbtn = Gtk.SpinButton.new_with_range(0, MAX_UPDATE_INTERVAL, 1);
@@ -71,7 +75,7 @@ const RssFeedSettingsWidget = new GObject.Class({
 		// items visible per page
 		let box2 = new Gtk.Box( { orientation: Gtk.Orientation.HORIZONTAL, spacing: 6 } );
 		box2.set_margin_bottom(6);
-		let label2 = new Gtk.Label({ xalign: 0, label: 'RSS sources per page:' });
+		let label2 = new Gtk.Label({ xalign: 0, label: _("RSS sources per page:") });
 		box2.pack_start(label2, true, true, 0);
 
 		let spinbtn2 = Gtk.SpinButton.new_with_range(1, MAX_SOURCES_LIMIT, 1);
@@ -180,7 +184,7 @@ const RssFeedSettingsWidget = new GObject.Class({
 	 */
 	_createNew: function() {
 
-		this._createDialog('New RSS Feed source', '', Lang.bind(this, function() {
+		this._createDialog(_("New RSS Feed source"), '', Lang.bind(this, function() {
 
 			// update tree view
 			let iter = this._store.append();
@@ -204,7 +208,7 @@ const RssFeedSettingsWidget = new GObject.Class({
 		let [any, model, iter] = this._actor.get_selection().get_selected();
 
 		if (any) {
-			this._createDialog('Edit RSS Feed source', model.get_value(iter, COLUMN_ID),
+			this._createDialog(_("Edit RSS Feed source"), model.get_value(iter, COLUMN_ID),
 			Lang.bind(this, function() {
 				// update tree view
 				this._store.set_value(iter, COLUMN_ID, this._entry.get_text());
@@ -273,6 +277,7 @@ const RssFeedSettingsWidget = new GObject.Class({
  *	Initialize the settings widget
  */
 function init() {
+    Convenience.initTranslations("rss-feed");
 }
 
 /*

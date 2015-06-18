@@ -36,6 +36,9 @@ const Parser = Me.imports.parsers.factory;
 const Log = Me.imports.logger;
 const Settings = Convenience.getSettings();
 
+const Gettext = imports.gettext.domain('rss-feed');
+const _ = Gettext.gettext;
+
 const ExtensionGui = {
     RssPopupMenuItem: Me.imports.extensiongui.rsspopupmenuitem.RssPopupMenuItem,
     RssPopupSubMenuMenuItem: Me.imports.extensiongui.rsspopupsubmenumenuitem.RssPopupSubMenuMenuItem
@@ -89,12 +92,12 @@ const RssFeedButton = new Lang.Class({
         });
 
         let systemMenu = Main.panel.statusArea.aggregateMenu._system;
-        let prevBtn = systemMenu._createActionButton('go-previous-symbolic', "Previous");
-        let nextBtn = systemMenu._createActionButton('go-next-symbolic', "Next");
-        let reloadBtn = systemMenu._createActionButton('view-refresh-symbolic', "Reload RSS Feeds");
-        let settingsBtn = systemMenu._createActionButton('preferences-system-symbolic', "RSS Feed Settings");
+        let prevBtn = systemMenu._createActionButton('go-previous-symbolic', _("Previous"));
+        let nextBtn = systemMenu._createActionButton('go-next-symbolic', _("Next"));
+        let reloadBtn = systemMenu._createActionButton('view-refresh-symbolic', _("Reload RSS Feeds"));
+        let settingsBtn = systemMenu._createActionButton('preferences-system-symbolic', _("RSS Feed Settings"));
 
-        this._lastUpdateTime = new St.Button({label: 'Last update: --:--'});
+        this._lastUpdateTime = new St.Button({label: _("Last update")+': --:--'});
 
         this._buttonMenu.actor.add_actor(prevBtn);
         this._buttonMenu.actor.add_actor(nextBtn);
@@ -329,7 +332,7 @@ const RssFeedButton = new Lang.Class({
 
         // update last download time
         let time = new Date();
-        this._lastUpdateTime.set_label('Last update: ' + this._pad(time.getHours(), 2)
+        this._lastUpdateTime.set_label(_("Last update")+': ' + this._pad(time.getHours(), 2)
             + ':' + this._pad(time.getMinutes(), 2));
 
         rssParser.clear();
@@ -362,7 +365,7 @@ const RssFeedButton = new Lang.Class({
             }
             else {
 
-                let subMenu = new PopupMenu.PopupMenuItem('No data available');
+                let subMenu = new PopupMenu.PopupMenuItem(_("No data available"));
                 this._feedsSection.addMenuItem(subMenu);
             }
 
@@ -384,6 +387,7 @@ let rssFeedBtn;
  *  Initialize the extension
  */
 function init() {
+    Convenience.initTranslations("rss-feed");
 
     // hack for dconf
     let enabled = Settings.get_boolean(DEBUG_ENABLED_KEY);
