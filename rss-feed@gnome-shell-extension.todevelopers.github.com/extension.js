@@ -21,6 +21,8 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+const Clutter = imports.gi.Clutter;
+const Gio = imports.gi.Gio;
 const Lang = imports.lang;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
@@ -62,15 +64,17 @@ const RssFeedButton = new Lang.Class({
 
         this._httpSession = null;
         this._startIndex = 0;
+        
+        this._newFeedIcon = Gio.icon_new_for_string(Me.path + "/new_feed.png");
 
         // top panel button
-        let icon = new St.Icon({
+        this._icon = new St.Icon({
             icon_name: 'application-rss+xml-symbolic',
             style_class: 'system-status-icon'
         });
 
-        this.actor.add_actor(icon);
-
+        this.actor.add_actor(this._icon);
+        
         this._feedsBox = new St.BoxLayout({
             vertical: true,
             reactive: false
@@ -127,6 +131,17 @@ const RssFeedButton = new Lang.Class({
 
         if (this._timeout)
             Mainloop.source_remove(this._timeout);
+    },
+    
+    _onEvent: function(actor, event) {
+        if (this.menu &&
+            (event.type() == Clutter.EventType.TOUCH_BEGIN ||
+             event.type() == Clutter.EventType.BUTTON_PRESS)) {
+            this.menu.toggle();
+            this._icon.set_icon_name('application-rss+xml-symbolic');
+        }
+
+        return Clutter.EVENT_PROPAGATE;
     },
 
     /*
@@ -218,7 +233,9 @@ const RssFeedButton = new Lang.Class({
         // array for GUI purposes
         // TODO check if realocate of this array is necesary after change in sources
         // TODO try to forget this array and do bussines without it
-        this._feedsArray = new Array(this._rssFeedsSources.length);
+        if (!this._feedsArray) {
+            this._feedsArray = new Array(this._rssFeedsSources.length);
+        }
 
         // remove timeout
         if (this._timeout)
@@ -305,6 +322,12 @@ const RssFeedButton = new Lang.Class({
 
         if (rssParser.Items.length > 0)
         {
+            // change icon if new feed found
+            if (!this._feedsArray[position] || 
+                 this._feedsArray[position].Items.length < rssParser.Items.length) {
+                this._icon.set_gicon(this._newFeedIcon)  
+            }
+            
             let rssFeed = {
                 Publisher: {
                     Title: ''
