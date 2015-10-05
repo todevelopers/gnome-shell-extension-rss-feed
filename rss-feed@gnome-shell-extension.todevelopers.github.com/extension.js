@@ -27,6 +27,7 @@ const Lang = imports.lang;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Notify = imports.gi.Notify;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Soup = imports.gi.Soup;
@@ -46,6 +47,7 @@ const ExtensionGui = {
 const RSS_FEEDS_LIST_KEY = 'rss-feeds-list';
 const UPDATE_INTERVAL_KEY = 'update-interval';
 const ITEMS_VISIBLE_KEY = 'items-visible';
+const SEND_NOTIFICATION_KEY = 'send-notification';
 const DEBUG_ENABLED_KEY = 'enable-debug';
 
 /*
@@ -64,8 +66,10 @@ const RssFeedButton = new Lang.Class({
 
         this._httpSession = null;
         this._startIndex = 0;
+        this._notify = false;
         
-        this._newFeedIcon = Gio.icon_new_for_string(Me.path + "/new_feed.png");
+        this._newFeedIcon = Gio.icon_new_for_string(Me.path + "/application-rss+xml-symbolic-inverted.svg");
+        
 
         // top panel button
         this._icon = new St.Icon({
@@ -133,6 +137,9 @@ const RssFeedButton = new Lang.Class({
             Mainloop.source_remove(this._timeout);
     },
     
+    /*
+     * Change icon on click
+     */
     _onEvent: function(actor, event) {
         if (this.menu &&
             (event.type() == Clutter.EventType.TOUCH_BEGIN ||
@@ -155,11 +162,14 @@ const RssFeedButton = new Lang.Class({
         this._updateInterval = Settings.get_int(UPDATE_INTERVAL_KEY);
         // rss sources visible per page
         this._itemsVisible = Settings.get_int(ITEMS_VISIBLE_KEY);
+        // send notification?
+        this._isSendNotification = Settings.get_boolean(SEND_NOTIFICATION_KEY);
         // http sources for rss feeds
         this._rssFeedsSources = Settings.get_strv(RSS_FEEDS_LIST_KEY);
 
         Log.Debug("Update interval: " + this._updateInterval +
                   " Visible items: " + this._itemsVisible +
+                  " Send notification: " + this._isSendNotification + 
                   " RSS sources: " + this._rssFeedsSources);
     },
 
@@ -254,6 +264,12 @@ const RssFeedButton = new Lang.Class({
                 this._httpGetRequestAsync(url, JSON.parse(jsonObj), i, Lang.bind(this, this._onDownload));
             }
         }
+        
+        // send notification
+        if (this._isSendNotification && this._notify) {
+            Main.notify("RSS Feed", "New RSS Feed available");
+            this._notify = false;
+        }
 
         // set timeout if enabled
         if (this._updateInterval > 0) {
@@ -324,8 +340,9 @@ const RssFeedButton = new Lang.Class({
         {
             // change icon if new feed found
             if (!this._feedsArray[position] || 
-                 this._feedsArray[position].Items.length < rssParser.Items.length) {
-                this._icon.set_gicon(this._newFeedIcon)  
+                 this._feedsArray[position].Items[0] != rssParser.Items[0]) {
+                 this._icon.set_gicon(this._newFeedIcon);
+                 this._notify = true
             }
             
             let rssFeed = {

@@ -36,6 +36,7 @@ const MAX_SOURCES_LIMIT = 1024;
 const RSS_FEEDS_LIST_KEY = 'rss-feeds-list';
 const UPDATE_INTERVAL_KEY = 'update-interval';
 const ITEMS_VISIBLE_KEY = 'items-visible';
+const SEND_NOTIFICATION_KEY = 'send-notification';
 
 /*
  *	RssFeedSettingsWidget class for settings widget
@@ -80,6 +81,19 @@ const RssFeedSettingsWidget = new GObject.Class({
 
 		box2.add(spinbtn2);
 		this.add(box2);
+		
+		// send notification on new feed
+		let box3 = new Gtk.Box( { orientation: Gtk.Orientation.HORIZONTAL, spacing: 6 } );
+		box3.set_margin_bottom(6);
+		let label3 = new Gtk.Label({ xalign: 0, label: 'Send notification:' });
+		box3.pack_start(label3, true, true, 0);
+		
+		let switchbtn = new Gtk.Switch({active: false});
+		switchbtn.set_state(Settings.get_boolean(SEND_NOTIFICATION_KEY));
+		Settings.bind(SEND_NOTIFICATION_KEY, switchbtn, 'state', Gio.SettingsBindFlags.DEFAULT);
+		
+		box3.add(switchbtn);
+		this.add(box3);
 
 		// rss feed sources
 		let scrolledWindow = new Gtk.ScrolledWindow();
