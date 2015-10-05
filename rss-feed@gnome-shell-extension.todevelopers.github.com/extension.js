@@ -338,19 +338,22 @@ const RssFeedButton = new Lang.Class({
         if (rssParser.Items.length > 0)
         {
             // change icon if new feed found
-            if (!this._feedsArray[position] || 
-                 this._feedsArray[position].Items[0] != rssParser.Items[0]) {
-                 this._icon.set_gicon(this._newFeedIcon);
-                 this._notify = true
+            if (this._feedsArray[position] && rssParser.Publisher.PublishDate &&
+                this._feedsArray[position].Publisher.PublishDate != 
+                rssParser.Publisher.PublishDate)
+                this._icon.set_gicon(this._newFeedIcon);
+                this._notify = true
             }
             
             let rssFeed = {
                 Publisher: {
-                    Title: ''
+                    Title: '',
+                    PublishDate: ''
                 },
                 Items: []
             };
             rssFeed.Publisher.Title = rssParser.Publisher.Title;
+            rssFeed.Publisher.PublishDate = rssParser.Publisher.PublishDate;
 
             for (let i = 0; i < rssParser.Items.length; i++) {
                 let item = {
