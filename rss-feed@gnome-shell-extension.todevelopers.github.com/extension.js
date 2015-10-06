@@ -266,6 +266,7 @@ const RssFeedButton = new Lang.Class({
         
         // send notification
         if (this._isSendNotification && this._notify) {
+            this._icon.set_gicon(this._newFeedIcon);
             Main.notify("RSS Feed", "New RSS Feed available");
             this._notify = false;
         }
@@ -340,8 +341,7 @@ const RssFeedButton = new Lang.Class({
             // change icon if new feed found
             if (this._feedsArray[position] && rssParser.Publisher.PublishDate &&
                 this._feedsArray[position].Publisher.PublishDate != 
-                rssParser.Publisher.PublishDate)
-                this._icon.set_gicon(this._newFeedIcon);
+                rssParser.Publisher.PublishDate) {
                 this._notify = true
             }
             
