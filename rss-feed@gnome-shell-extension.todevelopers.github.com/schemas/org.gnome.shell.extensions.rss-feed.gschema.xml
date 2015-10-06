@@ -12,6 +12,11 @@
             <summary>RSS Sources per page</summary>
             <description>Number of RSS Sources visible per page.</description>
         </key>
+        <key type="b" name="send-notification">
+            <default>true</default>
+            <summary>Send notification</summary>
+            <description>Send notification on new feed.</description>
+        </key>
         <key type="as" name="rss-feeds-list">
             <default>[]</default>
             <summary>RSS feeds</summary>

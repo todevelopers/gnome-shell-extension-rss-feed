@@ -21,10 +21,13 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+const Clutter = imports.gi.Clutter;
+const Gio = imports.gi.Gio;
 const Lang = imports.lang;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const MessageTray = imports.ui.messageTray;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Soup = imports.gi.Soup;
@@ -44,6 +47,7 @@ const ExtensionGui = {
 const RSS_FEEDS_LIST_KEY = 'rss-feeds-list';
 const UPDATE_INTERVAL_KEY = 'update-interval';
 const ITEMS_VISIBLE_KEY = 'items-visible';
+const SEND_NOTIFICATION_KEY = 'send-notification';
 const DEBUG_ENABLED_KEY = 'enable-debug';
 
 /*
@@ -62,15 +66,19 @@ const RssFeedButton = new Lang.Class({
 
         this._httpSession = null;
         this._startIndex = 0;
+        this._toNotify = false;
+        
+        this._newFeedIcon = Gio.icon_new_for_string(Me.path + "/application-rss+xml-symbolic-inverted.svg");
+        
 
         // top panel button
-        let icon = new St.Icon({
+        this._icon = new St.Icon({
             icon_name: 'application-rss+xml-symbolic',
             style_class: 'system-status-icon'
         });
 
-        this.actor.add_actor(icon);
-
+        this.actor.add_actor(this._icon);
+        
         this._feedsBox = new St.BoxLayout({
             vertical: true,
             reactive: false
@@ -128,6 +136,20 @@ const RssFeedButton = new Lang.Class({
         if (this._timeout)
             Mainloop.source_remove(this._timeout);
     },
+    
+    /*
+     * Change icon on click
+     */
+    _onEvent: function(actor, event) {
+        if (this.menu &&
+            (event.type() == Clutter.EventType.TOUCH_BEGIN ||
+             event.type() == Clutter.EventType.BUTTON_PRESS)) {
+            this.menu.toggle();
+            this._icon.set_icon_name('application-rss+xml-symbolic');
+        }
+
+        return Clutter.EVENT_PROPAGATE;
+    },
 
     /*
      *  Get variables from GSettings
@@ -140,11 +162,14 @@ const RssFeedButton = new Lang.Class({
         this._updateInterval = Settings.get_int(UPDATE_INTERVAL_KEY);
         // rss sources visible per page
         this._itemsVisible = Settings.get_int(ITEMS_VISIBLE_KEY);
+        // send notification?
+        this._isSendNotification = Settings.get_boolean(SEND_NOTIFICATION_KEY);
         // http sources for rss feeds
         this._rssFeedsSources = Settings.get_strv(RSS_FEEDS_LIST_KEY);
 
         Log.Debug("Update interval: " + this._updateInterval +
                   " Visible items: " + this._itemsVisible +
+                  " Send notification: " + this._isSendNotification + 
                   " RSS sources: " + this._rssFeedsSources);
     },
 
@@ -218,7 +243,9 @@ const RssFeedButton = new Lang.Class({
         // array for GUI purposes
         // TODO check if realocate of this array is necesary after change in sources
         // TODO try to forget this array and do bussines without it
-        this._feedsArray = new Array(this._rssFeedsSources.length);
+        if (!this._feedsArray || this._feedsArray.length != this._rssFeedsSources.length) {
+            this._feedsArray = new Array(this._rssFeedsSources.length);
+        }
 
         // remove timeout
         if (this._timeout)
@@ -236,6 +263,13 @@ const RssFeedButton = new Lang.Class({
 
                 this._httpGetRequestAsync(url, JSON.parse(jsonObj), i, Lang.bind(this, this._onDownload));
             }
+        }
+        
+        // send notification
+        if (this._isSendNotification && this._toNotify) {
+            this._icon.set_gicon(this._newFeedIcon);
+            this._notify("RSS Feed", "New RSS Feed available", "application-rss+xml-symbolic");
+            this._toNotify = false;
         }
 
         // set timeout if enabled
@@ -305,13 +339,22 @@ const RssFeedButton = new Lang.Class({
 
         if (rssParser.Items.length > 0)
         {
+            // change icon if new feed found
+            if (this._feedsArray[position] && rssParser.Publisher.PublishDate &&
+                this._feedsArray[position].Publisher.PublishDate != 
+                rssParser.Publisher.PublishDate) {
+                this._toNotify = true
+            }
+            
             let rssFeed = {
                 Publisher: {
-                    Title: ''
+                    Title: '',
+                    PublishDate: ''
                 },
                 Items: []
             };
             rssFeed.Publisher.Title = rssParser.Publisher.Title;
+            rssFeed.Publisher.PublishDate = rssParser.Publisher.PublishDate;
 
             for (let i = 0; i < rssParser.Items.length; i++) {
                 let item = {
@@ -372,6 +415,17 @@ const RssFeedButton = new Lang.Class({
                 break;
 
         }
+    },
+    
+    /*
+     * Send notification to message tray
+     */
+    _notify: function(msg, details, icon) {
+        let source = new MessageTray.Source("RSS Feed information", icon);
+        Main.messageTray.add(source);
+        let notification = new MessageTray.Notification(source, msg, details);
+        notification.setTransient(true);
+        source.notify(notification);
     }
 });
 
