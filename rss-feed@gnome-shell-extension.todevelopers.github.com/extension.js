@@ -27,6 +27,7 @@ const Lang = imports.lang;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const MessageTray = imports.ui.messageTray;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Soup = imports.gi.Soup;
@@ -65,7 +66,7 @@ const RssFeedButton = new Lang.Class({
 
         this._httpSession = null;
         this._startIndex = 0;
-        this._notify = false;
+        this._toNotify = false;
         
         this._newFeedIcon = Gio.icon_new_for_string(Me.path + "/application-rss+xml-symbolic-inverted.svg");
         
@@ -265,10 +266,10 @@ const RssFeedButton = new Lang.Class({
         }
         
         // send notification
-        if (this._isSendNotification && this._notify) {
+        if (this._isSendNotification && this._toNotify) {
             this._icon.set_gicon(this._newFeedIcon);
-            Main.notify("RSS Feed", "New RSS Feed available");
-            this._notify = false;
+            this._notify("RSS Feed", "New RSS Feed available", "application-rss+xml-symbolic");
+            this._toNotify = false;
         }
 
         // set timeout if enabled
@@ -342,7 +343,7 @@ const RssFeedButton = new Lang.Class({
             if (this._feedsArray[position] && rssParser.Publisher.PublishDate &&
                 this._feedsArray[position].Publisher.PublishDate != 
                 rssParser.Publisher.PublishDate) {
-                this._notify = true
+                this._toNotify = true
             }
             
             let rssFeed = {
@@ -414,6 +415,17 @@ const RssFeedButton = new Lang.Class({
                 break;
 
         }
+    },
+    
+    /*
+     * Send notification to message tray
+     */
+    _notify: function(msg, details, icon) {
+        let source = new MessageTray.Source("RSS Feed information", icon);
+        Main.messageTray.add(source);
+        let notification = new MessageTray.Notification(source, msg, details);
+        notification.setTransient(true);
+        source.notify(notification);
     }
 });
 
