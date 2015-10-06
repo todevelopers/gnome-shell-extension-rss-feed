@@ -242,7 +242,7 @@ const RssFeedButton = new Lang.Class({
         // array for GUI purposes
         // TODO check if realocate of this array is necesary after change in sources
         // TODO try to forget this array and do bussines without it
-        if (!this._feedsArray) {
+        if (!this._feedsArray || this._feedsArray.length != this._rssFeedsSources.length) {
             this._feedsArray = new Array(this._rssFeedsSources.length);
         }
 
