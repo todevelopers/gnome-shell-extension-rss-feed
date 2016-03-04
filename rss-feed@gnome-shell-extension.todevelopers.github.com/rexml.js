@@ -147,7 +147,7 @@ function REXML(XML) {
 
 function ParseAttribute(str,Attribute) {
 	var str = str +  ">";
-	if (str.indexOf(Attribute + "='")>-1) var Attr = new RegExp(".*" + Attribute + "='([^']*)'.*>");
-	else if (str.indexOf(Attribute + '="')>-1) var Attr = new RegExp(".*" + Attribute + '="([^"]*)".*>');
-	return str.replace(Attr, "$1");
+	if (str.indexOf(Attribute + "='")>-1) var Attr = new RegExp("(.*\\n)*.*" + Attribute + "='([^']*)'.*>");
+	else if (str.indexOf(Attribute + '="')>-1) var Attr = new RegExp("(.*\\n)*.*" + Attribute + '="([^"]*)".*>');
+	return str.replace(Attr, "$2");
 }
