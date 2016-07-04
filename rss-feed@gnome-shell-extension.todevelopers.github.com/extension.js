@@ -164,7 +164,7 @@ const RssFeedButton = new Lang.Class({
 
         this._startIndex -= this._itemsVisible;
         if (this._startIndex < 0)
-            this._startIndex = 0
+            this._startIndex = 0;
         this._refreshExtensionUI();
     },
 
@@ -371,6 +371,10 @@ const RssFeedButton = new Lang.Class({
             if (counter == this._itemsVisible)
                 break;
 
+        }
+
+        if (this._feedsSection.numMenuItems == 1) {
+            this._feedsSection.firstMenuItem.activate();
         }
     }
 });
