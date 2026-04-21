@@ -1,5 +1,41 @@
 ## Changelog
 
+### v2.0 (03.03.2017)
+
+*Major rework*
+
+* Reworked incoming data handling and menu update procedures (large performance boost)
+* Various bugfixes and increased fault tolerance
+* Replaced RSS source 'paging' system with a scrollable menu (maximum menu height can be set)
+* Added new article notification system
+* Mark unread articles in menu, show unread count in status area
+* Complete rework of the settings widget, added source verification
+  * Keep the plugin active when Gnome session locks / blanks screen (by default, all plugins are disabled at this point)
+  * Poll delay - minimizes performance impact on gnome-shell by rate-limiting source queries 
+  * Toggle debug mode
+  * Reload plugin button (depends on 'gnome-shell-extension-tool')
+  * Panel menu:
+    * Maximum number of shown articles per source
+    * Toggle menu animations
+    * Set menu button alignment (top/bottom)
+    * Toggle update detection
+    * Show article descriptions when selected
+  * Notifications:
+    * Toggle on/off
+    * Set notification limit
+    * Remove when plugin disabled
+    * Toggle show on lock screen
+  * RSS sources:
+    * Added 'Status' colum, displays source validation result
+    * Recheck all sources button, double click on a source to recheck it
+    * Removed 'Edit' button, made URL column cell editable (click selected row to edit)
+    * Made list reorderable (drag to reorder)
+    * Added buttons to move selected item up/down
+  * **`Note that certain features require plugin restart to take effect`**
+* Added plugin restart button (shown only in debug mode) - this reinitializes the plugin so gnome-shell does not have to be restarted after editing the source
+* Fixed REXML HTML attribute parsing bug
+* Right click on article copies URL to clipboard
+
 ### v1.2 (24.05.2015)
 
 *Hotfix version*

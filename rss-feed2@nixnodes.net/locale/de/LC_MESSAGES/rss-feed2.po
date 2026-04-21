@@ -1,0 +1,166 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: rss-feed2@nixnodes.net\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-12-16 07:10+0100\n"
+"PO-Revision-Date: 2015-06-18 11:03-0300\n"
+"Last-Translator: Jonatan Zeidler <jonatan_zeidler@gmx.de>\n"
+"Language-Team: German <jonatan_zeidler@gmx.de>\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 1.7.5\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+
+#: extension.js:185
+msgid "Reload Plugin"
+msgstr "Das Plugin neu laden"
+
+#: extension.js:205
+msgid "Reload RSS Feeds"
+msgstr "RSS-Quellen abrufen"
+
+#: extension.js:206
+msgid "RSS Feed Settings"
+msgstr "Einstellungen der RSS-Quellen"
+
+#: extension.js:722
+msgid "UPDATE"
+msgstr "NEUFASSUNG"
+
+#: extension.js:723
+msgid "Source"
+msgstr "Quelle"
+
+#: extension.js:724
+msgid "Author"
+msgstr "Autor"
+
+#: extension.js:750
+msgid "Last update"
+msgstr "Zuletzt aktualisiert"
+
+#: extension.js:798
+msgid "Open URL"
+msgstr "Öffne URL"
+
+#: extension.js:804
+msgid "Copy URL"
+msgstr "Kopieren URL"
+
+#: prefs.js:110
+msgid "Update interval (min):"
+msgstr "Aktualisierungsintervall (Min):"
+
+#: prefs.js:111
+msgid "Poll delay (ms):"
+msgstr "Abfrageverzögerung (ms):"
+
+#: prefs.js:112
+msgid "Preserve when screen off:"
+msgstr "Erhalten wenn Bildschirm aus:"
+
+#: prefs.js:113
+msgid "Detect updates:"
+msgstr "Erkennung Updates:"
+
+#: prefs.js:140
+msgid "Reactivate extension"
+msgstr "Verlängerung reaktivieren"
+
+#: prefs.js:142
+msgid "Debug mode:"
+msgstr "Debug-Modus:"
+
+#: prefs.js:178
+msgid "Max menu height (px):"
+msgstr "Max. Menühöhe (px):"
+
+#: prefs.js:179
+msgid "Max items per source:"
+msgstr "Max. Artikel pro Quelle:"
+
+#: prefs.js:180
+msgid "Enable animations:"
+msgstr "Animationen aktivieren:"
+
+#: prefs.js:181
+msgid "Top-align buttons:"
+msgstr "Top-align buttons:"
+
+#: prefs.js:182
+msgid "Show descriptions:"
+msgstr "Beschreibungen anzeigen:"
+
+#: prefs.js:212
+msgid "Show notifications:"
+msgstr "Zeige Benachrichtigungen:"
+
+#: prefs.js:215
+msgid "Max notifications:"
+msgstr "Maximale Benachrichtigung:"
+
+#: prefs.js:225
+msgid "Show on lock screen:"
+msgstr "Show on lock screen:"
+
+#: prefs.js:226
+msgid "Clean up notifications:"
+msgstr "Clean up notifications:"
+
+#: prefs.js:250
+msgid "RSS sources"
+msgstr "RSS Quellen"
+
+#: prefs.js:279
+msgid "Re-check all RSS sources"
+msgstr "Überprüfe alle RSS-Quellen"
+
+#: prefs.js:319
+msgid "URL"
+msgstr "URL"
+
+#: prefs.js:325
+msgid "Status"
+msgstr "Status"
+
+#: prefs.js:337
+msgid "No not."
+msgstr "No not."
+
+#: prefs.js:346
+msgid "No upd."
+msgstr "No upd."
+
+#: prefs.js:555
+msgid "Invalid URL"
+msgstr "Ungültige URL"
+
+#: prefs.js:564
+msgid "Checking"
+msgstr "Überprüfung"
+
+#: prefs.js:596
+msgid "Unable to parse"
+msgstr "Kann nicht analysiert werden"
+
+#: prefs.js:600
+msgid "OK"
+msgstr "OK"
+
+#: prefs.js:800
+msgid "New RSS Feed source"
+msgstr "Neue RSS-Quelle"
+
+#~ msgid "EXCEPTION"
+#~ msgstr "JS Fehler"
+
+#~ msgid "RSS parsing error"
+#~ msgstr "RSS Fehler"

@@ -21,75 +21,63 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const Lang = imports.lang;
-
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Base = Me.imports.parsers.base;
 const Log = Me.imports.logger;
 
 /*
- *  RDF (RSS 1.0) parser class
+ *  Atom 1.0 format parser class
  */
-const RdfParser = new Lang.Class({
-
-    Name: 'RdfParser',
-    Extends: Base.BaseParser,
-
+var AtomParser = class _AtomParser extends Base.BaseParser
+{
     /*
-     *  Initialize the instance of RdfParser class
+     *  Initialize the instance of AtomParser class
      *  root - root element of feed file
      */
-    _init: function(root) {
-        this.parent(root);
-        Log.Debug("RDF (RSS 1.0) parser");
-    },
+	constructor(root) {
+        super(root);
+        this._type = "Atom 1.0";
+        Log.Debug("Atom 1.0 parser");
+    }
 
     /*
      *  Parse feed file
      */
-    parse: function() {
+    parse() {
 
-        for (let i = 0; i < this._root.childElements.length; i++) {
-
-            if (this._root.childElements[i].name == 'channel') {
-                this._parsePublisher(this._root.childElements[i].childElements);
-            }
-            else if (this._root.childElements[i].name == 'item') {
-                this._parseItem(this._root.childElements[i].childElements);
-            }
-        }
-    },
+        // root = feed
+        this._parsePublisher(this._root.childElements);
+    }
 
     /*
      *  Parse publisher
      */
-    _parsePublisher: function(childElements) {
+    _parsePublisher(childElements) {
 
         for (let i = 0; i < childElements.length; i++) {
 
             if (childElements[i].name == 'title') {
                 this.Publisher.Title = childElements[i].text;
-                //Log.Debug("Publisher Title: " + this.Publisher.Title);
             }
-            else if (childElements[i].name == 'link') {
-                this.Publisher.HttpLink = childElements[i].text;
-                //Log.Debug("Publisher Link: " + this.Publisher.HttpLink);
+            else if (childElements[i].name == 'link' && childElements[i].attribute('rel') != 'self') {
+                this.Publisher.HttpLink = childElements[i].attribute('href');
             }
             else if (childElements[i].name == 'description') {
                 this.Publisher.Description = childElements[i].text;
-                //Log.Debug("Publisher Description: " + this.Publisher.Description);
             }
-            else if (childElements[i].name == 'dc:date') {
+            else if (childElements[i].name == 'updated') {
                 this.Publisher.PublishDate = childElements[i].text;
-                //Log.Debug("Publisher Date: " + this.Publisher.PublishDate);
+            }
+            else if (childElements[i].name == 'entry') {
+                this._parseItem(childElements[i].childElements);
             }
         }
-    },
-
+    }
+    
     /*
      *  Parse item
      */
-    _parseItem: function(itemElements) {
+    _parseItem(itemElements) {
 
         let item = this._initItem();
 
@@ -97,30 +85,31 @@ const RdfParser = new Lang.Class({
 
             if (itemElements[i].name == 'title') {
                 item.Title = itemElements[i].text;
-                //Log.Debug("Item Title: " + item.Title);
             }
-            else if (itemElements[i].name == 'link') {
-                item.HttpLink = itemElements[i].text;
-                //Log.Debug("Item Link: " + item.HttpLink);
+            else if (itemElements[i].name == 'link') {            	
+            	item.HttpLink = itemElements[i].attribute('href');        	
             }
             else if (itemElements[i].name == 'description') {
                 item.Description = itemElements[i].text;
-                //Log.Debug("Item Description: " + item.Description);
             }
-            else if (itemElements[i].name == 'dc:date') {
+            else if (itemElements[i].name == 'published') {
                 item.PublishDate = itemElements[i].text;
-                //Log.Debug("Item Date: " + item.PublishDate);
             }
-            else if (itemElements[i].name == 'dc:creator') {
-                item.Author = itemElements[i].text;
-                //Log.Debug("Item Author: " + item.Author);
+            else if (itemElements[i].name == 'updated') {
+                item.UpdateTime = itemElements[i].text;
             }
-            else if (itemElements[i].name == 'dc:contributor') {
-                item.Contributor = itemElements[i].childElements[0].childElements[0].text;
-                //Log.Debug("Item Author: " + item.Contributor);
+            else if (itemElements[i].name == 'author') {
+                item.Author = itemElements[i].childElements[0].text;
             }
+            else if (itemElements[i].name == 'id') {
+                item.ID = itemElements[i].text;
+            }
+        }
+        
+        if (!this._postprocessItem(item)) {
+        	return;
         }
 
         this.Items.push(item);
     }
-});
+};

@@ -21,42 +21,46 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const Lang = imports.lang;
-
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Base = Me.imports.parsers.base;
 const Log = Me.imports.logger;
 
 /*
- *  RSS 2.0 parser class
+ *  RDF (RSS 1.0) parser class
  */
-const RssParser = new Lang.Class({
-
-    Name: 'RssParser',
-    Extends: Base.BaseParser,
+var RdfParser = class _RdfParser extends Base.BaseParser
+{
 
     /*
-     *  Initialize the instance of RssParser class
+     *  Initialize the instance of RdfParser class
      *  root - root element of feed file
      */
-    _init: function(root) {
-        this.parent(root);
-        Log.Debug("RSS 2.0 parser");
-    },
+	constructor(root) {
+        super(root);
+        this._type = "RDF (RSS 1.0)";
+        Log.Debug("RDF (RSS 1.0) parser");
+    }
 
     /*
      *  Parse feed file
      */
-    parse: function() {
+    parse() {
 
-        // root = rss -> channel
-        this._parsePublisher(this._root.childElements[0].childElements);
-    },
+        for (let i = 0; i < this._root.childElements.length; i++) {
+
+            if (this._root.childElements[i].name == 'channel') {
+                this._parsePublisher(this._root.childElements[i].childElements);
+            }
+            else if (this._root.childElements[i].name == 'item') {
+                this._parseItem(this._root.childElements[i].childElements);
+            }
+        }
+    }
 
     /*
      *  Parse publisher
      */
-    _parsePublisher: function(childElements) {
+    _parsePublisher(childElements) {
 
         for (let i = 0; i < childElements.length; i++) {
 
@@ -69,19 +73,16 @@ const RssParser = new Lang.Class({
             else if (childElements[i].name == 'description') {
                 this.Publisher.Description = childElements[i].text;
             }
-            else if (childElements[i].name == 'pubDate') {
+            else if (childElements[i].name == 'dc:date') {
                 this.Publisher.PublishDate = childElements[i].text;
             }
-            else if (childElements[i].name == 'item') {
-                this._parseItem(childElements[i].childElements);
-            }
         }
-    },
+    }
 
     /*
      *  Parse item
      */
-    _parseItem: function(itemElements) {
+    _parseItem(itemElements) {
 
         let item = this._initItem();
 
@@ -96,14 +97,21 @@ const RssParser = new Lang.Class({
             else if (itemElements[i].name == 'description') {
                 item.Description = itemElements[i].text;
             }
-            else if (itemElements[i].name == 'pubDate') {
+            else if (itemElements[i].name == 'dc:date') {
                 item.PublishDate = itemElements[i].text;
             }
-            else if (itemElements[i].name == 'author') {
+            else if (itemElements[i].name == 'dc:creator') {
                 item.Author = itemElements[i].text;
             }
+            else if (itemElements[i].name == 'dc:contributor') {
+                item.Contributor = itemElements[i].childElements[0].childElements[0].text;
+            }
+        }
+        
+        if (!this._postprocessItem(item)) {
+        	return;
         }
 
         this.Items.push(item);
     }
-});
+};

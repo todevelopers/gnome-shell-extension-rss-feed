@@ -2,8 +2,6 @@
  * RSS Feed extension for GNOME Shell
  *
  * Copyright (C) 2015
- *     Tomas Gazovic <gazovic.tomasgmail.com>,
- *     Janka Gazovicova <jana.gazovicova@gmail.com>
  *
  * This file is part of gnome-shell-extension-rss-feed.
  *
@@ -21,26 +19,27 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Settings = Me.imports.convenience.getSettings();
 
-const DEBUG_ENABLED_KEY = 'enable-debug';
 
-/*
- *  Logs error messages.
- */
-function Error(message) {
-    logError(message);
-}
+function getParametersAsJson(url) 
+{
+	let l2o = url.indexOf('?');
 
-/*
- *  If debug extension is enabled logs debug messages.
- */
-function Debug(message) {
+	if (l2o == -1)
+		return "{}";
 
-    let enabled = Settings.get_boolean(DEBUG_ENABLED_KEY);
+	let urlParams = url.substr(l2o + 1);
+	let params = urlParams.split('&');
 
-    if (enabled == true) {
-          log("rss-feed@gnome-shell-extension: " + message);
-    }
+	let jsonObj = "{";
+	for (let i = 0; i < params.length; i++)
+	{
+		let pair = params[i].split('=');
+		jsonObj += '"' + pair[0] + '":' + '"' + pair[1] + '"';
+		if (i != params.length - 1)
+			jsonObj += ',';
+	}
+	jsonObj += "}";
+
+	return jsonObj;
 }

@@ -21,67 +21,66 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const Lang = imports.lang;
-
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Base = Me.imports.parsers.base;
 const Log = Me.imports.logger;
+const GLib = imports.gi.GLib;
 
 /*
- *  Atom 1.0 format parser class
+ * RSS 2.0 parser class
  */
-const AtomParser = new Lang.Class({
-
-    Name: 'AtomParser',
-    Extends: Base.BaseParser,
+var RssParser = class _RssParser extends Base.BaseParser
+{
 
     /*
-     *  Initialize the instance of AtomParser class
-     *  root - root element of feed file
-     */
-    _init: function(root) {
-        this.parent(root);
-        Log.Debug("Atom 1.0 parser");
-    },
+	 * Initialize the instance of RssParser class root - root element of feed
+	 * file
+	 */
+	constructor(root) 
+	{
+        super(root);
+        this._type = "RSS 2.0";
+        Log.Debug("RSS 2.0 parser");
+    }
 
     /*
-     *  Parse feed file
-     */
-    parse: function() {
+	 * Parse feed file
+	 */
+    parse() {
 
-        // root = feed
-        this._parsePublisher(this._root.childElements);
-    },
+        // root = rss -> channel
+        this._parsePublisher(this._root.childElements[0].childElements);
+    }
 
     /*
-     *  Parse publisher
-     */
-    _parsePublisher: function(childElements) {
+	 * Parse publisher
+	 */
+    _parsePublisher(childElements) {
 
         for (let i = 0; i < childElements.length; i++) {
 
             if (childElements[i].name == 'title') {
                 this.Publisher.Title = childElements[i].text;
             }
-            else if (childElements[i].name == 'link' && childElements[i].attribute('rel') != 'self') {
-                this.Publisher.HttpLink = childElements[i].attribute('href');
+            else if (childElements[i].name == 'link') {
+                this.Publisher.HttpLink = childElements[i].text;
             }
             else if (childElements[i].name == 'description') {
                 this.Publisher.Description = childElements[i].text;
             }
-            else if (childElements[i].name == 'updated') {
+            else if (childElements[i].name == 'pubDate') {
                 this.Publisher.PublishDate = childElements[i].text;
             }
-            else if (childElements[i].name == 'entry') {
+            else if (childElements[i].name == 'item') {
                 this._parseItem(childElements[i].childElements);
             }
         }
-    },
+    }
 
     /*
-     *  Parse item
-     */
-    _parseItem: function(itemElements) {
+	 * Parse item
+	 */
+    _parseItem(itemElements) {
 
         let item = this._initItem();
 
@@ -91,19 +90,26 @@ const AtomParser = new Lang.Class({
                 item.Title = itemElements[i].text;
             }
             else if (itemElements[i].name == 'link') {
-                item.HttpLink = itemElements[i].attribute('href');
+            	item.HttpLink = itemElements[i].text;
             }
             else if (itemElements[i].name == 'description') {
                 item.Description = itemElements[i].text;
             }
-            else if (itemElements[i].name == 'published') {
+            else if (itemElements[i].name == 'pubDate') {
                 item.PublishDate = itemElements[i].text;
             }
             else if (itemElements[i].name == 'author') {
-                item.Author = itemElements[i].childElements[0].text;
+                item.Author = itemElements[i].text;
+            } 
+            else if (itemElements[i].name == 'guid') {
+                item.ID = itemElements[i].text;
             }
+        }
+        
+        if (!this._postprocessItem(item)) {
+        	return;
         }
 
         this.Items.push(item);
     }
-});
+};

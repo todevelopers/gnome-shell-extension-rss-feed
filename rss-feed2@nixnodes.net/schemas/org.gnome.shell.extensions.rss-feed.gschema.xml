@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="rss-feed2-gnome-shell">
+    <schema path="/org/gnome/shell/extensions/rss-feed2/"
+            id="org.gnome.shell.extensions.rss-feed2">
+		<key type="i" name="update-interval">
+		    <default>15</default>
+		    <summary>Update interval</summary>
+		    <description>Download interval (in minutes) for all RSS feeds.</description>
+		</key>
+		<key type="i" name="items-visible">
+		    <default>100</default>
+		    <summary>Max items per source</summary>
+		    <description>Number of items visible per source.</description>
+		</key>
+		<key type="i" name="max-height">
+		    <default>8192</default>
+		    <summary>Max menu height (px)</summary>
+		    <description>Maximum popup menu height (in pixels) before it starts scrolling.</description>
+		</key>
+		<key type="i" name="fpoll-timeout">
+		    <default>1000</default>
+		    <summary>Poll delay (ms)</summary>
+		    <description>Throttles RSS source polls to reduce the performance impact on gnome-shell.</description>
+		</key>
+		<key type="i" name="notification-limit">
+		    <default>25</default>
+		    <summary>Notification limit</summary>
+		    <description>Maximum number of notifications shown at once</description>
+		</key>
+		<key type="b" name="enable-notifications">
+		    <default>true</default>
+		    <summary>Show notifications</summary>
+		    <description>Show notifications when new RSS items are found.</description>
+		</key>
+		<key type="b" name="enable-notifications-locked">
+		    <default>false</default>
+		    <summary>Lock screen notifications</summary>
+		    <description>Show notifications when screen locked.</description>
+		</key>
+		<key type="b" name="notifications-cleanup">
+		    <default>true</default>
+		    <summary>Clean notifications on disable</summary>
+		    <description>Clean notifications on plugin disabled.</description>
+		</key>
+		<key type="b" name="enable-anim">
+		    <default>true</default>
+		    <summary>Enable animations</summary>
+		    <description>Enable animations</description>
+		</key>
+		<key type="b" name="preserve-on-lock">
+		    <default>false</default>
+		    <summary>Preserve when screen off</summary>
+		    <description>Do not disable the extension when screen is deactivated or locked.</description>
+		</key>
+		<key type="b" name="detect-updates">
+		    <default>true</default>
+		    <summary>Detect updates</summary>
+		    <description>Detect updates.</description>
+		</key>
+		<key type="b" name="enable-descriptions">
+		    <default>false</default>
+		    <summary>Show descriptions</summary>
+		    <description>Show description received from RSS feed when selecting an article.</description>
+		</key>
+		<key type="as" name="rss-feeds-list">
+		    <default>[]</default>
+		    <summary>RSS feeds</summary>
+		    <description>List of RSS feeds sources.</description>
+		</key>
+		<key type="s" name="rss-feeds-settings">
+		    <default>"{}"</default>
+		    <summary>RSS feeds settings</summary>
+		    <description></description>
+		</key>
+		<key type="b" name="enable-debug">
+		    <default>false</default>
+		    <summary>Enable debug</summary>
+		    <description>Enable extension logs debug messages in Gnome logs provider.</description>
+		</key>
+		<key type="b" name="menu-buttons-align-top">
+		    <default>false</default>
+		    <summary>Top-align menu buttons</summary>
+		    <description>Top-align menu buttonsd</description>
+		</key>
+		<key type="b" name="http-keep-alive">
+		    <default>true</default>
+		    <summary>HTTP Keep-Alive</summary>
+		    <description>Set Keep-Alive in HTTP request headers</description>
+		</key>
+		<key type="b" name="set-seen-when-closed">
+		    <default>false</default>
+		    <summary>Set all feeds as seen when closed.</summary>
+		    <description>Set all RSS feeds as seen whenever the user closes the main popup menu.</description>
+		</key>		
+    </schema>
+</schemalist>
