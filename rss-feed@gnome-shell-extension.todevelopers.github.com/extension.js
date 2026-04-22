@@ -43,9 +43,6 @@ const Log = Me.imports.logger;
 const Settings = Convenience.getSettings();
 const AssocSettings = Me.imports.gsaa;
 
-const Gettext = imports.gettext.domain('rss-feed');
-const _ = Gettext.gettext;
-
 const MessageTray = imports.ui.messageTray;
 
 const Misc = Me.imports.misc;
@@ -197,7 +194,7 @@ const RssFeed2 = GObject.registerClass(
 			if (Settings.get_boolean(GSKeys.ENABLE_DEBUG))
 			{
 				let reloadPluginBtn = systemMenu._createActionButton('system-shutdown-symbolic',
-					_("Reload Plugin"));
+					"Reload Plugin");
 				this._buttonMenu.actor.add_actor(reloadPluginBtn);
 				reloadPluginBtn.connect('clicked', () =>
 				{
@@ -218,9 +215,9 @@ const RssFeed2 = GObject.registerClass(
 			this._lastUpdateTime.set_y_align(Clutter.ActorAlign.CENTER);
 
 			let reloadBtn = systemMenu._createActionButton('view-refresh-symbolic',
-				_("Reload RSS Feeds"));
+				"Reload RSS Feeds");
 			let settingsBtn = systemMenu._createActionButton('emblem-system-symbolic',
-				_("RSS Feed Settings"));
+				"RSS Feed Settings");
 
 			this._buttonMenu.actor.add_actor(reloadBtn);
 			this._buttonMenu.actor.add_actor(settingsBtn);
@@ -722,13 +719,6 @@ const RssFeed2 = GObject.registerClass(
 
 						cacheObj._itemDescription = itemDescription;
 
-						/*
-						 *  show description inside the article label, when selected
-						 *
-						 *  FIXME:
-						 *  This is not an ideal solution, it should be replaced with
-						 *  a free-floating (not bound to the menu) tooltip or similar.
-						 */
 						menu.connect('active-changed', (self, over) =>
 						{
 							if (!Settings.get_boolean(GSKeys.ENABLE_DESC))
@@ -762,12 +752,6 @@ const RssFeed2 = GObject.registerClass(
 				feedCache.UnreadCount++;
 				this._totalUnreadCount++;
 
-
-				//Log.Debug('--------------')
-				//Log.Debug(feedCache.UnreadCount);
-				//Log.Debug(feedCache.pUnreadCount);
-				//Log.Debug(this._totalUnreadCount);
-
 				cacheObj.Unread = true
 				menu.setOrnament(PopupMenu.Ornament.DOT);
 
@@ -777,11 +761,11 @@ const RssFeed2 = GObject.registerClass(
 				{
 					let itemTitle = item.Title;
 
-					cacheObj.Notification = this._dispatchNotification(item._update ? (_("UPDATE")
-						+ ': ' + item.Title) : itemTitle, _("Source")
+					cacheObj.Notification = this._dispatchNotification(item._update ? ("UPDATE"
+						+ ': ' + item.Title) : itemTitle, "Source"
 						+ ': '
 						+ Encoder.htmlDecode(rssParser.Publisher.Title)
-						+ (item.Author.length ? ', ' + _("Author") + ': '
+						+ (item.Author.length ? ', ' + "Author" + ': '
 							+ Encoder.htmlDecode(item.Author) : '') + '\n\n'
 						+ (cacheObj._itemDescription ? cacheObj._itemDescription : itemTitle),
 						itemURL, cacheObj);
@@ -811,7 +795,7 @@ const RssFeed2 = GObject.registerClass(
 
 			// update last download time
 			this._lastUpdateTime
-				.set_text(_("Last update") + ': ' + new Date().toLocaleTimeString());
+				.set_text("Last update" + ': ' + new Date().toLocaleTimeString());
 
 		}
 
@@ -862,13 +846,13 @@ const RssFeed2 = GObject.registerClass(
 			notification._itemURL = url;
 			notification._cacheObj = cacheObj;
 
-			notification.addAction(_('Open URL'), function()
+			notification.addAction('Open URL', function()
 			{
 				Misc.processLinkOpen(notification._itemURL, notification._cacheObj);
 				notification.destroy();
 			});
 
-			notification.addAction(_('Copy URL'), function()
+			notification.addAction('Copy URL', function()
 			{
 				St.Clipboard.get_default().set_text(St.ClipboardType.CLIPBOARD,
 					notification._itemURL);
@@ -921,8 +905,6 @@ let rssFeed;
  */
 function init()
 {
-	Convenience.initTranslations("rss-feed");
-
 	// hack for dconf
 	Settings.set_boolean(GSKeys.ENABLE_DEBUG, Settings.get_boolean(GSKeys.ENABLE_DEBUG));
 	Settings.set_boolean(GSKeys.HTTP_KEEPALIVE, Settings.get_boolean(GSKeys.HTTP_KEEPALIVE));

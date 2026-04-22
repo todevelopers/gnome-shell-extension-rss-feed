@@ -33,9 +33,6 @@ const Settings = Convenience.getSettings();
 
 const Mainloop = imports.mainloop;
 
-const Gettext = imports.gettext.domain('rss-feed');
-const _ = Gettext.gettext;
-
 const HTTP = Me.imports.http;
 const AssocSettings = Me.imports.gsaa;
 const Parser = Me.imports.parsers.factory;
@@ -109,10 +106,10 @@ const RssFeedSettingsWidget = GObject.registerClass(
 					hexpand: true
 				});
 				{
-					this._addSpinButton(general_box, GSKeys.UPDATE_INTERVAL, _("Update interval (min):"), MAX_UPDATE_INTERVAL);
-					this._addSpinButton(general_box, GSKeys.POLL_DELAY, _("Poll delay (ms):"), MAX_POLL_DELAY);
-					this._addSwitch(general_box, GSKeys.PRESERVE_ON_LOCK, _("Preserve when screen off:"));
-					this._addSwitch(general_box, GSKeys.DETECT_UPDATES, _("Detect updates:"));
+					this._addSpinButton(general_box, GSKeys.UPDATE_INTERVAL, "Update interval (min):", MAX_UPDATE_INTERVAL);
+					this._addSpinButton(general_box, GSKeys.POLL_DELAY, "Poll delay (ms):", MAX_POLL_DELAY);
+					this._addSwitch(general_box, GSKeys.PRESERVE_ON_LOCK, "Preserve when screen off:");
+					this._addSwitch(general_box, GSKeys.DETECT_UPDATES, "Detect updates:");
 					
 
 
@@ -141,9 +138,9 @@ const RssFeedSettingsWidget = GObject.registerClass(
 								try_spawn([GSE_TOOL_PATH, '-e', Me.uuid])
 							});
 						});
-						reloadButton.set_tooltip_text(_("Reactivate extension"));
+						reloadButton.set_tooltip_text("Reactivate extension");
 
-						let box_dbgsw = this._createControlBase(_("Debug mode:"));
+						let box_dbgsw = this._createControlBase("Debug mode:");
 						box_dbgsw.set_hexpand(true);
 						box_dbgsw.add(reloadButton);
 
@@ -179,12 +176,12 @@ const RssFeedSettingsWidget = GObject.registerClass(
 					hexpand: true
 				});
 				{
-					this._addSpinButton(menu_box, GSKeys.MAX_HEIGHT, _("Max menu height (px):"), MAX_HEIGHT);
-					this._addSpinButton(menu_box, GSKeys.ITEMS_VISIBLE, _("Max items per source:"), MAX_SOURCES_LIMIT);
-					this._addSwitch(menu_box, GSKeys.ENABLE_ANIMATIONS, _("Enable animations:"));
-					this._addSwitch(menu_box, GSKeys.MB_ALIGN_TOP, _("Top-align buttons:"));
-					this._addSwitch(menu_box, GSKeys.ENABLE_DESC, _("Show descriptions:"));
-					this._addSwitch(menu_box, GSKeys.SET_SEEN_WHEN_CLOSED, _("Set every feed as seen when closed:"));
+					this._addSpinButton(menu_box, GSKeys.MAX_HEIGHT, "Max menu height (px):", MAX_HEIGHT);
+					this._addSpinButton(menu_box, GSKeys.ITEMS_VISIBLE, "Max items per source:", MAX_SOURCES_LIMIT);
+					this._addSwitch(menu_box, GSKeys.ENABLE_ANIMATIONS, "Enable animations:");
+					this._addSwitch(menu_box, GSKeys.MB_ALIGN_TOP, "Top-align buttons:");
+					this._addSwitch(menu_box, GSKeys.ENABLE_DESC, "Show descriptions:");
+					this._addSwitch(menu_box, GSKeys.SET_SEEN_WHEN_CLOSED, "Set every feed as seen when closed:");
 				}
 
 				upper_box.add(menu_box);
@@ -214,10 +211,10 @@ const RssFeedSettingsWidget = GObject.registerClass(
 					hexpand: true
 				});
 				{
-					this._nbSwitch = this._addSwitch(notif_left, GSKeys.ENABLE_NOTIFICATIONS, _("Show notifications:"),
+					this._nbSwitch = this._addSwitch(notif_left, GSKeys.ENABLE_NOTIFICATIONS, "Show notifications:",
 						nbswStFunc
 					);
-					this._nbMax = this._addSpinButton(notif_left, GSKeys.MAX_NOTIFICATIONS, _("Max notifications:"), MAX_NOTIFICATIONS);
+					this._nbMax = this._addSpinButton(notif_left, GSKeys.MAX_NOTIFICATIONS, "Max notifications:", MAX_NOTIFICATIONS);
 				}
 
 				let notif_right = new Gtk.Box(
@@ -227,8 +224,8 @@ const RssFeedSettingsWidget = GObject.registerClass(
 					hexpand: true
 				});
 				{
-					this._nbOnLockScreen = this._addSwitch(notif_right, GSKeys.NOTIFICATIONS_ON_LOCKSCREEN, _("Show on lock screen:"));
-					this._nbCleanup = this._addSwitch(notif_right, GSKeys.CLEANUP_NOTIFICATIONS, _("Clean up notifications:"));
+					this._nbOnLockScreen = this._addSwitch(notif_right, GSKeys.NOTIFICATIONS_ON_LOCKSCREEN, "Show on lock screen:");
+					this._nbCleanup = this._addSwitch(notif_right, GSKeys.CLEANUP_NOTIFICATIONS, "Clean up notifications:");
 				}
 
 				notif_box.add(notif_left);
@@ -252,7 +249,7 @@ const RssFeedSettingsWidget = GObject.registerClass(
 			let labels = new Gtk.Label(
 			{
 				xalign: Gtk.Align.CENTER,
-				label: _("RSS sources")
+				label: "RSS sources"
 			});
 			boxsources.pack_start(labels, true, true, 0);
 
@@ -281,7 +278,7 @@ const RssFeedSettingsWidget = GObject.registerClass(
 					[res, iter] = this._store.get_iter(path);
 				}
 			});
-			checkRSSButton.set_tooltip_text(_("Re-check all RSS sources"))
+			checkRSSButton.set_tooltip_text("Re-check all RSS sources")
 
 			boxsources.add(checkRSSButton);
 
@@ -331,7 +328,7 @@ const RssFeedSettingsWidget = GObject.registerClass(
 			
 			// URL column
 			let [column_url, cell_url] = this._addSourcesColumn(this._actor, 
-				new Gtk.CellRendererText({editable: true}), COLUMN_URL, _("URL"));
+				new Gtk.CellRendererText({editable: true}), COLUMN_URL, "URL");
 
 			column_url.add_attribute(cell_url, "text", COLUMN_URL);
 			column_url.set_fixed_width(320);
@@ -340,7 +337,7 @@ const RssFeedSettingsWidget = GObject.registerClass(
 
 			// title column
 			let [column_title, cell_title] = this._addSourcesColumn(this._actor,
-				new Gtk.CellRendererText(), COLUMN_TITLE, _("Title"));
+				new Gtk.CellRendererText(), COLUMN_TITLE, "Title");
 			
 			column_title.add_attribute(cell_title, "text", COLUMN_TITLE);
 			column_title.set_expand(true);
@@ -348,14 +345,14 @@ const RssFeedSettingsWidget = GObject.registerClass(
 			
 			// status column		
 			let [column_status, cell_status] = this._addSourcesColumn(this._actor, 
-				new Gtk.CellRendererText(), COLUMN_STATUS, _("Status"));
+				new Gtk.CellRendererText(), COLUMN_STATUS, "Status");
 
 			column_status.add_attribute(cell_status, "text", COLUMN_STATUS);
 			column_status.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE);
 
 			// disable notifications column
 			let [column_notif, cell_notif] = this._addSourcesColumn(this._actor,
-				new Gtk.CellRendererToggle({activatable:true, xalign: Gtk.Align.CENTER}), COLUMN_NOTIF, _("No not."));
+				new Gtk.CellRendererToggle({activatable:true, xalign: Gtk.Align.CENTER}), COLUMN_NOTIF, "No not.");
 
 			column_notif.add_attribute(cell_notif, "active", COLUMN_NOTIF);
 			column_notif.set_fixed_width(60);
@@ -365,7 +362,7 @@ const RssFeedSettingsWidget = GObject.registerClass(
 
 			// disable updates column
 			let [column_upd, cell_upd] = this._addSourcesColumn(this._actor,
-				new Gtk.CellRendererToggle({activatable:true, xalign: Gtk.Align.CENTER}), COLUMN_UPD, _("No upd."));
+				new Gtk.CellRendererToggle({activatable:true, xalign: Gtk.Align.CENTER}), COLUMN_UPD, "No upd.");
 
 			column_upd.add_attribute(cell_upd, "active", COLUMN_UPD);
 			column_upd.set_fixed_width(60);
@@ -577,7 +574,7 @@ const RssFeedSettingsWidget = GObject.registerClass(
 
 			if (!request)
 			{
-				this._store.set_value(iter, COLUMN_STATUS, _("Invalid URL"));
+				this._store.set_value(iter, COLUMN_STATUS, "Invalid URL");
 				return null;
 			}
 
@@ -586,7 +583,7 @@ const RssFeedSettingsWidget = GObject.registerClass(
 
 			cacheObj.p = request;
 
-			this._store.set_value(iter, COLUMN_STATUS, _("Checking") + "..");
+			this._store.set_value(iter, COLUMN_STATUS, "Checking" + "..");
 
 			this._httpSession.queue_message(request, 
 				(session, message) =>
@@ -618,12 +615,12 @@ const RssFeedSettingsWidget = GObject.registerClass(
 
 					if (parser == null)
 					{
-						this._store.set_value(iter, COLUMN_STATUS, _("Unable to parse"));
+						this._store.set_value(iter, COLUMN_STATUS, "Unable to parse");
 						return;
 					}
 					parser.parse();
 
-					this._store.set_value(iter, COLUMN_STATUS, _("OK") + " (" + parser._type + ")");
+					this._store.set_value(iter, COLUMN_STATUS, "OK" + " (" + parser._type + ")");
 					this._store.set_value(iter, COLUMN_TITLE, parser.Publisher.Title);
 				});
 
@@ -822,7 +819,7 @@ const RssFeedSettingsWidget = GObject.registerClass(
 		 */
 		_createNew()
 		{
-			this._createDialog(_("New RSS Feed source"), '', 
+			this._createDialog("New RSS Feed source", '', 
 				(id) =>
 			{
 				let text = this._entry.get_text();
@@ -916,7 +913,6 @@ function try_spawn(argv)
  */
 function init()
 {
-	Convenience.initTranslations("rss-feed");
 }
 
 /*
