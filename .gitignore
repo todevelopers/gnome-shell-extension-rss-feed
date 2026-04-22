@@ -1,0 +1,12 @@
+# GNOME Schema compiled binary
+rss-feed2@nixnodes.net/schemas/gschemas.compiled
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
