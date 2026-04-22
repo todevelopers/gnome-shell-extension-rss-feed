@@ -30,7 +30,7 @@ Not yet available
 
 ### Manual installation
 
-Clone or download zip from https://github.com/nixnodes/gnome-shell-extension-rss-feed and move or symlink `rss-feed@nixnodes.net` folder to `~/.local/share/gnome-shell/extensions/`. 
+Clone or download zip from https://github.com/todevelopers/gnome-shell-extension-rss-feed and move or symlink `rss-feed@gnome-shell-extension.todevelopers.github.com` folder to `~/.local/share/gnome-shell/extensions/`.
 
 ## Screenshots
 

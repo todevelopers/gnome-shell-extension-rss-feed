@@ -41,10 +41,10 @@ function Debug(message) {
     let enabled = Settings.get_boolean(DEBUG_ENABLED_KEY);
 
     if (enabled == true) {
-          log("rss-feed2@gnome-shell-extension: " + message);
+          log("rss-feed@gnome-shell-extension.todevelopers.github.com: " + message);
     }
 }
 
 function Msg(message) {
-	log("rss-feed2@gnome-shell-extension: " + message);
+	log("rss-feed@gnome-shell-extension.todevelopers.github.com: " + message);
 }

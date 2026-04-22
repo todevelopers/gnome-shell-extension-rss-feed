@@ -1,127 +1,126 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# Slovenian translations for PACKAGE package.
+# Copyright (C) 2017 THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#  <siska@nixnodes.net>, 2017.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: rss-feed2@nixnodes.net\n"
+"Project-Id-Version: rss-feed@gnome-shell-extension.todevelopers.github.com\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-12-16 07:10+0100\n"
-"PO-Revision-Date: 2015-06-18 11:03-0300\n"
-"Last-Translator: Jonatan Zeidler <jonatan_zeidler@gmx.de>\n"
-"Language-Team: German <jonatan_zeidler@gmx.de>\n"
-"Language: de\n"
+"PO-Revision-Date: 2017-02-25 21:20+0100\n"
+"Last-Translator:  <siska@nixnodes.net>\n"
+"Language-Team: Slovenian\n"
+"Language: sl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 1.7.5\n"
-"X-Poedit-SourceCharset: UTF-8\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n"
+"%100==4 ? 2 : 3);\n"
 
 #: extension.js:185
 msgid "Reload Plugin"
-msgstr "Das Plugin neu laden"
+msgstr "Ponovno naloži vtičnik"
 
 #: extension.js:205
 msgid "Reload RSS Feeds"
-msgstr "RSS-Quellen abrufen"
+msgstr "Osveži"
 
 #: extension.js:206
 msgid "RSS Feed Settings"
-msgstr "Einstellungen der RSS-Quellen"
+msgstr "Nastavitve"
 
 #: extension.js:722
 msgid "UPDATE"
-msgstr "NEUFASSUNG"
+msgstr "POPRAVEK"
 
 #: extension.js:723
 msgid "Source"
-msgstr "Quelle"
+msgstr "Vir"
 
 #: extension.js:724
 msgid "Author"
-msgstr "Autor"
+msgstr "Avtor"
 
 #: extension.js:750
 msgid "Last update"
-msgstr "Zuletzt aktualisiert"
+msgstr "Zadnja posodobitev"
 
 #: extension.js:798
 msgid "Open URL"
-msgstr "Öffne URL"
+msgstr "Odpri"
 
 #: extension.js:804
 msgid "Copy URL"
-msgstr "Kopieren URL"
+msgstr "Kopiraj"
 
 #: prefs.js:110
 msgid "Update interval (min):"
-msgstr "Aktualisierungsintervall (Min):"
+msgstr "Interval osvežitev (min):"
 
 #: prefs.js:111
 msgid "Poll delay (ms):"
-msgstr "Abfrageverzögerung (ms):"
+msgstr "Zamik med posodobitvami (ms):"
 
 #: prefs.js:112
 msgid "Preserve when screen off:"
-msgstr "Erhalten wenn Bildschirm aus:"
+msgstr "Ohrani ob zaklepu zaslona:"
 
 #: prefs.js:113
 msgid "Detect updates:"
-msgstr "Erkennung Updates:"
+msgstr "Zaznaj popravke:"
 
 #: prefs.js:140
 msgid "Reactivate extension"
-msgstr "Verlängerung reaktivieren"
+msgstr "Ponovno aktiviraj vtičnik"
 
 #: prefs.js:142
 msgid "Debug mode:"
-msgstr "Debug-Modus:"
+msgstr "Razhroščevanje:"
 
 #: prefs.js:178
 msgid "Max menu height (px):"
-msgstr "Max. Menühöhe (px):"
+msgstr "Največja višina menija (px):"
 
 #: prefs.js:179
 msgid "Max items per source:"
-msgstr "Max. Artikel pro Quelle:"
+msgstr "Največ predmetov na vir:"
 
 #: prefs.js:180
 msgid "Enable animations:"
-msgstr "Animationen aktivieren:"
+msgstr "Vklopi animacije:"
 
 #: prefs.js:181
 msgid "Top-align buttons:"
-msgstr "Top-align buttons:"
+msgstr "Gumbi zgoraj:"
 
 #: prefs.js:182
 msgid "Show descriptions:"
-msgstr "Beschreibungen anzeigen:"
+msgstr "Prikaži opise:"
 
 #: prefs.js:212
 msgid "Show notifications:"
-msgstr "Zeige Benachrichtigungen:"
+msgstr "Prikaži obvestila:"
 
 #: prefs.js:215
 msgid "Max notifications:"
-msgstr "Maximale Benachrichtigung:"
+msgstr "Omejitev obvestil:"
 
 #: prefs.js:225
 msgid "Show on lock screen:"
-msgstr "Show on lock screen:"
+msgstr "Prikaži na lockscreenu:"
 
 #: prefs.js:226
 msgid "Clean up notifications:"
-msgstr "Clean up notifications:"
+msgstr "Počisti obvestila:"
 
 #: prefs.js:250
 msgid "RSS sources"
-msgstr "RSS Quellen"
+msgstr "RSS Viri"
 
 #: prefs.js:279
 msgid "Re-check all RSS sources"
-msgstr "Überprüfe alle RSS-Quellen"
+msgstr "Ponovno preveri vse RSS vire"
 
 #: prefs.js:319
 msgid "URL"
@@ -141,15 +140,15 @@ msgstr "No upd."
 
 #: prefs.js:555
 msgid "Invalid URL"
-msgstr "Ungültige URL"
+msgstr "Neveljaven URL"
 
 #: prefs.js:564
 msgid "Checking"
-msgstr "Überprüfung"
+msgstr "Preverjam"
 
 #: prefs.js:596
 msgid "Unable to parse"
-msgstr "Kann nicht analysiert werden"
+msgstr "Ne morem razčleniti"
 
 #: prefs.js:600
 msgid "OK"
@@ -157,10 +156,10 @@ msgstr "OK"
 
 #: prefs.js:800
 msgid "New RSS Feed source"
-msgstr "Neue RSS-Quelle"
+msgstr "Nov RSS vir"
 
 #~ msgid "EXCEPTION"
-#~ msgstr "JS Fehler"
+#~ msgstr "NAPAKA"
 
 #~ msgid "RSS parsing error"
-#~ msgstr "RSS Fehler"
+#~ msgstr "RSS napaka"

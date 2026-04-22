@@ -43,7 +43,7 @@ const Log = Me.imports.logger;
 const Settings = Convenience.getSettings();
 const AssocSettings = Me.imports.gsaa;
 
-const Gettext = imports.gettext.domain('rss-feed2');
+const Gettext = imports.gettext.domain('rss-feed');
 const _ = Gettext.gettext;
 
 const MessageTray = imports.ui.messageTray;
@@ -921,7 +921,7 @@ let rssFeed;
  */
 function init()
 {
-	Convenience.initTranslations("rss-feed2");
+	Convenience.initTranslations("rss-feed");
 
 	// hack for dconf
 	Settings.set_boolean(GSKeys.ENABLE_DEBUG, Settings.get_boolean(GSKeys.ENABLE_DEBUG));
