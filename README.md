@@ -1,39 +1,19 @@
-# RSS Feed GNOME Shell extension v2
+# RSS Feed GNOME Shell Extension
 
-Forked from https://github.com/maweki/gnome-shell-extension-rss-feed
+> **Work in progress** — A new version for the current GNOME release is under active development, featuring a fully redesigned UI.
 
-Simple RSS Feed reader extension for GNOME Shell.
+---
 
-You can add URL links of your RSS sources in Settings tab. Also you can adjust refreshing interval in minutes or set how many RSS Feeds will be displayed per page.
+## Thank You
 
-#### Supported formats:
+This project has been kept alive by the contributions of many people over the years. A big thank you to everyone who submitted patches, reported bugs, and helped maintain the extension:
 
-* RSS 1.0 (RDF)
-* RSS 2.0
-* Atom
-* Feedburner
+- **[nixnodes](https://github.com/nixnodes)** — special thanks for implementing new features that significantly extended the extension's capabilities
+- [maweki](https://github.com/maweki) (Mario Wenzel)
+- [jonnius](https://github.com/jonnius) (Jonatan Hatakeyama Zeidler)
+- [k-e-l-p](https://github.com/k-e-l-p) (koronis)
+- [Hippyjake](https://github.com/Hippyjake) (jake)
+- Dhriti Shikhar
+- wxf
 
-## Future plans
-
-* Support for different content encoding then UTF-8
-* ~~Verification of RSS source availability in Settings widget~~
-* ~~Rework of Settings widget~~
-* ~~Notifications for new articles~~
-* ~~Mark articles read / unread~~
-* Categories for RSS Feeds
-
-## Installation
-
-### Through extensions.gnome.org
-
-Not yet available
-
-### Manual installation
-
-Clone or download zip from https://github.com/todevelopers/gnome-shell-extension-rss-feed and move or symlink `rss-feed@gnome-shell-extension.todevelopers.github.com` folder to `~/.local/share/gnome-shell/extensions/`.
-
-## Screenshots
-
-![](http://i.imgur.com/JUUwRU2.png)
-![](https://i.imgur.com/NPsPt3C.png)
-![](http://i.imgur.com/ZunKk5b.png)
+Your work is what kept this project going.
