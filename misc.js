@@ -17,26 +17,13 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const
-Gio = imports.gi.Gio;
+import Gio from 'gi://Gio';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-const
-Main = imports.ui.main;
-const
-Util = imports.misc.util;
-const
-PopupMenu = imports.ui.popupMenu;
-
-const
-Me = imports.misc.extensionUtils.getCurrentExtension();
-
-const
-Log = Me.imports.logger;
-
-function getDefaultBrowser()
+export function getDefaultBrowser()
 {
-	let
-	browser;
+	let browser;
 	try
 	{
 		browser = Gio.app_info_get_default_for_uri_scheme("http").get_executable();
@@ -48,12 +35,20 @@ function getDefaultBrowser()
 	return browser;
 }
 
-function processLinkOpen(url, cacheObj)
+export function processLinkOpen(url, cacheObj)
 {
 	if (isScreenLocked())
 		return false;
 
-	Util.trySpawnCommandLine(getDefaultBrowser() + ' ' + url);
+	try
+	{
+		Gio.app_info_launch_default_for_uri(url, null);
+	}
+	catch (err)
+	{
+		console.error('rss-feed: failed to open URL: ' + err);
+		return false;
+	}
 
 	if (cacheObj && cacheObj.Unread)
 	{
@@ -62,23 +57,20 @@ function processLinkOpen(url, cacheObj)
 		if (cacheObj.Menu)
 			cacheObj.Menu.setOrnament(PopupMenu.Ornament.NONE);
 
-		let
-		feedCacheObj = cacheObj.parent;
+		let feedCacheObj = cacheObj.parent;
 
 		if (feedCacheObj)
 		{
 			feedCacheObj.UnreadCount--;
 
-			let
-			subMenu = feedCacheObj.Menu;
+			let subMenu = feedCacheObj.Menu;
 
 			subMenu.label.set_text(clampTitle(subMenu._olabeltext
 				+ (!feedCacheObj.UnreadCount ? '' : (' (' + feedCacheObj.UnreadCount + ')'))));
 
 			feedCacheObj.pUnreadCount = feedCacheObj.UnreadCount;
 
-			let
-			parentClass = feedCacheObj.parentClass;
+			let parentClass = feedCacheObj.parentClass;
 
 			if (parentClass)
 			{
@@ -92,23 +84,23 @@ function processLinkOpen(url, cacheObj)
 			}
 		}
 	}
-	
+
 	return true;
 }
 
-function clampTitle(title)
+export function clampTitle(title)
 {
 	if (title.length > 128)
 		title = title.substr(0, 128) + "...";
 	return title;
 }
 
-function isScreenLocked()
+export function isScreenLocked()
 {
 	return Main.sessionMode.isLocked;
 }
 
-function lineBreak(input, ld, lm, pl)
+export function lineBreak(input, ld, lm, pl)
 {
 	var result = "";
 	var pi = 0;

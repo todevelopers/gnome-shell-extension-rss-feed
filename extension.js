@@ -20,79 +20,64 @@
  * You should have received a copy of the GNU General Public License
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
-const GLib = imports.gi.GLib;
-const GObject = imports.gi.GObject;
-const Gio = imports.gi.Gio;
-const Soup = imports.gi.Soup;
-const St = imports.gi.St;
 
-const Main = imports.ui.main;
-const PanelMenu = imports.ui.panelMenu;
-const PopupMenu = imports.ui.popupMenu;
-const Util = imports.misc.util;
-const ScreenShield = imports.ui.screenShield;
-const ExtensionSystem = imports.ui.extensionSystem;
+import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
+import Gio from 'gi://Gio';
+import Soup from 'gi://Soup';
+import St from 'gi://St';
+import Clutter from 'gi://Clutter';
 
-const Mainloop = imports.mainloop;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
+import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 
-const Me = imports.misc.extensionUtils.getCurrentExtension();
+import * as GSKeys from './gskeys.js';
+import { GSAA } from './gsaa.js';
+import { getInstance } from './encoder.js';
+import * as HTTP from './http.js';
+import * as Misc from './misc.js';
+import { createRssParser } from './parsers/factory.js';
+import { RssPopupMenuItem } from './extensiongui/rsspopupmenuitem.js';
+import { RssPopupSubMenuMenuItem } from './extensiongui/rsspopupsubmenumenuitem.js';
+import { RssPopupMenuSection } from './extensiongui/rsspopupmenusection.js';
 
-const Convenience = Me.imports.convenience;
-const Parser = Me.imports.parsers.factory;
-const Log = Me.imports.logger;
-const Settings = Convenience.getSettings();
-const AssocSettings = Me.imports.gsaa;
-
-const MessageTray = imports.ui.messageTray;
-
-const Misc = Me.imports.misc;
-const Clutter = imports.gi.Clutter;
-
-const Encoder = Me.imports.encoder.getInstance();
-const HTTP = Me.imports.http;
-
-const ExtensionGui =
-{
-	RssPopupMenuItem : Me.imports.extensiongui.rsspopupmenuitem.RssPopupMenuItem,
-	RssPopupSubMenuMenuItem : Me.imports.extensiongui.rsspopupsubmenumenuitem.RssPopupSubMenuMenuItem,
-	RssPopupMenuSection : Me.imports.extensiongui.rsspopupmenusection.RssPopupMenuSection
-};
-
-const GSKeys = Me.imports.gskeys;
-
+const Encoder = getInstance();
 const NOTIFICATION_ICON = 'application-rss+xml';
 
-let _preserveOnLock = false;
-
-/*
- * Main RSS Feed 2 extension class
- */
+function _actionButton(iconName, accessibleName, onClicked)
+{
+	const btn = new St.Button(
+	{
+		style_class : 'rss-action-button',
+		can_focus : true,
+		x_expand : false,
+		accessible_name : accessibleName,
+		child : new St.Icon(
+		{
+			icon_name : iconName,
+			style_class : 'popup-menu-icon',
+		}),
+	});
+	btn.connect('clicked', onClicked);
+	return btn;
+}
 
 const RssFeed2 = GObject.registerClass(
 	class RssFeed2 extends PanelMenu.Button
 	{
-
-		/*
-		 * Initialize instance of RssFeed class
-		 */
-		_init()
+		_init(settings)
 		{
 			super._init(0.0, "RSS Feed 2");
 
-			this._httpSession = new Soup.SessionAsync(
-			{
-				timeout : 60
-			});
+			this._settings = settings;
 
-			// Lours974 Vitry David
-			// This makes the session work under a proxy. The funky syntax here
-			// is required because of another libsoup quirk, where there's a gobject
-			// property called 'add-feature', designed as a construct property for
-			// C convenience.
-			Soup.Session.prototype.add_feature.call(this._httpSession,
-				new Soup.ProxyResolverDefault());
+			this._httpSession = new Soup.Session({ timeout : 60 });
+			this._cancellable = new Gio.Cancellable();
 
-			this._aSettings = new AssocSettings.GSAA(GSKeys.RSS_FEEDS_SETTINGS);
+			this._aSettings = new GSAA(settings, GSKeys.RSS_FEEDS_SETTINGS);
 			this._aSettings.set_autoload(false);
 
 			this._startIndex = 0;
@@ -105,7 +90,6 @@ const RssFeed2 = GObject.registerClass(
 
 			this._miStPadding = Array(158).join(" ");
 
-			// top panel button
 			let button = new St.BoxLayout(
 			{
 				vertical : false,
@@ -129,17 +113,16 @@ const RssFeed2 = GObject.registerClass(
 			button.add_child(icon);
 			button.add_child(this._iconLabel);
 
-			this.actor.add_actor(button);
+			this.add_child(button);
 
 			this.menu.actor.add_style_class_name('rss-menu');
 
-			let seenOnClose = Settings.get_boolean(GSKeys.SET_SEEN_WHEN_CLOSED);
+			let seenOnClose = settings.get_boolean(GSKeys.SET_SEEN_WHEN_CLOSED);
 
 			this.menu.connect('open-state-changed', (self, open) =>
 			{
 				if (open && this._lastOpen)
 				{
-					Log.Debug("opening")
 					this._lastOpen.open();
 				}
 
@@ -148,24 +131,22 @@ const RssFeed2 = GObject.registerClass(
 					this._setAllFeedsAsSeen();
 					this._totalUnreadCount = 0;
 					this._updateUnreadCountLabel(0);
-
 				}
 			});
 
 			let separator = new PopupMenu.PopupSeparatorMenuItem();
 
-			let mbAlignTop = Settings.get_boolean(GSKeys.MB_ALIGN_TOP);
+			let mbAlignTop = settings.get_boolean(GSKeys.MB_ALIGN_TOP);
 
 			if (mbAlignTop)
 			{
 				this._createMainPanelButtons();
-				
 				this.menu.addMenuItem(separator);
 			}
 
-			this._pMaxMenuHeight = Settings.get_int(GSKeys.MAX_HEIGHT);
+			this._pMaxMenuHeight = settings.get_int(GSKeys.MAX_HEIGHT);
 
-			this._feedsSection = new ExtensionGui.RssPopupMenuSection("max-height: " + this._pMaxMenuHeight + "px;");
+			this._feedsSection = new RssPopupMenuSection("max-height: " + this._pMaxMenuHeight + "px;");
 
 			this.menu.addMenuItem(this._feedsSection);
 
@@ -176,14 +157,9 @@ const RssFeed2 = GObject.registerClass(
 			}
 		}
 
-		_createMainPanelButtons ()
+		_createMainPanelButtons()
 		{
-			let systemMenu = Main.panel.statusArea.aggregateMenu._system;
-
-			this._buttonMenu = new PopupMenu.PopupBaseMenuItem(
-			{
-				reactive : false
-			});
+			this._buttonMenu = new PopupMenu.PopupBaseMenuItem({ reactive : false });
 
 			this._lastUpdateTime = new St.Label(
 			{
@@ -191,68 +167,41 @@ const RssFeed2 = GObject.registerClass(
 				style_class : 'rss-status-label'
 			});
 
-			if (Settings.get_boolean(GSKeys.ENABLE_DEBUG))
-			{
-				let reloadPluginBtn = systemMenu._createActionButton('system-shutdown-symbolic',
-					"Reload Plugin");
-				this._buttonMenu.actor.add_actor(reloadPluginBtn);
-				reloadPluginBtn.connect('clicked', () =>
-				{
-					if (this._reloadTimeout || Misc.isScreenLocked())
-						return;
-
-					this._reloadTimeout = Mainloop.timeout_add(0, function()
-					{
-						ExtensionSystem.reloadExtension(Me);
-					});
-				});
-
-			}
-
-			this._buttonMenu.actor.add_actor(this._lastUpdateTime);
+			this._buttonMenu.add_child(this._lastUpdateTime);
 			this._buttonMenu.actor.set_x_align(Clutter.ActorAlign.CENTER);
 
 			this._lastUpdateTime.set_y_align(Clutter.ActorAlign.CENTER);
 
-			let reloadBtn = systemMenu._createActionButton('view-refresh-symbolic',
-				"Reload RSS Feeds");
-			let settingsBtn = systemMenu._createActionButton('emblem-system-symbolic',
-				"RSS Feed Settings");
+			let reloadBtn = _actionButton('view-refresh-symbolic', "Reload RSS Feeds",
+				this._pollFeeds.bind(this));
+			let settingsBtn = _actionButton('emblem-system-symbolic', "RSS Feed Settings",
+				this._onSettingsBtnClicked.bind(this));
 
-			this._buttonMenu.actor.add_actor(reloadBtn);
-			this._buttonMenu.actor.add_actor(settingsBtn);
+			this._buttonMenu.add_child(reloadBtn);
+			this._buttonMenu.add_child(settingsBtn);
 
-			reloadBtn.connect('clicked', this._pollFeeds.bind(this));
-			settingsBtn.connect('clicked', this._onSettingsBtnClicked.bind(this));
 			this.menu.addMenuItem(this._buttonMenu);
-
 		}
 
-		/*
-		 * Free resources
-		 */
-		destroy ()
+		destroy()
 		{
 			this._isDiscarded = true;
 
-			if (this._httpSession)
-				this._httpSession.abort();
-
-			this._httpSession = undefined;
+			this._cancellable.cancel();
 
 			if (this._scid)
-				Settings.disconnect(this._scid);
+				this._settings.disconnect(this._scid);
 
 			if (this._timeout)
-				Mainloop.source_remove(this._timeout);
+				GLib.source_remove(this._timeout);
 
 			if (this._settingsCWId)
-				Mainloop.source_remove(this._settingsCWId);
+				GLib.source_remove(this._settingsCWId);
 
-			for ( let t in this._feedTimers)
-				Mainloop.source_remove(t);
+			for (let t in this._feedTimers)
+				GLib.source_remove(t);
 
-			if (Settings.get_boolean(GSKeys.CLEANUP_NOTIFICATIONS))
+			if (this._settings.get_boolean(GSKeys.CLEANUP_NOTIFICATIONS))
 			{
 				let notifCache = this._notifCache;
 
@@ -265,14 +214,11 @@ const RssFeed2 = GObject.registerClass(
 			super.destroy();
 		}
 
-
-
 		_setAllFeedsAsSeen()
 		{
 			for (let i = 0; i < this._rssFeedsSources.length; i++)
 			{
 				let url = this._rssFeedsSources[i];
-
 				let feedCache = this._feedsCache[url];
 
 				if (!feedCache)
@@ -284,21 +230,13 @@ const RssFeed2 = GObject.registerClass(
 				{
 					let link = feedCache.Items[j];
 					feedCache.Items[link].Menu.setOrnament(PopupMenu.Ornament.NONE);
-					//Log.Debug(Object.keys(feedCache.Items[link]));
 					feedCache.Items[link].Unread = null;
-
 				}
-				
-				//Log.Debug(Object.keys(feedCache));
 
 				feedCache.Menu.label.text = feedCache.Menu._olabeltext;
-
 				feedCache.Menu.setOrnament(PopupMenu.Ornament.NONE);
-
 				this._feedsCache[url] = feedCache;
 			}
-
-			return;
 		}
 
 		_updateUnreadCountLabel(count)
@@ -314,67 +252,33 @@ const RssFeed2 = GObject.registerClass(
 			return "max-height: " + value + "px;";
 		}
 
-		/*
-		 * Get variables from GSettings
-		 */
 		_getSettings()
 		{
-			this._updateInterval = Settings.get_int(GSKeys.UPDATE_INTERVAL);
-			this._itemsVisible = Settings.get_int(GSKeys.ITEMS_VISIBLE);
-			this._rssFeedsSources = Settings.get_strv(GSKeys.RSS_FEEDS_LIST);
-			this._rssPollDelay = Settings.get_int(GSKeys.POLL_DELAY);
-			this._enableNotifications = Settings.get_boolean(GSKeys.ENABLE_NOTIFICATIONS);
-			this._maxMenuHeight = Settings.get_int(GSKeys.MAX_HEIGHT);
-			this._feedsSection._animate = Settings.get_boolean(GSKeys.ENABLE_ANIMATIONS);
-			this._notifLimit = Settings.get_int(GSKeys.MAX_NOTIFICATIONS);
-			this._detectUpdates = Settings.get_boolean(GSKeys.DETECT_UPDATES);
-			this._notifOnLockScreen = Settings.get_boolean(GSKeys.NOTIFICATIONS_ON_LOCKSCREEN);
-			this._http_keepalive = Settings.get_boolean(GSKeys.HTTP_KEEPALIVE);
-			this._setSeenOnClose = Settings.get_boolean(GSKeys.SET_SEEN_WHEN_CLOSED);
+			this._updateInterval = this._settings.get_int(GSKeys.UPDATE_INTERVAL);
+			this._itemsVisible = this._settings.get_int(GSKeys.ITEMS_VISIBLE);
+			this._rssFeedsSources = this._settings.get_strv(GSKeys.RSS_FEEDS_LIST);
+			this._rssPollDelay = this._settings.get_int(GSKeys.POLL_DELAY);
+			this._enableNotifications = this._settings.get_boolean(GSKeys.ENABLE_NOTIFICATIONS);
+			this._maxMenuHeight = this._settings.get_int(GSKeys.MAX_HEIGHT);
+			this._feedsSection._animate = this._settings.get_boolean(GSKeys.ENABLE_ANIMATIONS);
+			this._notifLimit = this._settings.get_int(GSKeys.MAX_NOTIFICATIONS);
+			this._detectUpdates = this._settings.get_boolean(GSKeys.DETECT_UPDATES);
+			this._notifOnLockScreen = this._settings.get_boolean(GSKeys.NOTIFICATIONS_ON_LOCKSCREEN);
+			this._http_keepalive = this._settings.get_boolean(GSKeys.HTTP_KEEPALIVE);
+			this._setSeenOnClose = this._settings.get_boolean(GSKeys.SET_SEEN_WHEN_CLOSED);
 
 			this._aSettings.load();
-
-			_preserveOnLock = Settings.get_boolean(GSKeys.PRESERVE_ON_LOCK);
 		}
 
-		/*
-		 * On settings button clicked callback
-		 */
 		_onSettingsBtnClicked()
 		{
 			if (Misc.isScreenLocked())
 				return;
 
-			var success, pid;
-			try
-			{
-				[
-					success, pid
-				] = GLib.spawn_async(null,
-				[
-					"gnome-shell-extension-prefs", Me.uuid
-				], null, GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
-			}
-			catch (err)
-			{
-				return;
-			}
-
-			if (!success)
-				return;
-
 			this.menu.close();
-
-			this._settingsCWId = GLib.child_watch_add(GLib.PRIORITY_DEFAULT, pid,
-				(pid, status) =>
-				{
-					this._settingsCWId = undefined;
-					GLib.spawn_close_pid(pid);
-					this._pollFeeds();
-				});
 		}
 
-		_purgeSource (key)
+		_purgeSource(key)
 		{
 			let feedCache = this._feedsCache[key];
 
@@ -391,22 +295,7 @@ const RssFeed2 = GObject.registerClass(
 			this._feedsCache[key] = undefined;
 		}
 
-		_restartExtension ()
-		{
-			if (!this._reloadTimer)
-			{
-				this._reloadTimer = Mainloop.timeout_add(0, function()
-				{
-					extension_disable();
-					enable();
-				});
-			}
-		}
-
-		/*
-		 * Scheduled reload of RSS feeds from sources set in settings
-		 */
-		_pollFeeds ()
+		_pollFeeds()
 		{
 			this._getSettings();
 
@@ -415,23 +304,21 @@ const RssFeed2 = GObject.registerClass(
 
 			this._pMaxMenuHeight = this._maxMenuHeight;
 
-			Log.Debug("Reload RSS Feeds");
+			console.debug("rss-feed: Reload RSS Feeds");
 
 			if (this._feedTimers.length)
 			{
-				for ( let t in this._feedTimers)
-					Mainloop.source_remove(t);
+				for (let t in this._feedTimers)
+					GLib.source_remove(t);
 
 				this._feedTimers = new Array();
 			}
 
-			// remove timeout
 			if (this._timeout)
-				Mainloop.source_remove(this._timeout);
+				GLib.source_remove(this._timeout);
 
 			if (this._rssFeedsSources)
 			{
-				/* clear feed list if necessary */
 				if ((this._pItemsVisible && this._itemsVisible > this._pItemsVisible))
 				{
 					this._feedsSection.removeAll();
@@ -444,9 +331,7 @@ const RssFeed2 = GObject.registerClass(
 
 				this._pItemsVisible = this._itemsVisible;
 
-				/* cleanup after removed sources */
-
-				for ( var key in this._feedsCache)
+				for (var key in this._feedsCache)
 				{
 					let h = false;
 
@@ -479,80 +364,90 @@ const RssFeed2 = GObject.registerClass(
 					if (l2o != -1)
 						url = url.substr(0, l2o);
 
-					let sourceID = Mainloop.timeout_add(i * this._rssPollDelay,
+					let finalUrl = HTTP.buildUrl(url, jsonObj);
+
+					let sourceID = GLib.timeout_add(GLib.PRIORITY_DEFAULT,
+						i * this._rssPollDelay,
 						() =>
 						{
-							this._httpGetRequestAsync(url, JSON.parse(jsonObj), sourceURL,
+							this._httpGetRequestAsync(finalUrl, sourceURL,
 								this._onDownload.bind(this));
 							delete this._feedTimers[sourceID];
+							return GLib.SOURCE_REMOVE;
 						});
 
 					this._feedTimers[sourceID] = true;
 				}
 			}
 
-			// set timeout if enabled
 			if (this._updateInterval > 0)
 			{
-				Log.Debug("Next scheduled reload after " + this._updateInterval * 60 + " seconds");
-				this._timeout = Mainloop.timeout_add_seconds(this._updateInterval * 60,
+				console.debug("rss-feed: Next scheduled reload after " + this._updateInterval * 60 + " seconds");
+				this._timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT,
+					this._updateInterval * 60,
 					() =>
 					{
 						this._timeout = undefined;
 						this._pollFeeds();
+						return GLib.SOURCE_REMOVE;
 					});
 			}
 		}
 
-		/*
-		 * Creates asynchronous HTTP GET request through Soup interface url - HTTP
-		 * request URL without parameters params - JSON object of HTTP GET request
-		 * sourceURL - original URL used as cache key
-		 * HTTP GET request response
-		 */
-		_httpGetRequestAsync (url, params, sourceURL, callback)
+		_httpGetRequestAsync(url, sourceURL, callback)
 		{
-			let request = Soup.form_request_new_from_hash('GET', url, params);
+			let message = Soup.Message.new('GET', url);
 
-			if (!request)
+			if (!message)
 			{
-				Log.Debug("Soup.form_request_new_from_hash returned 'null' for URL '" + url + "'");
+				console.debug("rss-feed: Soup.Message.new returned null for URL '" + url + "'");
 				return;
 			}
 
 			if (!this._http_keepalive)
-				request.request_headers.replace("Connection", "close");
+				message.get_request_headers().replace("Connection", "close");
 
-			this._httpSession.queue_message(request, function(httpSession, message)
-			{
-				let status_phrase = Soup.Status.get_phrase(message.status_code);
+			let cancellable = this._cancellable;
 
-				if (!((message.status_code) >= 200 && (message.status_code) < 300))
+			this._httpSession.send_and_read_async(message, GLib.PRIORITY_DEFAULT, cancellable,
+				(session, result) =>
 				{
-					Log.Debug("HTTP GET " + sourceURL + ": " + message.status_code + " "
-						+ status_phrase);
-					return;
-				}
+					let bytes;
+					try
+					{
+						bytes = session.send_and_read_finish(result);
+					}
+					catch (e)
+					{
+						if (e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+							return;
+						console.error("rss-feed: HTTP GET " + sourceURL + ": " + e);
+						return;
+					}
 
-				Log.Debug("HTTP GET " + sourceURL + ": " + message.status_code + " "
-					+ status_phrase + " Content-Type: "
-					+ message.response_headers.get_one("Content-Type"));
+					let status = message.get_status();
+					let statusPhrase = Soup.Status.get_phrase(status);
 
-				if (message.response_body.data)
-					callback(message.response_body.data, sourceURL);
-			});
+					if (!(status >= 200 && status < 300))
+					{
+						console.debug("rss-feed: HTTP GET " + sourceURL + ": " + status + " " + statusPhrase);
+						return;
+					}
+
+					console.debug("rss-feed: HTTP GET " + sourceURL + ": " + status + " " + statusPhrase);
+
+					if (bytes)
+					{
+						let data = new TextDecoder().decode(bytes.toArray());
+						if (data)
+							callback(data, sourceURL);
+					}
+				});
 		}
 
-		/*
-		 * On HTTP request response download callback responseData - response data
-		 * sourceURL - original URL used as cache key
-		 */
-		_onDownload (responseData, sourceURL)
+		_onDownload(responseData, sourceURL)
 		{
-
-			let rssParser = Parser.createRssParser(responseData);
-
-
+			let rssParser = createRssParser(responseData);
 
 			if (rssParser == null)
 			{
@@ -572,7 +467,6 @@ const RssFeed2 = GObject.registerClass(
 
 			if (!this._feedsCache[sourceURL])
 			{
-				// initialize the publisher cache
 				feedCache = this._feedsCache[sourceURL] = new Object();
 				feedCache.Items = new Array();
 				feedCache.UnreadCount = 0;
@@ -585,10 +479,9 @@ const RssFeed2 = GObject.registerClass(
 			let itemCache = feedCache.Items;
 			let subMenu;
 
-			// create publisher submenu
 			if (!feedCache.Menu)
 			{
-				subMenu = new ExtensionGui.RssPopupSubMenuMenuItem(rssParser.Publisher, nItems);
+				subMenu = new RssPopupSubMenuMenuItem(rssParser.Publisher, nItems);
 				this._feedsSection.addMenuItem(subMenu);
 
 				subMenu.menu.connect('open-state-changed', (self, open) =>
@@ -599,7 +492,7 @@ const RssFeed2 = GObject.registerClass(
 						this._lastOpen = undefined;
 				});
 
-				subMenu.menu.connect('destroy', (self, open) =>
+				subMenu.menu.connect('destroy', (self, _open) =>
 				{
 					if (this._lastOpen == self)
 						this._lastOpen = undefined;
@@ -620,9 +513,6 @@ const RssFeed2 = GObject.registerClass(
 				disableUpdates = gsData['u'];
 			}
 
-			/*
-			 * Cleanup article list of this source
-			 */
 			let i = itemCache.length;
 
 			while (i--)
@@ -671,8 +561,6 @@ const RssFeed2 = GObject.registerClass(
 				}
 			}
 
-			/* Insert articles into the list  */
-
 			i = nItems;
 
 			while (i--)
@@ -684,14 +572,11 @@ const RssFeed2 = GObject.registerClass(
 				if (itemCache[itemID])
 					continue;
 
-				/* remove HTML tags */
 				item.Title = Encoder.htmlDecode(item.Title).replace(/<.*?>/g, "").trim();
 
-				/* create the menu item in publisher submenu */
-				let menu = new ExtensionGui.RssPopupMenuItem(item);
+				let menu = new RssPopupMenuItem(item);
 				subMenu.menu.addMenuItem(menu, 0);
 
-				/* enter it into cache */
 				let cacheObj = new Object();
 				cacheObj.Menu = menu;
 				cacheObj.Item = item;
@@ -702,7 +587,6 @@ const RssFeed2 = GObject.registerClass(
 
 				menu._cacheObj = cacheObj;
 
-				/* decode description, if present */
 				if (item.Description.length > 0)
 				{
 					let itemDescription = Encoder.htmlDecode(item.Description).replace("<![CDATA[",
@@ -710,10 +594,8 @@ const RssFeed2 = GObject.registerClass(
 
 					if (itemDescription.length > 0)
 					{
-						/* word-break it for in-menu descriptions */
 						cacheObj._bItemDescription = Misc.lineBreak(itemDescription, 80, 90, "  ");
 
-						/* trim the description shown in notifications */
 						if (itemDescription.length > 290)
 							itemDescription = itemDescription.substr(0, 290) + "...";
 
@@ -721,10 +603,10 @@ const RssFeed2 = GObject.registerClass(
 
 						menu.connect('active-changed', (self, over) =>
 						{
-							if (!Settings.get_boolean(GSKeys.ENABLE_DESC))
+							if (!this._settings.get_boolean(GSKeys.ENABLE_DESC))
 								return;
 
-							let label_actor = self.actor.label_actor;
+							let label_actor = self.label;
 
 							if (over)
 							{
@@ -744,19 +626,15 @@ const RssFeed2 = GObject.registerClass(
 					}
 				}
 
-				/* do not notify or flag if this is the first query */
 				if (!feedCache._initialRefresh)
 					continue;
 
-				/* increment unread counts and flag item as unread */
 				feedCache.UnreadCount++;
 				this._totalUnreadCount++;
 
-				cacheObj.Unread = true
+				cacheObj.Unread = true;
 				menu.setOrnament(PopupMenu.Ornament.DOT);
 
-
-				/* trigger notification, if requested */
 				if (this._enableNotifications && !muteNotifications)
 				{
 					let itemTitle = item.Title;
@@ -776,7 +654,6 @@ const RssFeed2 = GObject.registerClass(
 				feedCache._initialRefresh = true;
 			else
 			{
-				
 				if (feedCache.UnreadCount)
 				{
 					if (feedCache.UnreadCount != feedCache.pUnreadCount)
@@ -785,52 +662,40 @@ const RssFeed2 = GObject.registerClass(
 
 					feedCache.pUnreadCount = feedCache.UnreadCount;
 					this._updateUnreadCountLabel(this._totalUnreadCount);
-					
+
 					subMenu.setOrnament(PopupMenu.Ornament.DOT);
-
-
-				
 				}
 			}
 
-			// update last download time
-			this._lastUpdateTime
-				.set_text("Last update" + ': ' + new Date().toLocaleTimeString());
-
+			this._lastUpdateTime.set_text("Last update" + ': ' + new Date().toLocaleTimeString());
 		}
 
-		_dispatchNotification (title, message, url, cacheObj)
+		_dispatchNotification(title, message, url, cacheObj)
 		{
-			/*
-			 * Since per-source notification limit cannot be set, we create a new
-			 * source each time.
-			 */
-			let Source = new MessageTray.SystemNotificationSource();
-			Source.createIcon = function()
+			if (Misc.isScreenLocked() && !this._notifOnLockScreen)
+				return null;
+
+			let source = new MessageTray.Source(
 			{
-				return new St.Icon(
-				{
-					icon_name : NOTIFICATION_ICON
-				});
-			};
+				title : 'RSS Feed',
+				icon : new Gio.ThemedIcon({ name : NOTIFICATION_ICON }),
+			});
 
-			let sourcePolicy = Source.policy;
+			Main.messageTray.add(source);
 
-			/*
-			 * Configure source policy, implicitly show details if lockscreen
-			 * notifications are enabled
-			 */
-			sourcePolicy._detailsInLockScreen =
-				sourcePolicy._showInLockScreen = this._notifOnLockScreen;
-
-			Main.messageTray.add(Source);
-
-			let notification = new MessageTray.Notification(Source, title, message);
-			notification.setPrivacyScope(MessageTray.PrivacyScope.SYSTEM);
+			let notification = new MessageTray.Notification(
+			{
+				source,
+				title,
+				body : message,
+				iconName : NOTIFICATION_ICON,
+				resident : true,
+				isTransient : false,
+				urgency : MessageTray.Urgency.HIGH,
+			});
 
 			let notifCache = this._notifCache;
 
-			/* remove notifications with same ID */
 			let i = notifCache.length;
 			while (i--)
 			{
@@ -846,120 +711,59 @@ const RssFeed2 = GObject.registerClass(
 			notification._itemURL = url;
 			notification._cacheObj = cacheObj;
 
-			notification.addAction('Open URL', function()
+			notification.addAction('Open URL', () =>
 			{
 				Misc.processLinkOpen(notification._itemURL, notification._cacheObj);
 				notification.destroy();
 			});
 
-			notification.addAction('Copy URL', function()
+			notification.addAction('Copy URL', () =>
 			{
 				St.Clipboard.get_default().set_text(St.ClipboardType.CLIPBOARD,
 					notification._itemURL);
 
-				/* don't destroy notification, just hide the banner */
 				if (Main.messageTray._banner)
 					Main.messageTray._banner.emit('done-displaying');
 			});
 
-			notification.connect('activated', function(self)
+			notification.connect('activated', (self) =>
 			{
 				Misc.processLinkOpen(self._itemURL, self._cacheObj);
 				self.destroy();
 			});
 
-			notification.setResident(true);
-
-
-			/*
-			 * Destroy the source after notification is gone
-			 */
-			notification.connect('destroy', function(self)
+			notification.connect('destroy', (self) =>
 			{
 				self.source.destroy();
 			});
 
-			notification.setTransient(false);
-			notification.setUrgency(MessageTray.Urgency.HIGH);
-
 			notifCache.push(notification);
 
-			/* remove excess notifications */
 			while (notifCache.length > this._notifLimit)
 				notifCache.shift().destroy();
 
-			Source.notify(notification);
+			source.addNotification(notification);
 
 			return notification;
 		}
 	}
 );
 
-/*
- * Extension widget instance
- */
-let rssFeed;
-
-/*
- * Initialize the extension
- */
-function init()
+export default class RssFeedExtension extends Extension
 {
-	// hack for dconf
-	Settings.set_boolean(GSKeys.ENABLE_DEBUG, Settings.get_boolean(GSKeys.ENABLE_DEBUG));
-	Settings.set_boolean(GSKeys.HTTP_KEEPALIVE, Settings.get_boolean(GSKeys.HTTP_KEEPALIVE));
-
-	Log.Debug("Extension initialized.");
-}
-
-/*
- * Enable the extension
- */
-function enable()
-{
-	if (rssFeed)
+	enable()
 	{
-		Log.Debug("Extension already enabled!");
-		return;
+		let settings = this.getSettings();
+		this._indicator = new RssFeed2(settings);
+		this._indicator._pollFeeds();
+		Main.panel.addToStatusArea('rssFeed2Menu', this._indicator, 0, 'right');
+		console.debug("rss-feed: Extension enabled.");
 	}
 
-	rssFeed = new RssFeed2();
-
-	/* trigger initial poll */
-	rssFeed._pollFeeds();
-
-	/* add plugin menu to status area */
-	Main.panel.addToStatusArea('rssFeed2Menu', rssFeed, 0, 'right');
-
-	Log.Debug("Extension enabled.");
-}
-
-function extension_disable()
-{
-	if (!rssFeed)
+	disable()
 	{
-		Log.Debug("Extension already disabled!");
-		return;
+		this._indicator?.destroy();
+		this._indicator = null;
+		console.debug("rss-feed: Extension disabled.");
 	}
-
-	rssFeed.destroy();
-	rssFeed = undefined;
-
-	Log.Debug("Extension disabled.");
-}
-
-/*
- * Disable the extension
- */
-function disable()
-{
-	_preserveOnLock = Settings.get_boolean(GSKeys.PRESERVE_ON_LOCK);
-
-	if (_preserveOnLock && Misc.isScreenLocked())
-	{
-		Log.Debug("Not disabling extension while screen inactive.");
-		return;
-	}
-
-	extension_disable();
 }

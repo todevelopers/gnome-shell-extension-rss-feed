@@ -20,28 +20,18 @@
  * You should have received a copy of the GNU General Public License
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
-const GObject = imports.gi.GObject;
-const Gtk = imports.gi.Gtk;
-const Soup = imports.gi.Soup;
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
-const Settings = Convenience.getSettings();
+import Adw from 'gi://Adw';
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import Gtk from 'gi://Gtk';
+import Soup from 'gi://Soup';
+import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
-const Mainloop = imports.mainloop;
-
-const HTTP = Me.imports.http;
-const AssocSettings = Me.imports.gsaa;
-const Parser = Me.imports.parsers.factory;
-
-const COLUMN_URL = 0;
-const COLUMN_TITLE = 1;
-const COLUMN_STATUS = 2;
-const COLUMN_NOTIF = 3;
-const COLUMN_UPD = 4;
+import * as GSKeys from './gskeys.js';
+import { GSAA } from './gsaa.js';
+import * as HTTP from './http.js';
+import { createRssParser } from './parsers/factory.js';
 
 const MAX_UPDATE_INTERVAL = 1440;
 const MAX_SOURCES_LIMIT = 1024;
@@ -49,878 +39,423 @@ const MAX_POLL_DELAY = 9999;
 const MAX_HEIGHT = 8192;
 const MAX_NOTIFICATIONS = 100;
 
-const GSKeys = Me.imports.gskeys;
-
-const Log = Me.imports.logger;
-
-const GSE_TOOL_PATH = 'gnome-shell-extension-tool';
-
-/*
- *	RssFeedSettingsWidget class for settings widget
- */
-
-const RssFeedSettingsWidget = GObject.registerClass(
-	class RssFeedSettingsWidget extends Gtk.Box
+export default class RssFeedPreferences extends ExtensionPreferences
+{
+	fillPreferencesWindow(window)
 	{
+		const settings = this.getSettings();
+		const aSettings = new GSAA(settings, GSKeys.RSS_FEEDS_SETTINGS);
 
-		/*
-		 *	Initialize new instance of RssFeedSettingsWidget class
-		 */
-		_init(params)
+		const httpSession = new Soup.Session({ timeout : 30 });
+		const cancellable = new Gio.Cancellable();
+
+		window.connect('close-request', () =>
 		{
-			super._init(params);
-			
-			this.GTypeName = 'RssFeed2SettingsWidget';
-			
-			this.orientation = Gtk.Orientation.VERTICAL;
-			this.margin_left = 10;
-			this.margin_right = 10;
-			this.margin_top = 10;
-			this.margin_bottom = 2;
+			cancellable.cancel();
+			aSettings.destroy();
+		});
 
-			this._aSettings = new AssocSettings.GSAA(GSKeys.RSS_FEEDS_SETTINGS);
+		// General page
+		const generalPage = new Adw.PreferencesPage({ title : "General", icon_name : 'preferences-system-symbolic' });
+		window.add(generalPage);
 
-			this._httpSession = new Soup.SessionAsync(
+		// Polling group
+		const pollingGroup = new Adw.PreferencesGroup({ title : "Polling" });
+		generalPage.add(pollingGroup);
+
+		pollingGroup.add(this._makeSpinRow(settings, GSKeys.UPDATE_INTERVAL, "Update interval (min)", 1, MAX_UPDATE_INTERVAL));
+		pollingGroup.add(this._makeSpinRow(settings, GSKeys.POLL_DELAY, "Poll delay (ms)", 1, MAX_POLL_DELAY));
+		pollingGroup.add(this._makeSwitchRow(settings, GSKeys.DETECT_UPDATES, "Detect updates"));
+
+		// Menu group
+		const menuGroup = new Adw.PreferencesGroup({ title : "Menu" });
+		generalPage.add(menuGroup);
+
+		menuGroup.add(this._makeSpinRow(settings, GSKeys.MAX_HEIGHT, "Max menu height (px)", 1, MAX_HEIGHT));
+		menuGroup.add(this._makeSpinRow(settings, GSKeys.ITEMS_VISIBLE, "Max items per source", 1, MAX_SOURCES_LIMIT));
+		menuGroup.add(this._makeSwitchRow(settings, GSKeys.ENABLE_ANIMATIONS, "Enable animations"));
+		menuGroup.add(this._makeSwitchRow(settings, GSKeys.MB_ALIGN_TOP, "Top-align buttons"));
+		menuGroup.add(this._makeSwitchRow(settings, GSKeys.ENABLE_DESC, "Show descriptions"));
+		menuGroup.add(this._makeSwitchRow(settings, GSKeys.SET_SEEN_WHEN_CLOSED, "Set every feed as seen when closed"));
+
+		// Notifications page
+		const notifPage = new Adw.PreferencesPage({ title : "Notifications", icon_name : 'notifications-symbolic' });
+		window.add(notifPage);
+
+		const notifGroup = new Adw.PreferencesGroup({ title : "Notifications" });
+		notifPage.add(notifGroup);
+
+		const notifSwitch = this._makeSwitchRow(settings, GSKeys.ENABLE_NOTIFICATIONS, "Show notifications");
+		notifGroup.add(notifSwitch);
+
+		const notifMaxRow = this._makeSpinRow(settings, GSKeys.MAX_NOTIFICATIONS, "Max notifications", 1, MAX_NOTIFICATIONS);
+		notifGroup.add(notifMaxRow);
+
+		const notifLockRow = this._makeSwitchRow(settings, GSKeys.NOTIFICATIONS_ON_LOCKSCREEN, "Show on lock screen");
+		notifGroup.add(notifLockRow);
+
+		const notifCleanRow = this._makeSwitchRow(settings, GSKeys.CLEANUP_NOTIFICATIONS, "Clean up notifications");
+		notifGroup.add(notifCleanRow);
+
+		const updateNotifSensitive = (enabled) =>
+		{
+			notifMaxRow.sensitive = enabled;
+			notifLockRow.sensitive = enabled;
+			notifCleanRow.sensitive = enabled;
+		};
+
+		updateNotifSensitive(settings.get_boolean(GSKeys.ENABLE_NOTIFICATIONS));
+		settings.connect('changed::' + GSKeys.ENABLE_NOTIFICATIONS, () =>
+		{
+			updateNotifSensitive(settings.get_boolean(GSKeys.ENABLE_NOTIFICATIONS));
+		});
+
+		// Sources page
+		const sourcesPage = new Adw.PreferencesPage({ title : "Sources", icon_name : 'rss-symbolic' });
+		window.add(sourcesPage);
+
+		const sourcesGroup = new Adw.PreferencesGroup({ title : "RSS Sources" });
+		sourcesPage.add(sourcesGroup);
+
+		// Header suffix: Add + Re-check buttons
+		const headerBox = new Gtk.Box({ spacing : 8 });
+
+		const recheckBtn = new Gtk.Button(
+		{
+			icon_name : 'view-refresh-symbolic',
+			tooltip_text : "Re-check all RSS sources",
+			valign : Gtk.Align.CENTER,
+		});
+		headerBox.append(recheckBtn);
+
+		const addBtn = new Gtk.Button(
+		{
+			icon_name : 'list-add-symbolic',
+			tooltip_text : "Add source",
+			valign : Gtk.Align.CENTER,
+		});
+		headerBox.append(addBtn);
+
+		sourcesGroup.set_header_suffix(headerBox);
+
+		// Cache for pending requests: url -> cancellable
+		const fCache = new Object();
+
+		const validateUrl = (entryRow, url) =>
+		{
+			if (!url.length)
+				return;
+
+			let jsonParams = HTTP.getParametersAsJson(url);
+			let l2o = url.indexOf('?');
+			let baseUrl = l2o != -1 ? url.substr(0, l2o) : url;
+			let finalUrl = HTTP.buildUrl(baseUrl, jsonParams);
+
+			let msg = Soup.Message.new('GET', finalUrl);
+			if (!msg)
 			{
-				timeout: 30
-			});
+				entryRow.set_title("Invalid URL");
+				return;
+			}
 
-			Soup.Session.prototype.add_feature.call(this._httpSession, new Soup.ProxyResolverDefault());
+			if (fCache[url])
+				fCache[url].cancel();
 
-			this._fCache = new Array();
+			let rowCancellable = new Gio.Cancellable();
+			fCache[url] = rowCancellable;
 
-			if (this.set_size_request)
-				this.set_size_request(682, 600);
+			entryRow._statusLabel.set_text("Checking..");
 
-			let upper_box = new Gtk.Box(
-			{
-				orientation: Gtk.Orientation.HORIZONTAL,
-				spacing: 8,
-				margin_bottom: 6
-			});
-			{
-				let general_box = new Gtk.Box(
+			httpSession.send_and_read_async(msg, GLib.PRIORITY_DEFAULT, rowCancellable,
+				(session, result) =>
 				{
-					orientation: Gtk.Orientation.VERTICAL,
-					spacing: 6,
-					hexpand: true
-				});
-				{
-					this._addSpinButton(general_box, GSKeys.UPDATE_INTERVAL, "Update interval (min):", MAX_UPDATE_INTERVAL);
-					this._addSpinButton(general_box, GSKeys.POLL_DELAY, "Poll delay (ms):", MAX_POLL_DELAY);
-					this._addSwitch(general_box, GSKeys.PRESERVE_ON_LOCK, "Preserve when screen off:");
-					this._addSwitch(general_box, GSKeys.DETECT_UPDATES, "Detect updates:");
-					
+					delete fCache[url];
 
-
-					let debug_box = new Gtk.Box(
+					let bytes;
+					try
 					{
-						orientation: Gtk.Orientation.HORIZONTAL,
-						spacing: 6,
-						hexpand: true
-					});
+						bytes = session.send_and_read_finish(result);
+					}
+					catch (e)
 					{
-						let reloadButton = new Gtk.ToolButton(
+						if (e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
 						{
-							icon_name: 'view-refresh-symbolic'
-						});
-						reloadButton.connect('clicked', () =>
-						{
-							if (this._rldTimeout)
-								return;
-
-							if (!try_spawn([GSE_TOOL_PATH, '-d', Me.uuid]))
-								return;
-
-							this._rldTimeout = Mainloop.timeout_add(100, () =>
-							{
-								this._rldTimeout = undefined;
-								try_spawn([GSE_TOOL_PATH, '-e', Me.uuid])
-							});
-						});
-						reloadButton.set_tooltip_text("Reactivate extension");
-
-						let box_dbgsw = this._createControlBase("Debug mode:");
-						box_dbgsw.set_hexpand(true);
-						box_dbgsw.add(reloadButton);
-
-						let dbg_sw = new Gtk.Switch(
-						{
-							active: Settings.get_boolean(GSKeys.ENABLE_DEBUG),
-							vexpand: false,
-							margin_top: 2,
-							margin_bottom: 2
-						});
-
-						dbg_sw.connect('notify::active', (b) =>
-						{
-							Settings.set_boolean(GSKeys.ENABLE_DEBUG, b.active);
-						});
-
-						box_dbgsw.add(dbg_sw);
-
-						debug_box.add(box_dbgsw);
+							entryRow._statusLabel.set_text("");
+							return;
+						}
+						entryRow._statusLabel.set_text("Error");
+						return;
 					}
 
-					general_box.add(debug_box);
-				}
-
-				upper_box.add(general_box);
-
-				this._addSeparator(upper_box, 2, 8);
-
-				let menu_box = new Gtk.Box(
-				{
-					orientation: Gtk.Orientation.VERTICAL,
-					spacing: 6,
-					hexpand: true
-				});
-				{
-					this._addSpinButton(menu_box, GSKeys.MAX_HEIGHT, "Max menu height (px):", MAX_HEIGHT);
-					this._addSpinButton(menu_box, GSKeys.ITEMS_VISIBLE, "Max items per source:", MAX_SOURCES_LIMIT);
-					this._addSwitch(menu_box, GSKeys.ENABLE_ANIMATIONS, "Enable animations:");
-					this._addSwitch(menu_box, GSKeys.MB_ALIGN_TOP, "Top-align buttons:");
-					this._addSwitch(menu_box, GSKeys.ENABLE_DESC, "Show descriptions:");
-					this._addSwitch(menu_box, GSKeys.SET_SEEN_WHEN_CLOSED, "Set every feed as seen when closed:");
-				}
-
-				upper_box.add(menu_box);
-			}
-
-			this.add(upper_box);
-			this._addSeparator(this, 0, 12);
-
-			let notif_box = new Gtk.Box(
-			{
-				orientation: Gtk.Orientation.HORIZONTAL,
-				spacing: 16,
-				margin_bottom: 6
-			});
-			{
-				let nbswStFunc = (self, state) =>
-				{
-					this._nbMax.set_sensitive(state);
-					this._nbOnLockScreen.set_sensitive(state);
-					this._nbCleanup.set_sensitive(state);
-				};
-
-				let notif_left = new Gtk.Box(
-				{
-					orientation: Gtk.Orientation.VERTICAL,
-					spacing: 6,
-					hexpand: true
-				});
-				{
-					this._nbSwitch = this._addSwitch(notif_left, GSKeys.ENABLE_NOTIFICATIONS, "Show notifications:",
-						nbswStFunc
-					);
-					this._nbMax = this._addSpinButton(notif_left, GSKeys.MAX_NOTIFICATIONS, "Max notifications:", MAX_NOTIFICATIONS);
-				}
-
-				let notif_right = new Gtk.Box(
-				{
-					orientation: Gtk.Orientation.VERTICAL,
-					spacing: 6,
-					hexpand: true
-				});
-				{
-					this._nbOnLockScreen = this._addSwitch(notif_right, GSKeys.NOTIFICATIONS_ON_LOCKSCREEN, "Show on lock screen:");
-					this._nbCleanup = this._addSwitch(notif_right, GSKeys.CLEANUP_NOTIFICATIONS, "Clean up notifications:");
-				}
-
-				notif_box.add(notif_left);
-				notif_box.add(notif_right);
-
-				nbswStFunc(null, Settings.get_boolean(GSKeys.ENABLE_NOTIFICATIONS));
-			}
-
-			this.add(notif_box);
-
-			this._addSeparator(this, 2, 2);
-
-			// sources label
-			let boxsources = new Gtk.Box(
-			{
-				orientation: Gtk.Orientation.HORIZONTAL,
-				spacing: 6
-			});
-			boxsources.set_margin_bottom(6);
-			boxsources.set_margin_top(4);
-			let labels = new Gtk.Label(
-			{
-				xalign: Gtk.Align.CENTER,
-				label: "RSS sources"
-			});
-			boxsources.pack_start(labels, true, true, 0);
-
-			let checkRSSButton = new Gtk.ToolButton(
-			{
-				icon_name: 'view-refresh-symbolic'
-			});
-			checkRSSButton.connect('clicked', () =>
-			{
-				let [res, iter] = this._store.get_iter_first();
-				let path;
-
-				while (res)
-				{
-					path = this._store.get_path(iter);
-
-					let cacheObj = this._fCache[path.get_indices()];
-
-					if (!cacheObj)
-						throw "FIXME: cache object and ListStore out of sync";
-
-					this._validateItemURL(iter, cacheObj);
-
-					path.next();
-
-					[res, iter] = this._store.get_iter(path);
-				}
-			});
-			checkRSSButton.set_tooltip_text("Re-check all RSS sources")
-
-			boxsources.add(checkRSSButton);
-
-			this.add(boxsources);
-
-			// rss feed sources
-			let scrolledWindow = new Gtk.ScrolledWindow();
-			scrolledWindow.set_border_width(0);
-			scrolledWindow.set_shadow_type(1);
-
-			this._store = new Gtk.ListStore();
-			this._store.set_column_types([
-				GObject.TYPE_STRING, 
-				GObject.TYPE_STRING,
-				GObject.TYPE_STRING,
-				GObject.TYPE_BOOLEAN, 
-				GObject.TYPE_BOOLEAN
-			]);
-			this._loadStoreFromSettings();
-
-			this._actor = new Gtk.TreeView(
-			{
-				model: this._store,
-				headers_visible: true,
-				headers_clickable: true,
-				reorderable: true,
-				hexpand: true,
-				vexpand: true,
-				enable_search: true
-			});
-
-			this._actor.set_search_equal_func(
-				(model, column, key, iter) =>
-				{
-					if (model.get_value(iter, COLUMN_URL).match(key))
-						return false;
-					else
-						return true;
-				});
-
-			this._actor.get_selection().set_mode(Gtk.SelectionMode.SINGLE);
-			let cellToggleFunc = function(key, self, path, iter, state)
-			{
-				let urlValue = this._store.get_value(iter, COLUMN_URL);
-				this._aSettings.set(urlValue, key, state);
-			};
-			
-			// URL column
-			let [column_url, cell_url] = this._addSourcesColumn(this._actor, 
-				new Gtk.CellRendererText({editable: true}), COLUMN_URL, "URL");
-
-			column_url.add_attribute(cell_url, "text", COLUMN_URL);
-			column_url.set_fixed_width(320);
-			column_url.set_expand(true);
-			column_url.set_sizing(Gtk.TreeViewColumnSizing.GROW_ONLY);
-
-			// title column
-			let [column_title, cell_title] = this._addSourcesColumn(this._actor,
-				new Gtk.CellRendererText(), COLUMN_TITLE, "Title");
-			
-			column_title.add_attribute(cell_title, "text", COLUMN_TITLE);
-			column_title.set_expand(true);
-			column_title.set_sizing(Gtk.TreeViewColumnSizing.GROW_ONLY);
-			
-			// status column		
-			let [column_status, cell_status] = this._addSourcesColumn(this._actor, 
-				new Gtk.CellRendererText(), COLUMN_STATUS, "Status");
-
-			column_status.add_attribute(cell_status, "text", COLUMN_STATUS);
-			column_status.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE);
-
-			// disable notifications column
-			let [column_notif, cell_notif] = this._addSourcesColumn(this._actor,
-				new Gtk.CellRendererToggle({activatable:true, xalign: Gtk.Align.CENTER}), COLUMN_NOTIF, "No not.");
-
-			column_notif.add_attribute(cell_notif, "active", COLUMN_NOTIF);
-			column_notif.set_fixed_width(60);
-
-			cell_notif.connect('toggled', this._gToggleHandler.bind(this, COLUMN_NOTIF,
-				cellToggleFunc.bind(this, 'n')));
-
-			// disable updates column
-			let [column_upd, cell_upd] = this._addSourcesColumn(this._actor,
-				new Gtk.CellRendererToggle({activatable:true, xalign: Gtk.Align.CENTER}), COLUMN_UPD, "No upd.");
-
-			column_upd.add_attribute(cell_upd, "active", COLUMN_UPD);
-			column_upd.set_fixed_width(60);
-
-			cell_upd.connect('toggled', this._gToggleHandler.bind(this, COLUMN_UPD,
-				cellToggleFunc.bind(this, 'u')));
-
-			this._actor.connect('row-activated', 
-				(self, path, column) =>
-				{
-					if ( column != column_status )
-						return;
-
-					let [res, iter] = this._store.get_iter(path);
-
-					if (!res)
-						return;
-
-					let index = path.get_indices();
-
-					if (index > this._fCache)
-						return;
-
-					this._validateItemURL(iter, this._fCache[index]);
-				});
-
-			cell_url.connect('edited', 
-				(self, str_path, text) =>
-				{
-					if (!text.length)
-						return;
-
-					let path = Gtk.TreePath.new_from_string(str_path);
-
-					if (!path)
-						return;
-
-					let [res, iter] = this._store.get_iter(path);
-
-					if (!res)
-						return;
-
-					let urlValue = this._store.get_value(iter, COLUMN_URL);
-
-					this._aSettings.rename(urlValue, text);
-
-					this._store.set_value(iter, COLUMN_URL, text);
-				});
-
-			this._store.connect('row-inserted', 
-				(tree, path, iter) =>
-				{
-					let feeds = Settings.get_strv(GSKeys.RSS_FEEDS_LIST);
-
-					if (feeds == null)
-						feeds = new Array();
-
-					let index = path.get_indices();
-
-					if (index > feeds.length)
-						return;
-
-					feeds.splice(index, 0, ""); // placeholder
-					this._fCache.splice(index, 0, new Object());
-
-					Settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
-				});
-
-			this._store.connect('row-changed', 
-				(tree, path, iter) =>
-				{
-					let feeds = Settings.get_strv(GSKeys.RSS_FEEDS_LIST);
-
-					if (feeds == null)
-						feeds = new Array();
-
-					let index = path.get_indices();
-
-					if (index >= feeds.length)
-						return;
-
-					let urlValue = this._store.get_value(iter, COLUMN_URL);
-
-					// detect URL column changes
-					if (urlValue == feeds[index])
-						return;
-
-					feeds[index] = urlValue;
-
-					let cacheObj = this._fCache[index];
-					cacheObj.v = urlValue;
-
-					Settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
-
-					this._validateItemURL(iter, cacheObj);
-				});
-
-			this._store.connect('row-deleted', 
-				(tree, path) =>
-				{
-					let feeds = Settings.get_strv(GSKeys.RSS_FEEDS_LIST);
-					if (feeds == null)
-						feeds = new Array();
-
-					let index = path.get_indices();
-
-					if (index >= feeds.length)
-						return;
-
-					let cacheObj = this._fCache[index];
-					if (cacheObj.p)
-						this._httpSession.cancel_message(cacheObj.p, Soup.Status.CANCELLED);
-
-					feeds.splice(index, 1);
-					this._fCache.splice(index, 1);
-
-					Settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
-				});
-
-			scrolledWindow.add(this._actor);
-			this.add(scrolledWindow);
-
-			let box_toolbar = new Gtk.Box(
-			{
-				orientation: Gtk.Orientation.HORIZONTAL
-			});
-
-			let toolbar = new Gtk.Toolbar();
-			toolbar.get_style_context().add_class(Gtk.STYLE_CLASS_TOOLBAR);
-
-			toolbar.set_icon_size(1);
-
-			let delButton = new Gtk.ToolButton(
-			{
-				icon_name: 'list-remove-symbolic'
-			});
-			delButton.connect('clicked', this._deleteSelected.bind(this));
-			toolbar.add(delButton);
-
-			let newButton = new Gtk.ToolButton(
-			{
-				hexpand: true,
-				icon_name: 'list-add-symbolic'
-			});
-			newButton.connect('clicked', this._createNew.bind(this));
-			toolbar.add(newButton);
-
-			box_toolbar.add(toolbar);
-
-			let toolbar2 = new Gtk.Toolbar();
-			toolbar2.set_icon_size(1);
-
-			let moveUpButton = new Gtk.ToolButton(
-			{
-				icon_name: 'go-up-symbolic'
-			});
-			moveUpButton.connect('clicked', this._moveItem.bind(this, true));
-			toolbar2.add(moveUpButton);
-
-			let moveDownButton = new Gtk.ToolButton(
-			{
-				icon_name: 'go-down-symbolic'
-			});
-			moveDownButton.connect('clicked', this._moveItem.bind(this, false));
-			toolbar2.add(moveDownButton);
-
-			box_toolbar.add(toolbar2);
-			box_toolbar.get_style_context().add_class(Gtk.STYLE_CLASS_TOOLBAR);
-
-			this.add(box_toolbar);
-		}
-
-		_gToggleHandler(cid, callback, self, str_path)
-		{
-			let path = Gtk.TreePath.new_from_string(str_path);
-
-			if (!path)
-				return;
-
-			let [res, iter] = this._store.get_iter(path);
-
-			if (!res)
-				return;
-
-			let val = !this._store.get_value(iter, cid);
-
-			this._store.set_value(iter, cid, val);
-
-			if (callback)
-				callback(self, path, iter, val);
-		}
-
-		/* 
-		 * Validates the URL of an item and displays
-		 * result in 'Status' column
-		 */
-		_validateItemURL(iter, cacheObj)
-		{
-			this._store.set_value(iter, COLUMN_TITLE, "");
-			
-			let url = this._store.get_value(iter, COLUMN_URL);
-
-			let params = HTTP.getParametersAsJson(url);
-
-			let l2o = url.indexOf('?');
-			if (l2o != -1) url = url.substr(0, l2o);
-
-			let request = Soup.form_request_new_from_hash('GET', url, JSON.parse(params));
-
-			if (!request)
-			{
-				this._store.set_value(iter, COLUMN_STATUS, "Invalid URL");
-				return null;
-			}
-
-			if (cacheObj.p)
-				this._httpSession.cancel_message(cacheObj.p, Soup.Status.CANCELLED);
-
-			cacheObj.p = request;
-
-			this._store.set_value(iter, COLUMN_STATUS, "Checking" + "..");
-
-			this._httpSession.queue_message(request, 
-				(session, message) =>
-				{
-					cacheObj.p = undefined;
-
-					if (message.status_code == Soup.Status.CANCELLED)
-						return;
-
-					if (!((message.status_code) >= 200 && (message.status_code) < 300))
+					let status = msg.get_status();
+					if (!(status >= 200 && status < 300))
 					{
-						this._store.set_value(iter, COLUMN_STATUS,
-							Soup.Status.get_phrase(message.status_code));
+						entryRow._statusLabel.set_text(Soup.Status.get_phrase(status));
 						return;
 					}
 
 					let parser;
-
 					try
 					{
-						parser = Parser.createRssParser(message.response_body.data);
+						let data = new TextDecoder().decode(bytes.toArray());
+						parser = createRssParser(data);
 					}
 					catch (e)
 					{
-						this._store.set_value(iter, COLUMN_STATUS, e.message);
-						Log.Error(e);
+						entryRow._statusLabel.set_text(e.message || "Parse error");
 						return;
 					}
 
 					if (parser == null)
 					{
-						this._store.set_value(iter, COLUMN_STATUS, "Unable to parse");
+						entryRow._statusLabel.set_text("Unable to parse");
 						return;
 					}
 					parser.parse();
-
-					this._store.set_value(iter, COLUMN_STATUS, "OK" + " (" + parser._type + ")");
-					this._store.set_value(iter, COLUMN_TITLE, parser.Publisher.Title);
+					entryRow._statusLabel.set_text("OK (" + parser._type + ")");
+					entryRow._titleLabel.set_text(parser.Publisher.Title);
 				});
+		};
 
-			return request;
-		}
-
-		_createControlBase(text)
+		const buildSourceRow = (url) =>
 		{
-			let box = new Gtk.Box(
+			const row = new Adw.EntryRow({ title : url });
+
+			const titleLabel = new Gtk.Label({ label : "", xalign : 0.0, hexpand : true });
+			titleLabel.add_css_class('dim-label');
+			row._titleLabel = titleLabel;
+
+			const statusLabel = new Gtk.Label({ label : "", xalign : 1.0 });
+			statusLabel.add_css_class('dim-label');
+			row._statusLabel = statusLabel;
+
+			const noNotifBtn = new Gtk.ToggleButton(
 			{
-				orientation: Gtk.Orientation.HORIZONTAL,
-				spacing: 6
+				icon_name : 'notifications-disabled-symbolic',
+				tooltip_text : "No notifications",
+				valign : Gtk.Align.CENTER,
 			});
-			box.set_margin_bottom(6);
-			let label = new Gtk.Label(
+			noNotifBtn.active = !!aSettings.get(url, 'n');
+			noNotifBtn.connect('toggled', () =>
 			{
-				xalign: Gtk.Align.FILL,
-				hexpand: true,
-				label: text
-			});
-			box.pack_start(label, true, true, 0);
-
-			return box;
-		}
-		
-		_addSourcesColumn(parent, cell, params, title)
-		{
-			let column = new Gtk.TreeViewColumn();
-
-			column.pack_start(cell, true);
-			
-			column.set_resizable(true);
-			column.set_title(title);
-
-			parent.append_column(column);
-			
-			return [column, cell];
-		}
-
-		_addSwitch(parent, key, text, callback)
-		{
-			let box = this._createControlBase(text);
-
-			let sw = new Gtk.Switch(
-			{
-				active: Settings.get_boolean(key)
-			});
-			sw.connect('notify::active', (b) =>
-			{
-				Settings.set_boolean(key, b.active);
-				if (callback)
-					callback(sw, b.active);
+				aSettings.set(url, 'n', noNotifBtn.active);
 			});
 
-			box.add(sw);
-			parent.add(box);
-
-			return box;
-		}
-
-		_addSpinButton(parent, key, text, limit)
-		{
-			let box = this._createControlBase(text);
-
-			let spin = Gtk.SpinButton.new_with_range(1, limit, 1);
-			spin.set_value(Settings.get_int(key));
-			Settings.bind(key, spin, 'value', Gio.SettingsBindFlags.DEFAULT);
-
-			box.add(spin);
-
-			parent.add(box);
-
-			return box;
-		}
-
-		_addSeparator(parent, margin_top, margin_bottom, visible)
-		{
-			let sep = new Gtk.Separator(
+			const noUpdBtn = new Gtk.ToggleButton(
 			{
-				orientation: Gtk.Orientation.HORIZONTAL,
-				visible: (visible != undefined ? visible : true)
+				icon_name : 'software-update-urgent-symbolic',
+				tooltip_text : "No updates detection",
+				valign : Gtk.Align.CENTER,
 			});
-			sep.set_margin_top(margin_top);
-			sep.set_margin_bottom(margin_bottom);
-
-			parent.add(sep);
-
-			return sep;
-		}
-
-		/*
-		 *	Creates modal dialog when adding new or editing RSS source
-		 *	title - dialog title
-		 *	text - text in dialog
-		 *	onOkButton - callback on OK button clicked
-		 */
-		_createDialog(title, text, onOkButton)
-		{
-
-			let dialog = new Gtk.Dialog(
+			noUpdBtn.active = !!aSettings.get(url, 'u');
+			noUpdBtn.connect('toggled', () =>
 			{
-				title: title
-			});
-			dialog.set_modal(true);
-			dialog.set_resizable(false);
-			dialog.set_border_width(12);
-
-			this._entry = new Gtk.Entry(
-			{
-				text: text
-			});
-			this._entry.margin_bottom = 12;
-			this._entry.width_chars = 40;
-
-			this._entry.connect("changed", () =>
-			{
-
-				if (this._entry.get_text().length === 0)
-					this._okButton.sensitive = false;
-				else
-					this._okButton.sensitive = true;
+				aSettings.set(url, 'u', noUpdBtn.active);
 			});
 
-			dialog.add_button(Gtk.STOCK_CANCEL, 0);
-			this._okButton = dialog.add_button(Gtk.STOCK_OK, 1); 
-			this._okButton.set_can_default(true);
-			this._okButton.sensitive = false;
-			dialog.set_default(this._okButton);
-			this._entry.activates_default = true;
-
-			let dialog_area = dialog.get_content_area();
-			dialog_area.pack_start(this._entry, 0, 0, 0);
-
-			dialog.connect("response", (w, response_id) =>
+			const upBtn = new Gtk.Button(
 			{
-				if (response_id == 1)
-				{
-					onOkButton(response_id);
-				}
-
-				dialog.hide();
+				icon_name : 'go-up-symbolic',
+				tooltip_text : "Move up",
+				valign : Gtk.Align.CENTER,
 			});
 
-			dialog.show_all();
-		}
-
-		/*
-		 *	Move selected item on the list
-		 */
-		_moveItem(direction, self)
-		{
-
-			let [any, model, iter] = this._actor.get_selection().get_selected();
-
-			if (!any)
-				return;
-
-			let path = model.get_path(iter);
-
-			if (!direction)
-				path.next();
-			else
-				path.prev();
-
-			let [res, iter_step] = model.get_iter(path);
-
-			if (!res)
-				return;
-
-			this._store.swap(iter, iter_step);
-
-			let index = model.get_path(iter).get_indices();
-			let index_step = model.get_path(iter_step).get_indices();
-
-			let feeds = Settings.get_strv(GSKeys.RSS_FEEDS_LIST);
-
-			if (feeds == null)
-				feeds = new Array();
-
-			if (index < feeds.length && index_step < feeds.length)
+			const downBtn = new Gtk.Button(
 			{
-				feeds[index] = model.get_value(iter, COLUMN_URL);
-				feeds[index_step] = model.get_value(iter_step, COLUMN_URL);
+				icon_name : 'go-down-symbolic',
+				tooltip_text : "Move down",
+				valign : Gtk.Align.CENTER,
+			});
 
-				let it = this._fCache[index];
-				this._fCache[index] = this._fCache[index_step];
-				this._fCache[index_step] = it;
-
-				Settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
-			}
-		}
-
-
-		/*
-		 *	On create new clicked callback
-		 */
-		_createNew()
-		{
-			this._createDialog("New RSS Feed source", '', 
-				(id) =>
+			const delBtn = new Gtk.Button(
 			{
-				let text = this._entry.get_text();
+				icon_name : 'list-remove-symbolic',
+				tooltip_text : "Remove",
+				valign : Gtk.Align.CENTER,
+			});
+			delBtn.add_css_class('destructive-action');
 
-				if (!text.length)
+			row.add_suffix(titleLabel);
+			row.add_suffix(statusLabel);
+			row.add_suffix(noNotifBtn);
+			row.add_suffix(noUpdBtn);
+			row.add_suffix(upBtn);
+			row.add_suffix(downBtn);
+			row.add_suffix(delBtn);
+
+			row.connect('apply', () =>
+			{
+				let newUrl = row.get_text().trim();
+				if (!newUrl.length)
 					return;
 
-				// update tree view
-				let iter = this._store.append();
-				this._store.set_value(iter, COLUMN_URL, text);
+				let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
+				let idx = feeds.indexOf(url);
+				if (idx == -1)
+					return;
 
-				// select and scroll to added entry
-				let path = this._store.get_path(iter);
-				this._actor.get_selection().select_iter(iter);
-				this._actor.scroll_to_cell(path, null, false, 0, 0);
+				aSettings.rename(url, newUrl);
+				feeds[idx] = newUrl;
+				settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
+
+				url = newUrl;
+				row.set_title(newUrl);
+				validateUrl(row, newUrl);
 			});
-		}
 
-		/*
-		 *	On delete clicked callback
-		 */
-		_deleteSelected()
-		{
-			let [any, model, iter] = this._actor.get_selection().get_selected();
-
-			if (any)
+			upBtn.connect('clicked', () =>
 			{
-				// must call before remove
-				let index = model.get_path(iter).get_indices();
-				// update tree view
+				let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
+				let idx = feeds.indexOf(url);
+				if (idx <= 0)
+					return;
 
-				this._aSettings.remove(this._store.get_value(iter, COLUMN_URL));
+				[feeds[idx - 1], feeds[idx]] = [feeds[idx], feeds[idx - 1]];
+				settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
 
-				this._store.remove(iter);
-			}
-		}
+				refreshSourcesList();
+			});
 
-		/*
-		 *	Loads RSS feeds entries from gsettings structure
-		 */
-		_loadStoreFromSettings()
-		{
-			let feeds = Settings.get_strv(GSKeys.RSS_FEEDS_LIST);
-
-			if (feeds)
+			downBtn.connect('clicked', () =>
 			{
-				for (let i = 0; i < feeds.length; i++)
+				let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
+				let idx = feeds.indexOf(url);
+				if (idx == -1 || idx >= feeds.length - 1)
+					return;
+
+				[feeds[idx], feeds[idx + 1]] = [feeds[idx + 1], feeds[idx]];
+				settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
+
+				refreshSourcesList();
+			});
+
+			delBtn.connect('clicked', () =>
+			{
+				aSettings.remove(url);
+				let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
+				let idx = feeds.indexOf(url);
+				if (idx != -1)
+					feeds.splice(idx, 1);
+				settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
+
+				sourcesGroup.remove(row);
+			});
+
+			validateUrl(row, url);
+
+			return row;
+		};
+
+		const rowMap = new Map();
+
+		const refreshSourcesList = () =>
+		{
+			let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
+
+			for (let [url, row] of rowMap)
+			{
+				if (!feeds.includes(url))
 				{
-					let iter = this._store.append();
-					this._store.set_value(iter, COLUMN_URL, feeds[i]);
-
-					let vset = this._aSettings.get(feeds[i], "n");
-
-					if (vset)
-						this._store.set_value(iter, COLUMN_NOTIF, vset);
-
-					vset = this._aSettings.get(feeds[i], "u");
-
-					if (vset)
-						this._store.set_value(iter, COLUMN_UPD, vset);
-
-					let cacheObj = this._fCache[i] = new Object();
-					cacheObj.v = feeds[i];
-					this._validateItemURL(iter, cacheObj);
+					sourcesGroup.remove(row);
+					rowMap.delete(url);
 				}
 			}
-		}
+
+			for (let i = 0; i < feeds.length; i++)
+			{
+				let url = feeds[i];
+				if (!rowMap.has(url))
+				{
+					let row = buildSourceRow(url);
+					sourcesGroup.add(row);
+					rowMap.set(url, row);
+				}
+			}
+		};
+
+		refreshSourcesList();
+
+		recheckBtn.connect('clicked', () =>
+		{
+			let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
+			for (let url of feeds)
+			{
+				let row = rowMap.get(url);
+				if (row)
+					validateUrl(row, url);
+			}
+		});
+
+		addBtn.connect('clicked', () =>
+		{
+			let dialog = new Adw.MessageDialog(
+			{
+				transient_for : window,
+				heading : "New RSS Feed source",
+			});
+
+			let entry = new Gtk.Entry(
+			{
+				placeholder_text : "https://example.com/rss",
+				activates_default : true,
+			});
+
+			dialog.set_extra_child(entry);
+			dialog.add_response('cancel', "Cancel");
+			dialog.add_response('ok', "Add");
+			dialog.set_default_response('ok');
+			dialog.set_response_appearance('ok', Adw.ResponseAppearance.SUGGESTED);
+
+			dialog.connect('response', (d, response) =>
+			{
+				if (response != 'ok')
+				{
+					d.destroy();
+					return;
+				}
+
+				let url = entry.get_text().trim();
+				if (!url.length)
+				{
+					d.destroy();
+					return;
+				}
+
+				let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
+				feeds.push(url);
+				settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
+
+				let row = buildSourceRow(url);
+				sourcesGroup.add(row);
+				rowMap.set(url, row);
+
+				d.destroy();
+			});
+
+			dialog.present();
+		});
 	}
-);
 
-function try_spawn(argv)
-{
-	var success, pid;
-
-	try
+	_makeSwitchRow(settings, key, title)
 	{
-		[success, pid] = GLib.spawn_sync(null, argv, null,
-			GLib.SpawnFlags.SEARCH_PATH, null);
+		const row = new Adw.SwitchRow({ title });
+		settings.bind(key, row, 'active', Gio.SettingsBindFlags.DEFAULT);
+		return row;
 	}
-	catch (err)
+
+	_makeSpinRow(settings, key, title, min, max)
 	{
-		Log.Error(err);
-		return false;
+		const row = new Adw.SpinRow(
+		{
+			title,
+			adjustment : new Gtk.Adjustment(
+			{
+				lower : min,
+				upper : max,
+				step_increment : 1,
+			}),
+		});
+		settings.bind(key, row, 'value', Gio.SettingsBindFlags.DEFAULT);
+		return row;
 	}
-
-	return success;
-}
-
-/*
- *	Initialize the settings widget
- */
-function init()
-{
-}
-
-/*
- *	Builds settings widget
- */
-function buildPrefsWidget()
-{
-	let widget = new RssFeedSettingsWidget();
-	widget.show_all();
-	return widget;
 }

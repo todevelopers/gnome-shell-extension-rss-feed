@@ -19,39 +19,33 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const
-Me = imports.misc.extensionUtils.getCurrentExtension();
-
-const
-Convenience = Me.imports.convenience;
-const
-Settings = Convenience.getSettings();
-
-var
-GSAA = class RssFeed_GSAA
+export class GSAA
 {
-	constructor(key)
+	constructor(settings, key)
 	{
 		this.autoload = false;
-		
-		if (!key)
-			throw "GSAA._init: missing key";
 
+		if (!settings)
+			throw "GSAA: missing settings";
+
+		if (!key)
+			throw "GSAA: missing key";
+
+		this._settings = settings;
 		this._gsKey = key;
 		this._gsData = new Object();
 
 		this.load();
 	}
 
-	destroy ()
+	destroy()
 	{
 		delete this._gsData;
 	}
 
-	load ()
+	load()
 	{
-		let
-		data = Settings.get_string(this._gsKey);
+		let data = this._settings.get_string(this._gsKey);
 
 		if (!data)
 			throw "GSAA.load: could not read data (" + this._gsKey + ")";
@@ -66,10 +60,9 @@ GSAA = class RssFeed_GSAA
 		if (!this._gsData)
 			return false;
 
-		let
-		data = JSON.stringify(this._gsData);
+		let data = JSON.stringify(this._gsData);
 
-		Settings.set_string(this._gsKey, data);
+		this._settings.set_string(this._gsKey, data);
 
 		return true;
 	}
@@ -79,8 +72,7 @@ GSAA = class RssFeed_GSAA
 		if (this.autoload != false)
 			this.load();
 
-		let
-		data = this._gsData[key];
+		let data = this._gsData[key];
 
 		if (!data)
 			return undefined;
@@ -88,12 +80,11 @@ GSAA = class RssFeed_GSAA
 		return data[subkey];
 	}
 
-	set (key, subkey, value)
+	set(key, subkey, value)
 	{
 		this.load();
 
-		let
-		data = this._gsData[key];
+		let data = this._gsData[key];
 
 		if (!data)
 			data = this._gsData[key] = new Object();
@@ -103,7 +94,7 @@ GSAA = class RssFeed_GSAA
 		this.dump();
 	}
 
-	remove (key)
+	remove(key)
 	{
 		this.load();
 
@@ -115,12 +106,11 @@ GSAA = class RssFeed_GSAA
 		this.dump();
 	}
 
-	rename (from, to)
+	rename(from, to)
 	{
 		this.load();
 
-		let
-		data = this._gsData[from];
+		let data = this._gsData[from];
 
 		if (!data)
 			return false;
@@ -133,7 +123,7 @@ GSAA = class RssFeed_GSAA
 		return true;
 	}
 
-	set_autoload (sw)
+	set_autoload(sw)
 	{
 		this.autoload = sw;
 	}

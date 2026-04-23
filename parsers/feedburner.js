@@ -21,93 +21,84 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Base = Me.imports.parsers.base;
-const Log = Me.imports.logger;
+import { BaseParser } from './base.js';
 
-/*
- *  special class for Feedburner RSS feed
- */
-var FeedburnerParser = class _FeedburnerParser extends Base.BaseParser
+export class FeedburnerParser extends BaseParser
 {
+	constructor(root)
+	{
+		super(root);
+		this._type = "Feedburner";
+		console.debug("rss-feed: Feedburner parser");
+	}
 
-    /*
-     *  Initialize the instance of FeedburnerParser class
-     *  root - root element of feed file
-     */
-	constructor(root) {
-        super(root);
-        this._type = "Feedburner";
-        Log.Debug("Feedburner parser");
-    }
+	parse()
+	{
+		this._parsePublisher(this._root.childElements[0].childElements);
+	}
 
-    /*
-     *  Parse feed file
-     */
-    parse() {
+	_parsePublisher(childElements)
+	{
+		for (let i = 0; i < childElements.length; i++)
+		{
+			if (childElements[i].name == 'title')
+			{
+				this.Publisher.Title = childElements[i].text;
+			}
+			else if (childElements[i].name == 'link')
+			{
+				this.Publisher.HttpLink = childElements[i].text;
+			}
+			else if (childElements[i].name == 'description')
+			{
+				this.Publisher.Description = childElements[i].text;
+			}
+			else if (childElements[i].name == 'lastBuildDate')
+			{
+				this.Publisher.PublishDate = childElements[i].text;
+			}
+			else if (childElements[i].name == 'item')
+			{
+				this._parseItem(childElements[i].childElements);
+			}
+		}
+	}
 
-        // root = rss -> channel
-        this._parsePublisher(this._root.childElements[0].childElements);
-    }
+	_parseItem(itemElements)
+	{
+		let item = this._initItem();
 
-    /*
-     *  Parse publisher
-     */
-    _parsePublisher(childElements) {
+		for (let i = 0; i < itemElements.length; i++)
+		{
+			if (itemElements[i].name == 'title')
+			{
+				item.Title = itemElements[i].text;
+			}
+			else if (itemElements[i].name == 'link')
+			{
+				item.HttpLink = itemElements[i].text;
+			}
+			else if (itemElements[i].name == 'description')
+			{
+				item.Description = itemElements[i].text;
+			}
+			else if (itemElements[i].name == 'pubDate')
+			{
+				item.PublishDate = itemElements[i].text;
+			}
+			else if (itemElements[i].name == 'author')
+			{
+				item.Author = itemElements[i].text;
+			}
+			else if (itemElements[i].name == 'guid')
+			{
+				item.ID = itemElements[i].text;
+			}
+		}
 
-        for (let i = 0; i < childElements.length; i++) {
+		if (!this._postprocessItem(item))
+			return;
 
-            if (childElements[i].name == 'title') {
-                this.Publisher.Title = childElements[i].text;
-            }
-            else if (childElements[i].name == 'link') {
-                this.Publisher.HttpLink = childElements[i].text;
-            }
-            else if (childElements[i].name == 'description') {
-                this.Publisher.Description = childElements[i].text;
-            }
-            else if (childElements[i].name == 'lastBuildDate') {
-                this.Publisher.PublishDate = childElements[i].text;
-            }
-            else if (childElements[i].name == 'item') {
-                this._parseItem(childElements[i].childElements);
-            }
-        }
-    }
-
-    /*
-     *  Parse item
-     */
-    _parseItem(itemElements) {
-
-        let item = this._initItem();
-
-        for (let i = 0; i < itemElements.length; i++) {
-
-            if (itemElements[i].name == 'title') {
-                item.Title = itemElements[i].text;
-            }
-            else if (itemElements[i].name == 'link') {
-                item.HttpLink = itemElements[i].text;
-            }
-            else if (itemElements[i].name == 'description') {
-                item.Description = itemElements[i].text;
-            }
-            else if (itemElements[i].name == 'pubDate') {
-                item.PublishDate = itemElements[i].text;
-            }
-            else if (itemElements[i].name == 'author') {
-                item.Author = itemElements[i].text;
-            }
-            else if (itemElements[i].name == 'guid') {
-                item.ID = itemElements[i].text;
-            }
-        }
-        
-        if (!this._postprocessItem(item)) {
-        	return;
-        }
-
-        this.Items.push(item);
-    }
-};
+		this.Items.push(item);
+	}
+}

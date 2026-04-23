@@ -21,47 +21,26 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import { getInstance } from '../encoder.js';
+import { RssPopupSubMenu } from './rsspopupsubmenu.js';
 
-const
-PopupMenu = imports.ui.popupMenu;
+const Encoder = getInstance();
 
-const
-Me = imports.misc.extensionUtils.getCurrentExtension();
-const
-Log = Me.imports.logger;
-const
-Encoder = Me.imports.encoder.getInstance();
-
-const
-RssPopupSubMenu = Me.imports.extensiongui.rsspopupsubmenu.RssPopupSubMenu;
-
-/*
- *  RssPopupSubMenuMenuItem class that extends PopupSubMenuMenuItem. Holds RSS feed articles
- */
-var
-RssPopupSubMenuMenuItem = class _RssPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem
+export class RssPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem
 {
-
-	/*
-	 *  Initialize instance of RssPopupSubMenuMenuItem class
-	 *  publisher - RSS feed publisher
-	 *  nitems - number of articles
-	 */
-	constructor(publisher, nitems)
+	constructor(publisher, _nitems)
 	{
-
-		let
-		title = Encoder.htmlDecode(publisher.Title);
+		let title = Encoder.htmlDecode(publisher.Title);
 		if (title.length > 128)
 			title = title.substr(0, 128) + "...";
 
 		super(title);
 
-		// kinda nasty, but what the hell
 		this.menu.destroy();
 		this.menu = new RssPopupSubMenu(this.actor, this._triangle);
-		this.menu.connect('open-state-changed', 
+		this.menu.connect('open-state-changed',
 			this._subMenuOpenStateChanged.bind(this));
 		this._olabeltext = title;
 	}
-};
+}

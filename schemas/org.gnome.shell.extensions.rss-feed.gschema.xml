@@ -47,11 +47,6 @@
 		    <summary>Enable animations</summary>
 		    <description>Enable animations</description>
 		</key>
-		<key type="b" name="preserve-on-lock">
-		    <default>false</default>
-		    <summary>Preserve when screen off</summary>
-		    <description>Do not disable the extension when screen is deactivated or locked.</description>
-		</key>
 		<key type="b" name="detect-updates">
 		    <default>true</default>
 		    <summary>Detect updates</summary>
@@ -72,15 +67,10 @@
 		    <summary>RSS feeds settings</summary>
 		    <description></description>
 		</key>
-		<key type="b" name="enable-debug">
-		    <default>false</default>
-		    <summary>Enable debug</summary>
-		    <description>Enable extension logs debug messages in Gnome logs provider.</description>
-		</key>
 		<key type="b" name="menu-buttons-align-top">
 		    <default>false</default>
 		    <summary>Top-align menu buttons</summary>
-		    <description>Top-align menu buttonsd</description>
+		    <description>Top-align menu buttons</description>
 		</key>
 		<key type="b" name="http-keep-alive">
 		    <default>true</default>
@@ -91,6 +81,6 @@
 		    <default>false</default>
 		    <summary>Set all feeds as seen when closed.</summary>
 		    <description>Set all RSS feeds as seen whenever the user closes the main popup menu.</description>
-		</key>		
+		</key>
     </schema>
 </schemalist>

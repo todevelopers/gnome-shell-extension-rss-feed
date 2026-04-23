@@ -1,27 +1,25 @@
 {
   "env": {
-    "es6": true
+    "es2022": true
   },
   "extends": "eslint:recommended",
   "globals": {
-    "imports": "readonly",
     "global": "readonly",
-    "log": "readonly",
-    "logError": "readonly",
-    "print": "readonly",
-    "printerr": "readonly",
     "_": "readonly",
     "C_": "readonly",
     "N_": "readonly",
-    "ngettext": "readonly"
+    "ngettext": "readonly",
+    "TextDecoder": "readonly",
+    "console": "readonly"
   },
   "parserOptions": {
-    "ecmaVersion": 2020
+    "ecmaVersion": 2022,
+    "sourceType": "module"
   },
   "rules": {
     "no-var": "off",
     "prefer-const": "off",
-    "no-unused-vars": ["warn", { "varsIgnorePattern": "^_" }],
+    "no-unused-vars": ["warn", { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_" }],
     "no-mixed-spaces-and-tabs": "off",
     "no-useless-escape": "off",
     "no-redeclare": "off"

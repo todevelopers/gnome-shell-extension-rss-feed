@@ -21,24 +21,10 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const
-Me = imports.misc.extensionUtils.getCurrentExtension();
-
-/*
- *  Base 'abstract' class for RSS parser. Every format inherits from this class
- *  and must implements all empty methods
- */
-var
-BaseParser = class _BaseParser
+export class BaseParser
 {
-
-	/*
-	 *  Initialize the instance of BaseParser class
-	 *  root - root element of feed file
-	 */
 	constructor(root)
 	{
-
 		this._root = root;
 
 		this.Publisher =
@@ -52,10 +38,7 @@ BaseParser = class _BaseParser
 		this.Items = [];
 	}
 
-	/*
-	 *  Initialize RSS article item object
-	 */
-	_initItem ()
+	_initItem()
 	{
 		return {
 			Title : '',
@@ -69,13 +52,8 @@ BaseParser = class _BaseParser
 		};
 	}
 
-	/*
-	 *  Clears publisher and items
-	 */
-
-	clear ()
+	clear()
 	{
-
 		while (this.Items.length > 0)
 			this.Items.pop();
 		this.Publisher.Title = '';
@@ -85,40 +63,32 @@ BaseParser = class _BaseParser
 		this.Publisher.UpdateTime = '';
 	}
 
-	/*
-	 *  Abstract function to Parse feed file
-	 */
-	parse ()
+	parse()
 	{
-		// child classes implements this 'abstract' function
 	}
 
-	/*
-	 *  Abstract function to Parse publisher
-	 */
-	_parsePublisher(childElements)
+	_parsePublisher(_childElements)
 	{
-		// child classes implements this 'abstract' function
 	}
 
-	/*
-	 *  Abstract function to Parse item
-	 */
-	_parseItem (itemElements)
+	_parseItem(_itemElements)
 	{
-		// child classes implements this 'abstract' function
 	}
-	
-	_postprocessItem (item)
+
+	_postprocessItem(item)
 	{
-		if ( !item.ID ) {
-			if ( !item.HttpLink ) {
+		if (!item.ID)
+		{
+			if (!item.HttpLink)
+			{
 				return 0;
-			} else {
+			}
+			else
+			{
 				item.ID = item.HttpLink;
 			}
 		}
-		
+
 		return 1;
 	}
-};
+}

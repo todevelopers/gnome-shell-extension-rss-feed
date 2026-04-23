@@ -19,9 +19,7 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-
-function getParametersAsJson(url) 
+export function getParametersAsJson(url)
 {
 	let l2o = url.indexOf('?');
 
@@ -42,4 +40,16 @@ function getParametersAsJson(url)
 	jsonObj += "}";
 
 	return jsonObj;
+}
+
+export function buildUrl(baseUrl, params)
+{
+	let paramObj = JSON.parse(params);
+	let keys = Object.keys(paramObj);
+
+	if (!keys.length)
+		return baseUrl;
+
+	let query = keys.map(k => encodeURIComponent(k) + '=' + encodeURIComponent(paramObj[k])).join('&');
+	return baseUrl + '?' + query;
 }

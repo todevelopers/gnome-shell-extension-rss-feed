@@ -27,8 +27,7 @@
  *		 - replaced string concatonation in numEncode with string builder, push and join for peformance with ammendments by Rob Reid
  */
 
-let
-Encoder =
+const Encoder =
 {
 	// When encoding do we convert characters into html or numerical entities
 	EncodeType : "entity", // entity OR numerical
@@ -355,7 +354,6 @@ Encoder =
 		var re;
 		if (arr1 && arr2)
 		{
-			//ShowDebug("in swapArrayVals arr1.length = " + arr1.length + " arr2.length = " + arr2.length)
 			// array lengths must match
 			if (arr1.length == arr2.length)
 			{
@@ -381,9 +379,9 @@ Encoder =
 		return -1;
 	}
 
-}
+};
 
-function getInstance()
+export function getInstance()
 {
 	return Encoder;
 }

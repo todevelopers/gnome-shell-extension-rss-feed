@@ -21,49 +21,42 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Log = Me.imports.logger;
-const XML = Me.imports.rexml;
-const Feedburner = Me.imports.parsers.feedburner;
-const Rdf = Me.imports.parsers.rdf;
-const Atom = Me.imports.parsers.atom;
-const Rss = Me.imports.parsers.rss;
+import { REXML } from '../rexml.js';
+import { FeedburnerParser } from './feedburner.js';
+import { RdfParser } from './rdf.js';
+import { AtomParser } from './atom.js';
+import { RssParser } from './rss.js';
 
-/*
- *  Factory function that initialize correct parser class instance
- */
-function createRssParser(rawXml) {
+export function createRssParser(rawXml)
+{
+	try
+	{
+		let cleanXml = rawXml.split(/\<\?\s*xml(.*?).*\?\>/).join('');
+		cleanXml = cleanXml.split(/<!--[\s\S]*?-->/g).join('');
 
-    try {
-        // remove XML declarations because the REXML library is not able to parse it
-        // more lines possibility
-        let cleanXml = rawXml.split(/\<\?\s*xml(.*?).*\?\>/).join('');
+		let xdoc = new REXML(cleanXml);
 
-        // remove HTML comments. REXML library could not handle it (especially when couple of lines are commented)
-        cleanXml = cleanXml.split(/<!--[\s\S]*?-->/g).join('');
+		if (xdoc.rootElement.attribute('xmlns:feedburner') == 'http://rssnamespace.org/feedburner/ext/1.0')
+			return new FeedburnerParser(xdoc.rootElement);
 
-        let xdoc = new XML.REXML(cleanXml);
+		let test;
 
-        if (xdoc.rootElement.attribute('xmlns:feedburner') == 'http://rssnamespace.org/feedburner/ext/1.0')
-            return new Feedburner.FeedburnerParser(xdoc.rootElement);
+		test = 'rdf:RDF';
+		if (xdoc.rootElement.name.slice(0, test.length) == test)
+			return new RdfParser(xdoc.rootElement);
 
-        let test;
+		test = 'feed';
+		if (xdoc.rootElement.name.toLowerCase().slice(0, test.length) == test)
+			return new AtomParser(xdoc.rootElement);
 
-        test = 'rdf:RDF';
-        if (xdoc.rootElement.name.slice(0, test.length) == test)
-            return new Rdf.RdfParser(xdoc.rootElement);
+		test = 'rss';
+		if (xdoc.rootElement.name.toLowerCase().slice(0, test.length) == test)
+			return new RssParser(xdoc.rootElement);
+	}
+	catch (e)
+	{
+		console.error('rss-feed: parser error: ' + e);
+	}
 
-        test = 'feed';
-        if (xdoc.rootElement.name.toLowerCase().slice(0, test.length) == test)
-            return new Atom.AtomParser(xdoc.rootElement);
-
-        test = 'rss';
-        if (xdoc.rootElement.name.toLowerCase().slice(0, test.length) == test)
-            return new Rss.RssParser(xdoc.rootElement);
-    }
-    catch (e) {
-        Log.Error(e);
-    }
-
-    return null;
+	return null;
 }
