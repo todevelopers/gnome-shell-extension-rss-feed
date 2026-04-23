@@ -16,10 +16,10 @@ jobs:
         run: |
           set -o pipefail
           npm run lint 2>&1 | tee eslint.log
-      - name: Write summary
+      - name: Compute stats
+        id: stats
         if: always()
         env:
-          TOOL: ESLint
           LOG: eslint.log
           PATTERN: '✖ [0-9]+ problems \(([0-9]+) errors, ([0-9]+) warnings\)'
         run: |
@@ -30,17 +30,44 @@ jobs:
             warnings="${BASH_REMATCH[2]}"
           fi
           if [ "$errors" -gt 0 ]; then
-            emoji="❌"; alert="CAUTION"; status="failed"
+            emoji="❌"; alert="CAUTION"; status_text="failed"; color="red"
+            if [ "$warnings" -gt 0 ]; then
+              message="$errors errors, $warnings warnings"
+            else
+              message="$errors errors"
+            fi
           elif [ "$warnings" -gt 0 ]; then
-            emoji="⚠️"; alert="WARNING"; status="passed with warnings"
+            emoji="⚠️"; alert="WARNING"; status_text="passed with warnings"; color="yellow"
+            message="$warnings warnings"
           else
-            emoji="✅"; alert="NOTE"; status="passed"
+            emoji="✅"; alert="NOTE"; status_text="passed"; color="brightgreen"
+            message="passing"
           fi
           {
-            echo "## $emoji $TOOL"
+            echo "errors=$errors"
+            echo "warnings=$warnings"
+            echo "emoji=$emoji"
+            echo "alert=$alert"
+            echo "status_text=$status_text"
+            echo "color=$color"
+            echo "message=$message"
+          } >> "$GITHUB_OUTPUT"
+      - name: Write summary
+        if: always()
+        env:
+          TOOL: ESLint
+          LOG: eslint.log
+          EMOJI: ${{ steps.stats.outputs.emoji }}
+          ALERT: ${{ steps.stats.outputs.alert }}
+          STATUS: ${{ steps.stats.outputs.status_text }}
+          ERRORS: ${{ steps.stats.outputs.errors }}
+          WARNINGS: ${{ steps.stats.outputs.warnings }}
+        run: |
+          {
+            echo "## $EMOJI $TOOL"
             echo ""
-            echo "> [!$alert]"
-            echo "> Status: $status — $((errors + warnings)) findings ($errors errors, $warnings warnings)"
+            echo "> [!$ALERT]"
+            echo "> Status: $STATUS — $((ERRORS + WARNINGS)) findings ($ERRORS errors, $WARNINGS warnings)"
             echo ""
             echo "<details><summary>Full output (click to expand)</summary>"
             echo ""
@@ -52,6 +79,16 @@ jobs:
             echo ""
             echo "---"
           } >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish badge
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: 87195eb23e76eae80cd14a6d80e56072
+          filename: eslint.json
+          label: eslint
+          message: ${{ steps.stats.outputs.message }}
+          color: ${{ steps.stats.outputs.color }}
       - name: Upload log
         if: always()
         uses: actions/upload-artifact@v4
@@ -72,10 +109,10 @@ jobs:
         run: |
           set -o pipefail
           shexli "$PWD" 2>&1 | tee shexli.log
-      - name: Write summary
+      - name: Compute stats
+        id: stats
         if: always()
         env:
-          TOOL: shexli
           LOG: shexli.log
           PATTERN: 'issues_found \([0-9]+ findings, ([0-9]+) errors, ([0-9]+) warnings\)'
         run: |
@@ -86,17 +123,44 @@ jobs:
             warnings="${BASH_REMATCH[2]}"
           fi
           if [ "$errors" -gt 0 ]; then
-            emoji="❌"; alert="CAUTION"; status="failed"
+            emoji="❌"; alert="CAUTION"; status_text="failed"; color="red"
+            if [ "$warnings" -gt 0 ]; then
+              message="$errors errors, $warnings warnings"
+            else
+              message="$errors errors"
+            fi
           elif [ "$warnings" -gt 0 ]; then
-            emoji="⚠️"; alert="WARNING"; status="passed with warnings"
+            emoji="⚠️"; alert="WARNING"; status_text="passed with warnings"; color="yellow"
+            message="$warnings warnings"
           else
-            emoji="✅"; alert="NOTE"; status="passed"
+            emoji="✅"; alert="NOTE"; status_text="passed"; color="brightgreen"
+            message="passing"
           fi
           {
-            echo "## $emoji $TOOL"
+            echo "errors=$errors"
+            echo "warnings=$warnings"
+            echo "emoji=$emoji"
+            echo "alert=$alert"
+            echo "status_text=$status_text"
+            echo "color=$color"
+            echo "message=$message"
+          } >> "$GITHUB_OUTPUT"
+      - name: Write summary
+        if: always()
+        env:
+          TOOL: shexli
+          LOG: shexli.log
+          EMOJI: ${{ steps.stats.outputs.emoji }}
+          ALERT: ${{ steps.stats.outputs.alert }}
+          STATUS: ${{ steps.stats.outputs.status_text }}
+          ERRORS: ${{ steps.stats.outputs.errors }}
+          WARNINGS: ${{ steps.stats.outputs.warnings }}
+        run: |
+          {
+            echo "## $EMOJI $TOOL"
             echo ""
-            echo "> [!$alert]"
-            echo "> Status: $status — $((errors + warnings)) findings ($errors errors, $warnings warnings)"
+            echo "> [!$ALERT]"
+            echo "> Status: $STATUS — $((ERRORS + WARNINGS)) findings ($ERRORS errors, $WARNINGS warnings)"
             echo ""
             echo "<details><summary>Full output (click to expand)</summary>"
             echo ""
@@ -108,6 +172,16 @@ jobs:
             echo ""
             echo "---"
           } >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish badge
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: 87195eb23e76eae80cd14a6d80e56072
+          filename: shexli.json
+          label: shexli
+          message: ${{ steps.stats.outputs.message }}
+          color: ${{ steps.stats.outputs.color }}
       - name: Upload log
         if: always()
         uses: actions/upload-artifact@v4
