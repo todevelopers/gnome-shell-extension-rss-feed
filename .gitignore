@@ -1,6 +1,10 @@
 # GNOME Schema compiled binary
 rss-feed2@nixnodes.net/schemas/gschemas.compiled
 
+# Build output
+.bin/
+node_modules/
+
 # Editor
 .vscode/
 .idea/
