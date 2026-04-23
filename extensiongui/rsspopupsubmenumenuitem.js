@@ -38,7 +38,7 @@ export class RssPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem
 		super(title);
 
 		this.menu.destroy();
-		this.menu = new RssPopupSubMenu(this.actor, this._triangle);
+		this.menu = new RssPopupSubMenu(this, this._triangle);
 		this.menu.connect('open-state-changed',
 			this._subMenuOpenStateChanged.bind(this));
 		this._olabeltext = title;

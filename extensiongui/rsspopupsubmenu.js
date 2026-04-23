@@ -27,9 +27,9 @@ export class RssPopupSubMenu extends PopupMenu.PopupSubMenu
 	{
 		super(sourceActor, sourceArrow);
 
-		this.actor.connect('scroll-event', (actor, event) =>
+		this.box.connect('scroll-event', (actor, event) =>
 		{
-			let adj = this._parent.actor.vadjustment;
+			let adj = this._parent.actor ? this._parent.actor.vadjustment : this._parent.vadjustment;
 			if (adj)
 				adj.emit('scroll-event', event);
 		});
