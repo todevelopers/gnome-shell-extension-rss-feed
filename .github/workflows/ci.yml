@@ -18,11 +18,40 @@ jobs:
           npm run lint 2>&1 | tee eslint.log
       - name: Write summary
         if: always()
+        env:
+          TOOL: ESLint
+          LOG: eslint.log
+          PATTERN: '✖ [0-9]+ problems \(([0-9]+) errors, ([0-9]+) warnings\)'
         run: |
-          echo "## ESLint" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat eslint.log >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          errors=0
+          warnings=0
+          if [[ $(cat "$LOG") =~ $PATTERN ]]; then
+            errors="${BASH_REMATCH[1]}"
+            warnings="${BASH_REMATCH[2]}"
+          fi
+          if [ "$errors" -gt 0 ]; then
+            emoji="❌"; alert="CAUTION"; status="failed"
+          elif [ "$warnings" -gt 0 ]; then
+            emoji="⚠️"; alert="WARNING"; status="passed with warnings"
+          else
+            emoji="✅"; alert="NOTE"; status="passed"
+          fi
+          {
+            echo "## $emoji $TOOL"
+            echo ""
+            echo "> [!$alert]"
+            echo "> Status: $status — $((errors + warnings)) findings ($errors errors, $warnings warnings)"
+            echo ""
+            echo "<details><summary>Full output (click to expand)</summary>"
+            echo ""
+            echo '```text'
+            cat "$LOG"
+            echo '```'
+            echo ""
+            echo "</details>"
+            echo ""
+            echo "---"
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Upload log
         if: always()
         uses: actions/upload-artifact@v4
@@ -45,11 +74,40 @@ jobs:
           shexli "$PWD" 2>&1 | tee shexli.log
       - name: Write summary
         if: always()
+        env:
+          TOOL: shexli
+          LOG: shexli.log
+          PATTERN: 'issues_found \([0-9]+ findings, ([0-9]+) errors, ([0-9]+) warnings\)'
         run: |
-          echo "## shexli" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat shexli.log >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          errors=0
+          warnings=0
+          if [[ $(cat "$LOG") =~ $PATTERN ]]; then
+            errors="${BASH_REMATCH[1]}"
+            warnings="${BASH_REMATCH[2]}"
+          fi
+          if [ "$errors" -gt 0 ]; then
+            emoji="❌"; alert="CAUTION"; status="failed"
+          elif [ "$warnings" -gt 0 ]; then
+            emoji="⚠️"; alert="WARNING"; status="passed with warnings"
+          else
+            emoji="✅"; alert="NOTE"; status="passed"
+          fi
+          {
+            echo "## $emoji $TOOL"
+            echo ""
+            echo "> [!$alert]"
+            echo "> Status: $status — $((errors + warnings)) findings ($errors errors, $warnings warnings)"
+            echo ""
+            echo "<details><summary>Full output (click to expand)</summary>"
+            echo ""
+            echo '```text'
+            cat "$LOG"
+            echo '```'
+            echo ""
+            echo "</details>"
+            echo ""
+            echo "---"
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Upload log
         if: always()
         uses: actions/upload-artifact@v4
