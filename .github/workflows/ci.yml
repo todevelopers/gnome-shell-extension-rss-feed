@@ -123,6 +123,7 @@ jobs:
           label: eslint
           message: ${{ steps.stats.outputs.message }}
           color: ${{ steps.stats.outputs.color }}
+          cacheSeconds: 0
       - name: Upload log
         if: always()
         uses: actions/upload-artifact@v4
@@ -272,6 +273,7 @@ jobs:
           label: shexli
           message: ${{ steps.stats.outputs.message }}
           color: ${{ steps.stats.outputs.color }}
+          cacheSeconds: 0
       - name: Upload log
         if: always()
         uses: actions/upload-artifact@v4
