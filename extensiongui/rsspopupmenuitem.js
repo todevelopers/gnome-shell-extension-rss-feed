@@ -22,19 +22,21 @@
  */
 
 import Clutter from 'gi://Clutter';
+import GObject from 'gi://GObject';
 import St from 'gi://St';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import * as Misc from '../misc.js';
 
-export class RssPopupMenuItem extends PopupMenu.PopupMenuItem
+export const RssPopupMenuItem = GObject.registerClass(
+class RssPopupMenuItem extends PopupMenu.PopupMenuItem
 {
-	constructor(item)
+	_init(item)
 	{
 		let title = "  " + item.Title;
-		super(title);
-
 		if (title.length > 100)
 			title = title.substr(0, 100) + "...";
+
+		super._init(title);
 
 		this._link = item.HttpLink;
 
@@ -61,4 +63,4 @@ export class RssPopupMenuItem extends PopupMenu.PopupMenuItem
 			}
 		});
 	}
-}
+});

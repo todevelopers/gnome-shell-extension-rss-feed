@@ -21,21 +21,23 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import GObject from 'gi://GObject';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import { getInstance } from '../encoder.js';
 import { RssPopupSubMenu } from './rsspopupsubmenu.js';
 
 const Encoder = getInstance();
 
-export class RssPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem
+export const RssPopupSubMenuMenuItem = GObject.registerClass(
+class RssPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem
 {
-	constructor(publisher, _nitems)
+	_init(publisher, _nitems)
 	{
 		let title = Encoder.htmlDecode(publisher.Title);
 		if (title.length > 128)
 			title = title.substr(0, 128) + "...";
 
-		super(title);
+		super._init(title);
 
 		this.menu.destroy();
 		this.menu = new RssPopupSubMenu(this, this._triangle);
@@ -43,4 +45,4 @@ export class RssPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem
 			this._subMenuOpenStateChanged.bind(this));
 		this._olabeltext = title;
 	}
-}
+});
