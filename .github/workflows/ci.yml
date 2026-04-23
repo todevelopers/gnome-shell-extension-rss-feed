@@ -16,6 +16,10 @@ jobs:
         run: |
           set -o pipefail
           npm run lint 2>&1 | tee eslint.log
+      - name: Run ESLint (JSON)
+        if: always()
+        continue-on-error: true
+        run: npx eslint . --format json -o eslint.json || true
       - name: Compute stats
         id: stats
         if: always()
@@ -57,6 +61,7 @@ jobs:
         env:
           TOOL: ESLint
           LOG: eslint.log
+          JSON: eslint.json
           EMOJI: ${{ steps.stats.outputs.emoji }}
           ALERT: ${{ steps.stats.outputs.alert }}
           STATUS: ${{ steps.stats.outputs.status_text }}
@@ -69,6 +74,35 @@ jobs:
             echo "> [!$ALERT]"
             echo "> Status: $STATUS — $((ERRORS + WARNINGS)) findings ($ERRORS errors, $WARNINGS warnings)"
             echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          render_table() {
+            local severity="$1" heading="$2"
+            [ -s "$JSON" ] || return 0
+            local rows
+            rows=$(jq -r --arg s "$severity" '
+              [.[] | .filePath as $f | .messages[]
+                | select(.severity == ($s | tonumber))
+                | "| \(.ruleId // "-") | \($f | split("/") | last):\(.line) | \(.message | gsub("\\|"; "\\\\|") | gsub("\n"; " ")) |"]
+              | .[]' "$JSON" 2>/dev/null) || return 0
+            if [ -n "$rows" ]; then
+              local count
+              count=$(echo "$rows" | wc -l)
+              {
+                echo "### $heading ($count)"
+                echo ""
+                echo "| Rule | Location | Message |"
+                echo "|---|---|---|"
+                echo "$rows"
+                echo ""
+              } >> "$GITHUB_STEP_SUMMARY"
+            fi
+          }
+
+          render_table 2 "❌ Errors" || true
+          render_table 1 "⚠️ Warnings" || true
+
+          {
             echo "<details><summary>Full output (click to expand)</summary>"
             echo ""
             echo '```text'
@@ -145,6 +179,41 @@ jobs:
             echo "color=$color"
             echo "message=$message"
           } >> "$GITHUB_OUTPUT"
+      - name: Parse findings
+        if: always()
+        continue-on-error: true
+        run: |
+          python3 <<'EOF' || true
+          import re, json
+
+          text = open('shexli.log').read()
+          header = re.compile(r'^(EGO-[A-Z]-\d+)\s+(error|warning)\s*$', re.MULTILINE)
+          matches = list(header.finditer(text))
+          findings = []
+          for i, m in enumerate(matches):
+              start = m.end()
+              end = matches[i+1].start() if i+1 < len(matches) else len(text)
+              block = text[start:end]
+              msg = next((l.strip() for l in block.splitlines() if l.strip()), '')
+              locs = re.findall(r'-->\s+(\S+)', block) + re.findall(r'=\s*also:\s+(\S+)', block)
+              short = [l.rsplit('/', 1)[-1] for l in locs]
+              location = short[0] if short else '-'
+              if len(short) > 1:
+                  location += f' (+{len(short)-1} more)'
+              findings.append({'code': m.group(1), 'severity': m.group(2), 'location': location, 'msg': msg})
+
+          def write_table(path, items):
+              if not items:
+                  open(path, 'w').close()
+                  return
+              with open(path, 'w') as fp:
+                  for f in items:
+                      msg = f['msg'].replace('|', '\\|').replace('\n', ' ')
+                      fp.write(f"| {f['code']} | {f['location']} | {msg} |\n")
+
+          write_table('shexli-errors.tbl', [f for f in findings if f['severity'] == 'error'])
+          write_table('shexli-warnings.tbl', [f for f in findings if f['severity'] == 'warning'])
+          EOF
       - name: Write summary
         if: always()
         env:
@@ -162,6 +231,27 @@ jobs:
             echo "> [!$ALERT]"
             echo "> Status: $STATUS — $((ERRORS + WARNINGS)) findings ($ERRORS errors, $WARNINGS warnings)"
             echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          render_table() {
+            local file="$1" heading="$2"
+            [ -s "$file" ] || return 0
+            local count
+            count=$(wc -l < "$file")
+            {
+              echo "### $heading ($count)"
+              echo ""
+              echo "| Rule | Location | Message |"
+              echo "|---|---|---|"
+              cat "$file"
+              echo ""
+            } >> "$GITHUB_STEP_SUMMARY"
+          }
+
+          render_table shexli-errors.tbl "❌ Errors" || true
+          render_table shexli-warnings.tbl "⚠️ Warnings" || true
+
+          {
             echo "<details><summary>Full output (click to expand)</summary>"
             echo ""
             echo '```text'
