@@ -12,7 +12,23 @@ jobs:
         with:
           node-version: 'lts/*'
       - run: npm install
-      - run: npm run lint
+      - name: Run ESLint
+        run: |
+          set -o pipefail
+          npm run lint 2>&1 | tee eslint.log
+      - name: Write summary
+        if: always()
+        run: |
+          echo "## ESLint" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat eslint.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+      - name: Upload log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eslint-log
+          path: eslint.log
 
   lint-gnome:
     name: shexli (GNOME static analysis)
@@ -23,4 +39,20 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install shexli
-      - run: shexli "$PWD"
+      - name: Run shexli
+        run: |
+          set -o pipefail
+          shexli "$PWD" 2>&1 | tee shexli.log
+      - name: Write summary
+        if: always()
+        run: |
+          echo "## shexli" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat shexli.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+      - name: Upload log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shexli-log
+          path: shexli.log
