@@ -68,17 +68,23 @@ function _actionButton(iconName, accessibleName, onClicked)
 const RssFeed2 = GObject.registerClass(
 	class RssFeed2 extends PanelMenu.Button
 	{
-		_init(settings)
+		_init(settings, extension)
 		{
 			super._init(0.0, "RSS Feed 2");
 
 			this._settings = settings;
+			this._extension = extension;
 
 			this._httpSession = new Soup.Session({ timeout : 60 });
 			this._cancellable = new Gio.Cancellable();
 
 			this._aSettings = new GSAA(settings, GSKeys.RSS_FEEDS_SETTINGS);
 			this._aSettings.set_autoload(false);
+
+			this._scid = settings.connect('changed::' + GSKeys.RSS_FEEDS_LIST, () =>
+			{
+				this._pollFeeds();
+			});
 
 			this._startIndex = 0;
 			this._feedsCache = new Array();
@@ -276,6 +282,7 @@ const RssFeed2 = GObject.registerClass(
 				return;
 
 			this.menu.close();
+			this._extension.openPreferences();
 		}
 
 		_purgeSource(key)
@@ -754,7 +761,7 @@ export default class RssFeedExtension extends Extension
 	enable()
 	{
 		let settings = this.getSettings();
-		this._indicator = new RssFeed2(settings);
+		this._indicator = new RssFeed2(settings, this);
 		this._indicator._pollFeeds();
 		Main.panel.addToStatusArea('rssFeed2Menu', this._indicator, 0, 'right');
 		console.debug("rss-feed: Extension enabled.");
