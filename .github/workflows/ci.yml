@@ -143,7 +143,9 @@ jobs:
       - name: Run shexli
         run: |
           set -o pipefail
-          shexli "$PWD" 2>&1 | tee shexli.log
+          mkdir -p /tmp/scan
+          git archive HEAD | tar -x -C /tmp/scan
+          shexli /tmp/scan 2>&1 | tee shexli.log
       - name: Compute stats
         id: stats
         if: always()
