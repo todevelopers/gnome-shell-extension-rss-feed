@@ -65,7 +65,7 @@ class RssPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem
 			y_align: Clutter.ActorAlign.CENTER,
 			visible: false,
 		});
-		this.insert_child_before(this._countBadge, this._triangleBin);
+		this.insert_child_at_index(this._countBadge, this.get_n_children() - 1);
 
 		this.menu.destroy();
 		this.menu = new RssPopupSubMenu(this, this._triangle);
