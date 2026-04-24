@@ -91,6 +91,8 @@ class RssPopupMenuItem extends PopupMenu.PopupMenuItem
 
 	setOrnament(ornament)
 	{
+		if (!this._dot)
+			return;
 		let isUnread = ornament === PopupMenu.Ornament.DOT;
 		if (isUnread)
 		{
