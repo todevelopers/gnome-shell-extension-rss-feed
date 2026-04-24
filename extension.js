@@ -206,13 +206,13 @@ const RssFeed2 = GObject.registerClass(
 		{
 			this._buttonMenu = new PopupMenu.PopupBaseMenuItem({ reactive : false, style_class : 'rss-header' });
 
-			let iconBox = new St.BoxLayout(
+			let iconBox = new St.Bin(
 			{
 				style_class : 'rss-header-icon',
 				x_align : Clutter.ActorAlign.CENTER,
 				y_align : Clutter.ActorAlign.CENTER,
+				child : new St.Icon({ icon_name : 'application-rss+xml-symbolic', icon_size : 20 }),
 			});
-			iconBox.add_child(new St.Icon({ icon_name : 'application-rss+xml-symbolic', icon_size : 16 }));
 			this._buttonMenu.add_child(iconBox);
 
 			let titleBox = new St.BoxLayout({ vertical : true, x_expand : true });
