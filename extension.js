@@ -242,7 +242,7 @@ const RssFeed2 = GObject.registerClass(
 			{
 				style_class : 'rss-icon-btn',
 				can_focus : true,
-				child : new St.Icon({ icon_name : 'emblem-system-symbolic', style_class : 'popup-menu-icon' }),
+				child : new St.Icon({ icon_name : 'preferences-system-symbolic', style_class : 'popup-menu-icon' }),
 			});
 			settingsBtn.connect('clicked', this._onSettingsBtnClicked.bind(this));
 
@@ -746,14 +746,14 @@ const RssFeed2 = GObject.registerClass(
 
 						cacheObj._itemDescription = itemDescription;
 
-						menu.connect('active-changed', (self, over) =>
+						menu.connect('notify::active', (self) =>
 						{
 							if (!this._settings.get_boolean(GSKeys.ENABLE_DESC))
 								return;
 
 							let label_actor = self.label;
 
-							if (over)
+							if (self.active)
 							{
 								label_actor._originalHeight = label_actor.get_height();
 
