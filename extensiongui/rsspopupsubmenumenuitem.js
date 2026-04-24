@@ -21,12 +21,22 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
+import St from 'gi://St';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import { getInstance } from '../encoder.js';
 import { RssPopupSubMenu } from './rsspopupsubmenu.js';
 
 const Encoder = getInstance();
+
+function _feedInitials(title)
+{
+	let words = title.trim().split(/\s+/);
+	if (words.length >= 2)
+		return (words[0][0] + words[1][0]).toUpperCase();
+	return title.substring(0, 2).toUpperCase();
+}
 
 export const RssPopupSubMenuMenuItem = GObject.registerClass(
 class RssPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem
@@ -39,10 +49,41 @@ class RssPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem
 
 		super._init(title);
 
+		this._avatar = new St.Label(
+		{
+			text: _feedInitials(title),
+			style_class: 'rss-feed-avatar',
+			y_align: Clutter.ActorAlign.CENTER,
+			x_align: Clutter.ActorAlign.CENTER,
+		});
+		this.insert_child_at_index(this._avatar, 0);
+
+		this._countBadge = new St.Label(
+		{
+			text: '',
+			style_class: 'rss-feed-count',
+			y_align: Clutter.ActorAlign.CENTER,
+			visible: false,
+		});
+		this.insert_child_before(this._countBadge, this._triangleBin);
+
 		this.menu.destroy();
 		this.menu = new RssPopupSubMenu(this, this._triangle);
 		this.menu.connect('open-state-changed',
 			this._subMenuOpenStateChanged.bind(this));
 		this._olabeltext = title;
+	}
+
+	setUnreadCount(n)
+	{
+		if (n > 0)
+		{
+			this._countBadge.set_text(n.toString());
+			this._countBadge.show();
+		}
+		else
+		{
+			this._countBadge.hide();
+		}
 	}
 });

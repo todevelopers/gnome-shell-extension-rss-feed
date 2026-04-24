@@ -47,23 +47,64 @@ import { RssPopupMenuSection } from './extensiongui/rsspopupmenusection.js';
 const Encoder = getInstance();
 const NOTIFICATION_ICON = 'application-rss+xml';
 
-function _actionButton(iconName, accessibleName, onClicked)
+function _relativeTime(dateStr)
 {
-	const btn = new St.Button(
+	if (!dateStr) return '';
+	try
 	{
-		style_class : 'rss-action-button',
-		can_focus : true,
-		x_expand : false,
-		accessible_name : accessibleName,
-		child : new St.Icon(
-		{
-			icon_name : iconName,
-			style_class : 'popup-menu-icon',
-		}),
-	});
-	btn.connect('clicked', onClicked);
-	return btn;
+		let diff = (Date.now() - new Date(dateStr).getTime()) / 60000;
+		if (diff < 60) return Math.round(Math.max(1, diff)) + 'm';
+		if (diff < 1440) return Math.round(diff / 60) + 'h';
+		return Math.round(diff / 1440) + 'd';
+	}
+	catch (_) { return ''; }
 }
+
+const RssMinimalMenuItem = GObject.registerClass(
+class RssMinimalMenuItem extends PopupMenu.PopupBaseMenuItem
+{
+	_init(cacheObj, feedTitle, onRead)
+	{
+		super._init();
+		this._cacheObj = cacheObj;
+		let item = cacheObj.Item;
+
+		this._dot = new St.Widget(
+		{
+			style_class: 'rss-article-dot ' + (cacheObj.Unread ? 'rss-article-dot-unread' : 'rss-article-dot-read'),
+			y_align: Clutter.ActorAlign.CENTER,
+		});
+		this.add_child(this._dot);
+
+		let contentBox = new St.BoxLayout({ vertical: true, x_expand: true });
+		this._titleLabel = new St.Label(
+		{
+			text: item.Title,
+			style_class: cacheObj.Unread ? 'rss-article-unread' : 'rss-article-read',
+		});
+		contentBox.add_child(this._titleLabel);
+
+		let metaBox = new St.BoxLayout({ spacing: 6 });
+		metaBox.add_child(new St.Label({ text: feedTitle, style_class: 'rss-source-tag' }));
+		metaBox.add_child(new St.Label({ text: _relativeTime(item.PublishDate), style_class: 'rss-article-time' }));
+		contentBox.add_child(metaBox);
+		this.add_child(contentBox);
+
+		this.connect('activate', (self, event) =>
+		{
+			if (event.type() == Clutter.EventType.BUTTON_RELEASE
+				&& event.get_button() == Clutter.BUTTON_SECONDARY)
+			{
+				St.Clipboard.get_default().set_text(St.ClipboardType.CLIPBOARD, item.HttpLink);
+			}
+			else
+			{
+				Misc.processLinkOpen(item.HttpLink, cacheObj);
+				onRead();
+			}
+		});
+	}
+});
 
 const RssFeed2 = GObject.registerClass(
 	class RssFeed2 extends PanelMenu.Button
@@ -140,53 +181,126 @@ const RssFeed2 = GObject.registerClass(
 				}
 			});
 
-			let separator = new PopupMenu.PopupSeparatorMenuItem();
-
-			let mbAlignTop = settings.get_boolean(GSKeys.MB_ALIGN_TOP);
-
-			if (mbAlignTop)
-			{
-				this._createMainPanelButtons();
-				this.menu.addMenuItem(separator);
-			}
-
 			this._pMaxMenuHeight = settings.get_int(GSKeys.MAX_HEIGHT);
 
+			this._createHeader();
+
 			this._feedsSection = new RssPopupMenuSection("max-height: " + this._pMaxMenuHeight + "px;");
-
+			this._minimalSection = new RssPopupMenuSection("max-height: " + this._pMaxMenuHeight + "px;");
 			this.menu.addMenuItem(this._feedsSection);
+			this.menu.addMenuItem(this._minimalSection);
 
-			if (!mbAlignTop)
+			this._layoutMode = settings.get_string(GSKeys.LAYOUT_MODE);
+			this._applyLayoutMode();
+
+			this._lcid = settings.connect('changed::' + GSKeys.LAYOUT_MODE, () =>
 			{
-				this.menu.addMenuItem(separator);
-				this._createMainPanelButtons();
-			}
+				this._layoutMode = settings.get_string(GSKeys.LAYOUT_MODE);
+				this._applyLayoutMode();
+				if (this._layoutMode === 'minimal')
+					this._rebuildMinimalSection();
+			});
 		}
 
-		_createMainPanelButtons()
+		_createHeader()
 		{
-			this._buttonMenu = new PopupMenu.PopupBaseMenuItem({ reactive : false });
+			this._buttonMenu = new PopupMenu.PopupBaseMenuItem({ reactive : false, style_class : 'rss-header' });
 
-			this._lastUpdateTime = new St.Label(
+			let iconBox = new St.BoxLayout(
 			{
-				text : "",
-				style_class : 'rss-status-label'
+				style_class : 'rss-header-icon',
+				x_align : Clutter.ActorAlign.CENTER,
+				y_align : Clutter.ActorAlign.CENTER,
 			});
+			iconBox.add_child(new St.Icon({ icon_name : 'application-rss+xml-symbolic', icon_size : 16 }));
+			this._buttonMenu.add_child(iconBox);
 
-			this._buttonMenu.add_child(this._lastUpdateTime);
-			this._buttonMenu.actor.set_x_align(Clutter.ActorAlign.CENTER);
+			let titleBox = new St.BoxLayout({ vertical : true, x_expand : true });
+			titleBox.add_child(new St.Label({ text : 'RSS Feed', style_class : 'rss-header-title' }));
+			this._headerSubtitle = new St.Label({ text : '', style_class : 'rss-header-subtitle' });
+			titleBox.add_child(this._headerSubtitle);
+			this._buttonMenu.add_child(titleBox);
 
-			this._lastUpdateTime.set_y_align(Clutter.ActorAlign.CENTER);
+			this._unreadBadge = new St.Label(
+			{
+				text : '',
+				style_class : 'rss-unread-badge',
+				visible : false,
+				y_align : Clutter.ActorAlign.CENTER,
+			});
+			this._buttonMenu.add_child(this._unreadBadge);
 
-			let reloadBtn = _actionButton('view-refresh-symbolic', "Reload RSS Feeds",
-				this._pollFeeds.bind(this));
-			let settingsBtn = _actionButton('emblem-system-symbolic', "RSS Feed Settings",
-				this._onSettingsBtnClicked.bind(this));
+			let reloadBtn = new St.Button(
+			{
+				style_class : 'rss-icon-btn',
+				can_focus : true,
+				child : new St.Icon({ icon_name : 'view-refresh-symbolic', style_class : 'popup-menu-icon' }),
+			});
+			reloadBtn.connect('clicked', this._pollFeeds.bind(this));
+
+			let settingsBtn = new St.Button(
+			{
+				style_class : 'rss-icon-btn',
+				can_focus : true,
+				child : new St.Icon({ icon_name : 'emblem-system-symbolic', style_class : 'popup-menu-icon' }),
+			});
+			settingsBtn.connect('clicked', this._onSettingsBtnClicked.bind(this));
 
 			this._buttonMenu.add_child(reloadBtn);
 			this._buttonMenu.add_child(settingsBtn);
 
 			this.menu.addMenuItem(this._buttonMenu);
+		}
+
+		_applyLayoutMode()
+		{
+			let classic = this._layoutMode !== 'minimal';
+			this._feedsSection.actor.visible = classic;
+			this._minimalSection.actor.visible = !classic;
+		}
+
+		_rebuildMinimalSection()
+		{
+			this._minimalSection.removeAll();
+
+			let allItems = [];
+			for (let url in this._feedsCache)
+			{
+				let feedCache = this._feedsCache[url];
+				if (!feedCache || !feedCache.Menu) continue;
+				let feedTitle = feedCache.Menu._olabeltext;
+				for (let i = 0; i < feedCache.Items.length; i++)
+				{
+					let id = feedCache.Items[i];
+					let cacheObj = feedCache.Items[id];
+					if (!cacheObj) continue;
+					allItems.push({ cacheObj, feedTitle });
+				}
+			}
+
+			allItems.sort((a, b) =>
+			{
+				if (!!a.cacheObj.Unread !== !!b.cacheObj.Unread)
+					return a.cacheObj.Unread ? -1 : 1;
+				let da = new Date(a.cacheObj.Item.PublishDate || 0).getTime();
+				let db = new Date(b.cacheObj.Item.PublishDate || 0).getTime();
+				return db - da;
+			});
+
+			let lastSection = null;
+			for (let { cacheObj, feedTitle } of allItems)
+			{
+				let section = cacheObj.Unread ? 'unread' : 'read';
+				if (section !== lastSection)
+				{
+					let sep = new PopupMenu.PopupSeparatorMenuItem(section.toUpperCase());
+					this._minimalSection.addMenuItem(sep);
+					lastSection = section;
+				}
+				let mi = new RssMinimalMenuItem(cacheObj, feedTitle,
+					() => this._rebuildMinimalSection());
+				this._minimalSection.addMenuItem(mi);
+			}
 		}
 
 		destroy()
@@ -197,6 +311,9 @@ const RssFeed2 = GObject.registerClass(
 
 			if (this._scid)
 				this._settings.disconnect(this._scid);
+
+			if (this._lcid)
+				this._settings.disconnect(this._lcid);
 
 			if (this._timeout)
 				GLib.source_remove(this._timeout);
@@ -239,7 +356,7 @@ const RssFeed2 = GObject.registerClass(
 					feedCache.Items[link].Unread = null;
 				}
 
-				feedCache.Menu.label.text = feedCache.Menu._olabeltext;
+				feedCache.Menu.setUnreadCount(0);
 				feedCache.Menu.setOrnament(PopupMenu.Ornament.NONE);
 				this._feedsCache[url] = feedCache;
 			}
@@ -251,6 +368,19 @@ const RssFeed2 = GObject.registerClass(
 
 			if (text != this._iconLabel.get_text())
 				this._iconLabel.set_text(text);
+
+			if (this._unreadBadge)
+			{
+				if (count > 0)
+				{
+					this._unreadBadge.set_text(count.toString());
+					this._unreadBadge.show();
+				}
+				else
+				{
+					this._unreadBadge.hide();
+				}
+			}
 		}
 
 		_generatePopupMenuCSS(value)
@@ -267,6 +397,7 @@ const RssFeed2 = GObject.registerClass(
 			this._enableNotifications = this._settings.get_boolean(GSKeys.ENABLE_NOTIFICATIONS);
 			this._maxMenuHeight = this._settings.get_int(GSKeys.MAX_HEIGHT);
 			this._feedsSection._animate = this._settings.get_boolean(GSKeys.ENABLE_ANIMATIONS);
+			this._minimalSection._animate = this._feedsSection._animate;
 			this._notifLimit = this._settings.get_int(GSKeys.MAX_NOTIFICATIONS);
 			this._detectUpdates = this._settings.get_boolean(GSKeys.DETECT_UPDATES);
 			this._notifOnLockScreen = this._settings.get_boolean(GSKeys.NOTIFICATIONS_ON_LOCKSCREEN);
@@ -300,6 +431,9 @@ const RssFeed2 = GObject.registerClass(
 
 			delete this._feedsCache[key];
 			this._feedsCache[key] = undefined;
+
+			if (this._layoutMode === 'minimal')
+				this._rebuildMinimalSection();
 		}
 
 		_pollFeeds()
@@ -307,7 +441,10 @@ const RssFeed2 = GObject.registerClass(
 			this._getSettings();
 
 			if (this._maxMenuHeight != this._pMaxMenuHeight)
+			{
 				this._feedsSection.actor.set_style(this._generatePopupMenuCSS(this._maxMenuHeight));
+				this._minimalSection.actor.set_style(this._generatePopupMenuCSS(this._maxMenuHeight));
+			}
 
 			this._pMaxMenuHeight = this._maxMenuHeight;
 
@@ -329,6 +466,7 @@ const RssFeed2 = GObject.registerClass(
 				if ((this._pItemsVisible && this._itemsVisible > this._pItemsVisible))
 				{
 					this._feedsSection.removeAll();
+					this._minimalSection.removeAll();
 					delete this._feedsCache;
 					this._feedsCache = new Array();
 
@@ -664,8 +802,7 @@ const RssFeed2 = GObject.registerClass(
 				if (feedCache.UnreadCount)
 				{
 					if (feedCache.UnreadCount != feedCache.pUnreadCount)
-						subMenu.label.set_text(Misc.clampTitle(subMenu._olabeltext + ' ('
-							+ feedCache.UnreadCount + ')'));
+						subMenu.setUnreadCount(feedCache.UnreadCount);
 
 					feedCache.pUnreadCount = feedCache.UnreadCount;
 					this._updateUnreadCountLabel(this._totalUnreadCount);
@@ -674,7 +811,11 @@ const RssFeed2 = GObject.registerClass(
 				}
 			}
 
-			this._lastUpdateTime.set_text("Last update" + ': ' + new Date().toLocaleTimeString());
+			if (this._headerSubtitle)
+				this._headerSubtitle.set_text('Updated at ' + new Date().toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' }));
+
+			if (this._layoutMode === 'minimal')
+				this._rebuildMinimalSection();
 		}
 
 		_dispatchNotification(title, message, url, cacheObj)

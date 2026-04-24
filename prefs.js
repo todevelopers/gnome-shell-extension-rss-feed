@@ -71,6 +71,23 @@ export default class RssFeedPreferences extends ExtensionPreferences
 		const menuGroup = new Adw.PreferencesGroup({ title : "Menu" });
 		generalPage.add(menuGroup);
 
+		const layoutBox = new Gtk.Box({ spacing: 12, margin_top: 4, margin_bottom: 4 });
+		for (const { id, label } of [{ id: 'classic', label: 'Classic' }, { id: 'minimal', label: 'Minimal' }])
+		{
+			let btn = new Gtk.Button({ label, css_classes: ['card'] });
+			btn.connect('clicked', () => settings.set_string(GSKeys.LAYOUT_MODE, id));
+			settings.connect('changed::' + GSKeys.LAYOUT_MODE, () =>
+			{
+				let active = settings.get_string(GSKeys.LAYOUT_MODE) === id;
+				btn.add_css_class(active ? 'suggested-action' : 'flat');
+				btn.remove_css_class(active ? 'flat' : 'suggested-action');
+			});
+			layoutBox.append(btn);
+		}
+		const layoutRow = new Adw.ActionRow({ title: 'Layout' });
+		layoutRow.add_suffix(layoutBox);
+		menuGroup.add(layoutRow);
+
 		menuGroup.add(this._makeSpinRow(settings, GSKeys.MAX_HEIGHT, "Max menu height (px)", 1, MAX_HEIGHT));
 		menuGroup.add(this._makeSpinRow(settings, GSKeys.ITEMS_VISIBLE, "Max items per source", 1, MAX_SOURCES_LIMIT));
 		menuGroup.add(this._makeSwitchRow(settings, GSKeys.ENABLE_ANIMATIONS, "Enable animations"));

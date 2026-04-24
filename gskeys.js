@@ -14,3 +14,4 @@ export const DETECT_UPDATES = 'detect-updates';
 export const RSS_FEEDS_SETTINGS = 'rss-feeds-settings';
 export const HTTP_KEEPALIVE = 'http-keep-alive';
 export const SET_SEEN_WHEN_CLOSED = 'set-seen-when-closed';
+export const LAYOUT_MODE = 'layout-mode';

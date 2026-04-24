@@ -27,16 +27,41 @@ import St from 'gi://St';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import * as Misc from '../misc.js';
 
+function _relativeTime(dateStr)
+{
+	if (!dateStr) return '';
+	try
+	{
+		let diff = (Date.now() - new Date(dateStr).getTime()) / 60000;
+		if (diff < 60) return Math.round(Math.max(1, diff)) + 'm';
+		if (diff < 1440) return Math.round(diff / 60) + 'h';
+		return Math.round(diff / 1440) + 'd';
+	}
+	catch (_) { return ''; }
+}
+
 export const RssPopupMenuItem = GObject.registerClass(
 class RssPopupMenuItem extends PopupMenu.PopupMenuItem
 {
 	_init(item)
 	{
-		let title = "  " + item.Title;
+		let title = item.Title;
 		if (title.length > 100)
 			title = title.substr(0, 100) + "...";
 
 		super._init(title);
+
+		this._dot = new St.Widget({ style_class: 'rss-article-dot rss-article-dot-read' });
+		this.insert_child_at_index(this._dot, 0);
+
+		this._timeLabel = new St.Label(
+		{
+			text: _relativeTime(item.PublishDate),
+			style_class: 'rss-article-time',
+			y_align: Clutter.ActorAlign.CENTER,
+			x_align: Clutter.ActorAlign.END,
+		});
+		this.add_child(this._timeLabel);
 
 		this._link = item.HttpLink;
 
@@ -62,5 +87,24 @@ class RssPopupMenuItem extends PopupMenu.PopupMenuItem
 				}
 			}
 		});
+	}
+
+	setOrnament(ornament)
+	{
+		let isUnread = ornament === PopupMenu.Ornament.DOT;
+		if (isUnread)
+		{
+			this._dot.remove_style_class_name('rss-article-dot-read');
+			this._dot.add_style_class_name('rss-article-dot-unread');
+			this.label.remove_style_class_name('rss-article-read');
+			this.label.add_style_class_name('rss-article-unread');
+		}
+		else
+		{
+			this._dot.remove_style_class_name('rss-article-dot-unread');
+			this._dot.add_style_class_name('rss-article-dot-read');
+			this.label.remove_style_class_name('rss-article-unread');
+			this.label.add_style_class_name('rss-article-read');
+		}
 	}
 });

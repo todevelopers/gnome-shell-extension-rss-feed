@@ -65,10 +65,9 @@ export function processLinkOpen(url, cacheObj)
 
 			let subMenu = feedCacheObj.Menu;
 
-			subMenu.label.set_text(clampTitle(subMenu._olabeltext
-				+ (!feedCacheObj.UnreadCount ? '' : (' (' + feedCacheObj.UnreadCount + ')'))));
-
 			feedCacheObj.pUnreadCount = feedCacheObj.UnreadCount;
+			if (feedCacheObj.Menu)
+				feedCacheObj.Menu.setUnreadCount(feedCacheObj.UnreadCount);
 
 			let parentClass = feedCacheObj.parentClass;
 
