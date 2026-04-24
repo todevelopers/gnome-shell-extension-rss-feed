@@ -212,7 +212,7 @@ const RssFeed2 = GObject.registerClass(
 				x_align : Clutter.ActorAlign.CENTER,
 				y_align : Clutter.ActorAlign.CENTER,
 			});
-			iconBox.add_child(new St.Icon({ icon_name : 'rss-symbolic', icon_size : 16 }));
+			iconBox.add_child(new St.Icon({ icon_name : 'application-rss+xml-symbolic', icon_size : 16 }));
 			this._buttonMenu.add_child(iconBox);
 
 			let titleBox = new St.BoxLayout({ vertical : true, x_expand : true });
