@@ -32,7 +32,7 @@ const Encoder = getInstance();
 
 function _feedInitials(title)
 {
-	let words = title.trim().split(/\s+/);
+	let words = title.trim().split(/\s+/).filter(w => /\p{L}/u.test(w[0]));
 	if (words.length >= 2)
 		return (words[0][0] + words[1][0]).toUpperCase();
 	return title.substring(0, 2).toUpperCase();
@@ -49,13 +49,16 @@ class RssPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem
 
 		super._init(title);
 
-		this._avatar = new St.Label(
+		this._avatar = new St.Bin(
 		{
-			text: _feedInitials(title),
 			style_class: 'rss-feed-avatar',
 			y_align: Clutter.ActorAlign.CENTER,
 			x_align: Clutter.ActorAlign.CENTER,
 		});
+		let avatarLabel = new St.Label({ text: _feedInitials(title) });
+		avatarLabel.x_align = Clutter.ActorAlign.CENTER;
+		avatarLabel.y_align = Clutter.ActorAlign.CENTER;
+		this._avatar.child = avatarLabel;
 		this.insert_child_at_index(this._avatar, 0);
 
 		this._countBadge = new St.Label(
