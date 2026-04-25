@@ -51,6 +51,8 @@ class RssPopupMenuItem extends PopupMenu.PopupMenuItem
 
 		super._init(title);
 
+		this.label.x_expand = true;
+
 		this._timeLabel = new St.Label(
 		{
 			text: _relativeTime(item.PublishDate),
