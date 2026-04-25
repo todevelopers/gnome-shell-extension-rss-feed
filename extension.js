@@ -771,14 +771,16 @@ const RssFeed2 = GObject.registerClass(
 					}
 				}
 
+				if (!feedCache._initialRefresh)
+					continue;
+
 				feedCache.UnreadCount++;
 				this._totalUnreadCount++;
 
 				cacheObj.Unread = true;
 				menu.setOrnament(PopupMenu.Ornament.DOT);
 
-				if (feedCache._initialRefresh
-					&& this._enableNotifications && !muteNotifications)
+				if (this._enableNotifications && !muteNotifications)
 				{
 					let itemTitle = item.Title;
 
@@ -795,17 +797,19 @@ const RssFeed2 = GObject.registerClass(
 
 			if (!feedCache._initialRefresh)
 				feedCache._initialRefresh = true;
-
-			if (feedCache.UnreadCount != feedCache.pUnreadCount)
-				subMenu.setUnreadCount(feedCache.UnreadCount);
-
-			feedCache.pUnreadCount = feedCache.UnreadCount;
-			this._updateUnreadCountLabel(this._totalUnreadCount);
-
-			if (feedCache.UnreadCount)
-				subMenu.setOrnament(PopupMenu.Ornament.DOT);
 			else
-				subMenu.setOrnament(PopupMenu.Ornament.NONE);
+			{
+				if (feedCache.UnreadCount)
+				{
+					if (feedCache.UnreadCount != feedCache.pUnreadCount)
+						subMenu.setUnreadCount(feedCache.UnreadCount);
+
+					feedCache.pUnreadCount = feedCache.UnreadCount;
+					this._updateUnreadCountLabel(this._totalUnreadCount);
+
+					subMenu.setOrnament(PopupMenu.Ornament.DOT);
+				}
+			}
 
 			if (this._headerSubtitle)
 				this._headerSubtitle.set_text('Updated at ' + new Date().toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' }));
