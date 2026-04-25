@@ -1,9 +1,9 @@
 .rss-icon-label {
 	background-color: rgba(53, 132, 228, 1.0);
 	background-color: -st-accent-color;
-	min-width: 18px;
-	height: 18px;
-	border-radius: 9px;
+	min-width: 22px;
+	height: 22px;
+	border-radius: 11px;
 	padding: 0;
 	margin-right: 4px;
 }
@@ -38,9 +38,9 @@
 }
 
 .rss-unread-badge {
-	min-width: 20px;
-	height: 20px;
-	border-radius: 10px;
+	min-width: 24px;
+	height: 24px;
+	border-radius: 12px;
 	background-color: rgba(53, 132, 228, 1.0);
 	background-color: -st-accent-color;
 	padding: 0;
@@ -72,9 +72,9 @@
 }
 
 .rss-feed-count {
-	min-width: 18px;
-	height: 18px;
-	border-radius: 9px;
+	min-width: 22px;
+	height: 22px;
+	border-radius: 11px;
 	background-color: rgba(53, 132, 228, 1.0);
 	background-color: -st-accent-color;
 	padding: 0;
