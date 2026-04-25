@@ -128,7 +128,7 @@ export default class RssFeedPreferences extends ExtensionPreferences
 		});
 
 		// Sources page
-		const sourcesPage = new Adw.PreferencesPage({ title : "Sources", icon_name : 'rss-symbolic' });
+		const sourcesPage = new Adw.PreferencesPage({ title : "Sources", icon_name : 'view-list-symbolic' });
 		window.add(sourcesPage);
 
 		const sourcesOptionsGroup = new Adw.PreferencesGroup();
