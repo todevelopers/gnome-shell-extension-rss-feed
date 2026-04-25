@@ -30,11 +30,8 @@ class RssBadgeButton extends St.Button
 
 		this.connect('clicked', () =>
 		{
-			console.debug('rss-feed: badge clicked, confirmMode=' + this._confirmMode
-				+ ', hasOnConfirm=' + !!this.onConfirm);
 			if (this._confirmMode)
 			{
-				console.debug('rss-feed: confirm action firing');
 				if (this.onConfirm)
 					this.onConfirm();
 				this.exitConfirm();

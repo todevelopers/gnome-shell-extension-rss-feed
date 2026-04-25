@@ -239,19 +239,11 @@ const RssFeed2 = GObject.registerClass(
 				let type = event.type();
 				if (type === Clutter.EventType.BUTTON_PRESS)
 				{
-					let src = event.get_source();
-					console.debug('rss-feed: captured BUTTON_PRESS source=' + src);
-					let inBadge = false;
-					while (src)
-					{
-						if (src === this._activeConfirm)
-						{
-							inBadge = true;
-							break;
-						}
-						src = src.get_parent();
-					}
-					console.debug('rss-feed: inBadge=' + inBadge);
+					let [ex, ey] = event.get_coords();
+					let [bx, by] = this._activeConfirm.get_transformed_position();
+					let [bw, bh] = this._activeConfirm.get_transformed_size();
+					let inBadge = ex >= bx && ex < bx + bw
+						&& ey >= by && ey < by + bh;
 					if (!inBadge)
 					{
 						this._activeConfirm.exitConfirm();
