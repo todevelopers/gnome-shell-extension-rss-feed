@@ -65,7 +65,7 @@ class RssMinimalMenuItem extends PopupMenu.PopupBaseMenuItem
 {
 	_init(cacheObj, feedTitle, onRead)
 	{
-		super._init({});
+		super._init();
 		this._cacheObj = cacheObj;
 		let item = cacheObj.Item;
 
@@ -74,7 +74,7 @@ class RssMinimalMenuItem extends PopupMenu.PopupBaseMenuItem
 		this._titleLabel.add_style_class_name(cacheObj.Unread ? 'rss-article-unread' : 'rss-article-read');
 		contentBox.add_child(this._titleLabel);
 
-		let metaBox = new St.BoxLayout({ spacing: 6 });
+		let metaBox = new St.BoxLayout({ style: 'spacing: 6px;' });
 		metaBox.add_child(new St.Label({ text: feedTitle, style_class: 'rss-source-tag' }));
 		metaBox.add_child(new St.Label({ text: _relativeTime(item.PublishDate), style_class: 'rss-article-time' }));
 		contentBox.add_child(metaBox);
@@ -286,7 +286,6 @@ const RssFeed2 = GObject.registerClass(
 				}
 			}
 
-			console.debug("rss-feed: minimal rebuild — " + allItems.length + " items from " + urls.length + " feeds");
 
 			allItems.sort((a, b) =>
 			{
