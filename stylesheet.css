@@ -1,9 +1,23 @@
 .rss-icon-label {
-	font-size: 87%;
+	background-color: rgba(53, 132, 228, 1.0);
+	background-color: -st-accent-color;
+	color: white;
+	color: -st-accent-fg-color;
+	min-width: 14px;
+	height: 16px;
+	border-radius: 8px;
+	padding: 0 5px;
+	font-size: 9pt;
+	font-weight: bold;
+	margin-left: 4px;
 }
 
 .rss-menu {
 	width: 370px;
+}
+
+.rss-menu .popup-sub-menu {
+	max-height: 320px;
 }
 
 .rss-header {
@@ -28,11 +42,13 @@
 }
 
 .rss-unread-badge {
-	height: 20px;
 	min-width: 20px;
+	height: 20px;
 	border-radius: 10px;
-	background-color: rgba(255, 255, 255, 0.25);
-	color: rgba(255, 255, 255, 0.70);
+	background-color: rgba(53, 132, 228, 1.0);
+	background-color: -st-accent-color;
+	color: white;
+	color: -st-accent-fg-color;
 	font-size: 11px;
 	font-weight: bold;
 	padding: 0 6px;
@@ -64,28 +80,16 @@
 }
 
 .rss-feed-count {
-	height: 18px;
 	min-width: 18px;
+	height: 18px;
 	border-radius: 9px;
-	background-color: rgba(255, 255, 255, 0.25);
-	color: rgba(255, 255, 255, 0.70);
+	background-color: rgba(53, 132, 228, 1.0);
+	background-color: -st-accent-color;
+	color: white;
+	color: -st-accent-fg-color;
 	font-size: 10px;
 	font-weight: bold;
 	padding: 0 5px;
-}
-
-.rss-article-dot {
-	width: 7px;
-	height: 7px;
-	border-radius: 4px;
-}
-
-.rss-article-dot-unread {
-	background-color: rgba(255, 255, 255, 0.70);
-}
-
-.rss-article-dot-read {
-	background-color: transparent;
 }
 
 .rss-article-unread {

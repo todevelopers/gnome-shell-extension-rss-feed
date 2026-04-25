@@ -69,13 +69,6 @@ class RssMinimalMenuItem extends PopupMenu.PopupBaseMenuItem
 		this._cacheObj = cacheObj;
 		let item = cacheObj.Item;
 
-		this._dot = new St.Widget(
-		{
-			style_class: 'rss-article-dot ' + (cacheObj.Unread ? 'rss-article-dot-unread' : 'rss-article-dot-read'),
-			y_align: Clutter.ActorAlign.CENTER,
-		});
-		this.add_child(this._dot);
-
 		let contentBox = new St.BoxLayout({ vertical: true, x_expand: true });
 		this._titleLabel = new St.Label(
 		{
@@ -364,10 +357,17 @@ const RssFeed2 = GObject.registerClass(
 
 		_updateUnreadCountLabel(count)
 		{
-			var text = !count ? '' : count.toString();
-
-			if (text != this._iconLabel.get_text())
-				this._iconLabel.set_text(text);
+			if (count > 0)
+			{
+				let text = count.toString();
+				if (text != this._iconLabel.get_text())
+					this._iconLabel.set_text(text);
+				this._iconLabel.show();
+			}
+			else
+			{
+				this._iconLabel.hide();
+			}
 
 			if (this._unreadBadge)
 			{

@@ -51,8 +51,7 @@ class RssPopupMenuItem extends PopupMenu.PopupMenuItem
 
 		super._init(title);
 
-		this._dot = new St.Widget({ style_class: 'rss-article-dot rss-article-dot-read' });
-		this.insert_child_at_index(this._dot, 0);
+		this.label.add_style_class_name('rss-article-read');
 
 		this._timeLabel = new St.Label(
 		{
@@ -91,20 +90,16 @@ class RssPopupMenuItem extends PopupMenu.PopupMenuItem
 
 	setOrnament(ornament)
 	{
-		if (!this._dot)
+		if (!this.label)
 			return;
 		let isUnread = ornament === PopupMenu.Ornament.DOT;
 		if (isUnread)
 		{
-			this._dot.remove_style_class_name('rss-article-dot-read');
-			this._dot.add_style_class_name('rss-article-dot-unread');
 			this.label.remove_style_class_name('rss-article-read');
 			this.label.add_style_class_name('rss-article-unread');
 		}
 		else
 		{
-			this._dot.remove_style_class_name('rss-article-dot-unread');
-			this._dot.add_style_class_name('rss-article-dot-read');
 			this.label.remove_style_class_name('rss-article-unread');
 			this.label.add_style_class_name('rss-article-read');
 		}
