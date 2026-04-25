@@ -90,10 +90,23 @@
 
 .rss-article-unread {
 	font-weight: bold;
+	color: rgba(255, 255, 255, 1.0);
 }
 
 .rss-article-read {
-	color: rgba(255, 255, 255, 0.45);
+	font-weight: 300;
+	color: rgba(255, 255, 255, 0.32);
+}
+
+.rss-menu .popup-sub-menu .popup-menu-item {
+	padding-left: 8px;
+	padding-right: 8px;
+	spacing: 6px;
+}
+
+.rss-menu .popup-sub-menu .popup-menu-item .popup-menu-ornament {
+	width: 0;
+	min-width: 0;
 }
 
 .rss-article-time {

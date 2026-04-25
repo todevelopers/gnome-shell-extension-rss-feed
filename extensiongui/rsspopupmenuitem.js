@@ -93,8 +93,14 @@ class RssPopupMenuItem extends PopupMenu.PopupMenuItem
 		if (!this.label)
 			return;
 		if (ornament === PopupMenu.Ornament.DOT)
+		{
+			this.label.remove_style_class_name('rss-article-read');
 			this.label.add_style_class_name('rss-article-unread');
+		}
 		else
+		{
 			this.label.remove_style_class_name('rss-article-unread');
+			this.label.add_style_class_name('rss-article-read');
+		}
 	}
 });
