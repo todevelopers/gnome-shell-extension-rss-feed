@@ -240,6 +240,7 @@ const RssFeed2 = GObject.registerClass(
 				if (type === Clutter.EventType.BUTTON_PRESS)
 				{
 					let src = event.get_source();
+					console.debug('rss-feed: captured BUTTON_PRESS source=' + src);
 					let inBadge = false;
 					while (src)
 					{
@@ -250,6 +251,7 @@ const RssFeed2 = GObject.registerClass(
 						}
 						src = src.get_parent();
 					}
+					console.debug('rss-feed: inBadge=' + inBadge);
 					if (!inBadge)
 					{
 						this._activeConfirm.exitConfirm();
