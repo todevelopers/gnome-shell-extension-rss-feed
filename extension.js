@@ -43,6 +43,7 @@ import { createRssParser } from './parsers/factory.js';
 import { RssPopupMenuItem } from './extensiongui/rsspopupmenuitem.js';
 import { RssPopupSubMenuMenuItem } from './extensiongui/rsspopupsubmenumenuitem.js';
 import { RssPopupMenuSection } from './extensiongui/rsspopupmenusection.js';
+import { RssBadgeButton } from './extensiongui/rssbadgebutton.js';
 
 const Encoder = getInstance();
 const NOTIFICATION_ICON = 'application-rss+xml';
@@ -212,12 +213,58 @@ const RssFeed2 = GObject.registerClass(
 					this._lastOpen.open();
 				}
 
-				if (open == false && seenOnClose == true)
+				if (open == false)
 				{
-					this._setAllFeedsAsSeen();
-					this._totalUnreadCount = 0;
-					this._updateUnreadCountLabel(0);
+					if (this._activeConfirm)
+					{
+						this._activeConfirm.exitConfirm();
+						this._activeConfirm = null;
+					}
+
+					if (seenOnClose == true)
+					{
+						this._setAllFeedsAsSeen();
+						this._totalUnreadCount = 0;
+						this._updateUnreadCountLabel(0);
+					}
 				}
+			});
+
+			this._activeConfirm = null;
+			this.menu.actor.connect('captured-event', (_actor, event) =>
+			{
+				if (!this._activeConfirm)
+					return Clutter.EVENT_PROPAGATE;
+
+				let type = event.type();
+				if (type === Clutter.EventType.BUTTON_PRESS)
+				{
+					let src = event.get_source();
+					let inBadge = false;
+					while (src)
+					{
+						if (src === this._activeConfirm)
+						{
+							inBadge = true;
+							break;
+						}
+						src = src.get_parent();
+					}
+					if (!inBadge)
+					{
+						this._activeConfirm.exitConfirm();
+						this._activeConfirm = null;
+					}
+				}
+				else if (type === Clutter.EventType.KEY_PRESS
+					&& event.get_key_symbol() === Clutter.KEY_Escape)
+				{
+					this._activeConfirm.exitConfirm();
+					this._activeConfirm = null;
+					return Clutter.EVENT_STOP;
+				}
+
+				return Clutter.EVENT_PROPAGATE;
 			});
 
 			this._pMaxMenuHeight = settings.get_int(GSKeys.MAX_HEIGHT);
@@ -268,13 +315,17 @@ const RssFeed2 = GObject.registerClass(
 				style_class : 'rss-badge-text',
 			});
 
-			this._unreadBadge = new St.Bin(
+			this._unreadBadge = new RssBadgeButton('rss-unread-badge', this._unreadBadgeText);
+			this._unreadBadge.visible = false;
+			this._unreadBadge.onConfirm = () =>
 			{
-				style_class : 'rss-unread-badge',
-				visible : false,
-				y_align : Clutter.ActorAlign.CENTER,
-				child : this._unreadBadgeText,
-			});
+				this._setAllFeedsAsSeen();
+				this._totalUnreadCount = 0;
+				this._updateUnreadCountLabel(0);
+				if (this._layoutMode === 'minimal')
+					this._rebuildMinimalSection();
+			};
+			this._unreadBadge.onEnterConfirm = (b) => this._activateConfirm(b);
 			this._buttonMenu.add_child(this._unreadBadge);
 
 			let reloadBtn = new St.Button(
@@ -362,6 +413,43 @@ const RssFeed2 = GObject.registerClass(
 				if (currentHeader)
 					currentHeader.addItem(mi);
 			}
+		}
+
+		_activateConfirm(badge)
+		{
+			if (this._activeConfirm && this._activeConfirm !== badge)
+				this._activeConfirm.exitConfirm();
+			this._activeConfirm = badge;
+		}
+
+		_markFeedAsSeen(feedCache)
+		{
+			if (!feedCache)
+				return;
+
+			let delta = feedCache.UnreadCount;
+
+			for (let j = 0; j < feedCache.Items.length; j++)
+			{
+				let id = feedCache.Items[j];
+				let cacheObj = feedCache.Items[id];
+				if (!cacheObj)
+					continue;
+				if (cacheObj.Menu)
+					cacheObj.Menu.setOrnament(PopupMenu.Ornament.NONE);
+				cacheObj.Unread = null;
+			}
+
+			feedCache.UnreadCount = 0;
+			feedCache.pUnreadCount = 0;
+			if (feedCache.Menu)
+				feedCache.Menu.setUnreadCount(0);
+
+			this._totalUnreadCount = Math.max(0, this._totalUnreadCount - delta);
+			this._updateUnreadCountLabel(this._totalUnreadCount);
+
+			if (this._layoutMode === 'minimal')
+				this._rebuildMinimalSection();
 		}
 
 		destroy()
@@ -704,6 +792,9 @@ const RssFeed2 = GObject.registerClass(
 					if (this._lastOpen == self)
 						this._lastOpen = undefined;
 				});
+
+				subMenu._countBadge.onConfirm = () => this._markFeedAsSeen(feedCache);
+				subMenu._countBadge.onEnterConfirm = (b) => this._activateConfirm(b);
 
 				feedCache.Menu = subMenu;
 			}

@@ -27,6 +27,7 @@ import St from 'gi://St';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import { getInstance } from '../encoder.js';
 import { RssPopupSubMenu } from './rsspopupsubmenu.js';
+import { RssBadgeButton } from './rssbadgebutton.js';
 
 const Encoder = getInstance();
 
@@ -69,13 +70,8 @@ class RssPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem
 			style_class: 'rss-badge-text',
 		});
 
-		this._countBadge = new St.Bin(
-		{
-			style_class: 'rss-feed-count',
-			y_align: Clutter.ActorAlign.CENTER,
-			visible: false,
-			child: this._countBadgeText,
-		});
+		this._countBadge = new RssBadgeButton('rss-feed-count', this._countBadgeText);
+		this._countBadge.visible = false;
 		this.insert_child_at_index(this._countBadge, this.get_n_children() - 1);
 
 		this.menu.destroy();

@@ -87,6 +87,17 @@
 	padding: 0 4px;
 }
 
+.rss-badge-confirm-icon {
+	color: white;
+	color: -st-accent-fg-color;
+	icon-size: 14px;
+}
+
+.rss-unread-badge:hover,
+.rss-feed-count:hover {
+	background-color: rgba(74, 144, 226, 1.0);
+}
+
 .rss-article-unread {
 	font-weight: bold;
 	color: rgba(255, 255, 255, 1.0);
