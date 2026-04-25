@@ -251,7 +251,7 @@ const RssFeed2 = GObject.registerClass(
 			{
 				style_class : 'rss-icon-btn',
 				can_focus : true,
-				child : new St.Icon({ icon_name : 'preferences-system-symbolic', style_class : 'popup-menu-icon' }),
+				child : new St.Icon({ icon_name : 'applications-system-symbolic', style_class : 'popup-menu-icon' }),
 			});
 			settingsBtn.connect('clicked', this._onSettingsBtnClicked.bind(this));
 
