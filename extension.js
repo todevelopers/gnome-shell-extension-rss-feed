@@ -65,16 +65,13 @@ class RssMinimalMenuItem extends PopupMenu.PopupBaseMenuItem
 {
 	_init(cacheObj, feedTitle, onRead)
 	{
-		super._init();
+		super._init({});
 		this._cacheObj = cacheObj;
 		let item = cacheObj.Item;
 
 		let contentBox = new St.BoxLayout({ vertical: true, x_expand: true });
-		this._titleLabel = new St.Label(
-		{
-			text: item.Title,
-			style_class: cacheObj.Unread ? 'rss-article-unread' : '',
-		});
+		this._titleLabel = new St.Label({ text: item.Title });
+		this._titleLabel.add_style_class_name(cacheObj.Unread ? 'rss-article-unread' : 'rss-article-read');
 		contentBox.add_child(this._titleLabel);
 
 		let metaBox = new St.BoxLayout({ spacing: 6 });
@@ -273,19 +270,23 @@ const RssFeed2 = GObject.registerClass(
 			this._minimalSection.removeAll();
 
 			let allItems = [];
-			for (let url in this._feedsCache)
+			let urls = this._rssFeedsSources || [];
+			for (let i = 0; i < urls.length; i++)
 			{
+				let url = urls[i];
 				let feedCache = this._feedsCache[url];
 				if (!feedCache || !feedCache.Menu) continue;
 				let feedTitle = feedCache.Menu._olabeltext;
-				for (let i = 0; i < feedCache.Items.length; i++)
+				for (let j = 0; j < feedCache.Items.length; j++)
 				{
-					let id = feedCache.Items[i];
+					let id = feedCache.Items[j];
 					let cacheObj = feedCache.Items[id];
 					if (!cacheObj) continue;
 					allItems.push({ cacheObj, feedTitle });
 				}
 			}
+
+			console.debug("rss-feed: minimal rebuild — " + allItems.length + " items from " + urls.length + " feeds");
 
 			allItems.sort((a, b) =>
 			{
