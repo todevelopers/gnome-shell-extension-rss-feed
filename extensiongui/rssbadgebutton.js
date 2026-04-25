@@ -44,7 +44,8 @@ class RssBadgeButton extends St.Button
 			}
 		});
 
-		this.connect('button-press-event', () => Clutter.EVENT_STOP);
+		this.connect_after('button-release-event', () => Clutter.EVENT_STOP);
+		this.connect_after('button-press-event', () => Clutter.EVENT_STOP);
 	}
 
 	enterConfirm()
