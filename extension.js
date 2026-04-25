@@ -73,7 +73,7 @@ class RssMinimalMenuItem extends PopupMenu.PopupBaseMenuItem
 		this._titleLabel = new St.Label(
 		{
 			text: item.Title,
-			style_class: cacheObj.Unread ? 'rss-article-unread' : 'rss-article-read',
+			style_class: cacheObj.Unread ? 'rss-article-unread' : '',
 		});
 		contentBox.add_child(this._titleLabel);
 
@@ -139,6 +139,7 @@ const RssFeed2 = GObject.registerClass(
 			this._iconLabel = new St.Label(
 			{
 				text : '',
+				visible : false,
 				y_expand : true,
 				y_align : Clutter.ActorAlign.START,
 				style_class : 'rss-icon-label'
@@ -403,6 +404,7 @@ const RssFeed2 = GObject.registerClass(
 			this._notifOnLockScreen = this._settings.get_boolean(GSKeys.NOTIFICATIONS_ON_LOCKSCREEN);
 			this._http_keepalive = this._settings.get_boolean(GSKeys.HTTP_KEEPALIVE);
 			this._setSeenOnClose = this._settings.get_boolean(GSKeys.SET_SEEN_WHEN_CLOSED);
+			this._markInitialAsNew = this._settings.get_boolean(GSKeys.MARK_INITIAL_AS_NEW);
 
 			this._aSettings.load();
 		}
@@ -771,7 +773,7 @@ const RssFeed2 = GObject.registerClass(
 					}
 				}
 
-				if (!feedCache._initialRefresh)
+				if (!feedCache._initialRefresh && !this._markInitialAsNew)
 					continue;
 
 				feedCache.UnreadCount++;
@@ -780,7 +782,8 @@ const RssFeed2 = GObject.registerClass(
 				cacheObj.Unread = true;
 				menu.setOrnament(PopupMenu.Ornament.DOT);
 
-				if (this._enableNotifications && !muteNotifications)
+				if (feedCache._initialRefresh
+					&& this._enableNotifications && !muteNotifications)
 				{
 					let itemTitle = item.Title;
 
@@ -797,19 +800,17 @@ const RssFeed2 = GObject.registerClass(
 
 			if (!feedCache._initialRefresh)
 				feedCache._initialRefresh = true;
+
+			if (feedCache.UnreadCount != feedCache.pUnreadCount)
+				subMenu.setUnreadCount(feedCache.UnreadCount);
+
+			feedCache.pUnreadCount = feedCache.UnreadCount;
+			this._updateUnreadCountLabel(this._totalUnreadCount);
+
+			if (feedCache.UnreadCount)
+				subMenu.setOrnament(PopupMenu.Ornament.DOT);
 			else
-			{
-				if (feedCache.UnreadCount)
-				{
-					if (feedCache.UnreadCount != feedCache.pUnreadCount)
-						subMenu.setUnreadCount(feedCache.UnreadCount);
-
-					feedCache.pUnreadCount = feedCache.UnreadCount;
-					this._updateUnreadCountLabel(this._totalUnreadCount);
-
-					subMenu.setOrnament(PopupMenu.Ornament.DOT);
-				}
-			}
+				subMenu.setOrnament(PopupMenu.Ornament.NONE);
 
 			if (this._headerSubtitle)
 				this._headerSubtitle.set_text('Updated at ' + new Date().toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' }));

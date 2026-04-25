@@ -131,6 +131,10 @@ export default class RssFeedPreferences extends ExtensionPreferences
 		const sourcesPage = new Adw.PreferencesPage({ title : "Sources", icon_name : 'rss-symbolic' });
 		window.add(sourcesPage);
 
+		const sourcesOptionsGroup = new Adw.PreferencesGroup();
+		sourcesPage.add(sourcesOptionsGroup);
+		sourcesOptionsGroup.add(this._makeSwitchRow(settings, GSKeys.MARK_INITIAL_AS_NEW, "Mark items from first poll as new"));
+
 		const sourcesGroup = new Adw.PreferencesGroup({ title : "RSS Sources" });
 		sourcesPage.add(sourcesGroup);
 

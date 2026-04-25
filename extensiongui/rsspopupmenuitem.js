@@ -51,8 +51,6 @@ class RssPopupMenuItem extends PopupMenu.PopupMenuItem
 
 		super._init(title);
 
-		this.label.add_style_class_name('rss-article-read');
-
 		this._timeLabel = new St.Label(
 		{
 			text: _relativeTime(item.PublishDate),
@@ -92,16 +90,9 @@ class RssPopupMenuItem extends PopupMenu.PopupMenuItem
 	{
 		if (!this.label)
 			return;
-		let isUnread = ornament === PopupMenu.Ornament.DOT;
-		if (isUnread)
-		{
-			this.label.remove_style_class_name('rss-article-read');
+		if (ornament === PopupMenu.Ornament.DOT)
 			this.label.add_style_class_name('rss-article-unread');
-		}
 		else
-		{
 			this.label.remove_style_class_name('rss-article-unread');
-			this.label.add_style_class_name('rss-article-read');
-		}
 	}
 });

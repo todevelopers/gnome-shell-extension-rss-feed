@@ -86,5 +86,10 @@
 		    <default>'classic'</default>
 		    <summary>Popup layout mode</summary>
 		</key>
+		<key type="b" name="mark-initial-as-new">
+		    <default>false</default>
+		    <summary>Mark initial items as new</summary>
+		    <description>When enabled, items fetched on the first poll are marked as unread.</description>
+		</key>
     </schema>
 </schemalist>
