@@ -183,20 +183,11 @@ const RssFeed2 = GObject.registerClass(
 				style_class : 'panel-status-menu-box'
 			});
 
-			this._iconLabelText = new St.Label(
-			{
-				text : '',
-				x_align : Clutter.ActorAlign.CENTER,
-				y_align : Clutter.ActorAlign.CENTER,
-				style_class : 'rss-badge-text'
-			});
-
-			this._iconLabel = new St.Bin(
+			this._iconLabel = new St.Widget(
 			{
 				visible : false,
 				y_align : Clutter.ActorAlign.CENTER,
 				style_class : 'rss-icon-label',
-				child : this._iconLabelText,
 			});
 
 			let icon = new St.Icon(
@@ -435,16 +426,9 @@ const RssFeed2 = GObject.registerClass(
 		_updateUnreadCountLabel(count)
 		{
 			if (count > 0)
-			{
-				let text = count.toString();
-				if (text != this._iconLabelText.get_text())
-					this._iconLabelText.set_text(text);
 				this._iconLabel.show();
-			}
 			else
-			{
 				this._iconLabel.hide();
-			}
 
 			if (this._unreadBadge)
 			{

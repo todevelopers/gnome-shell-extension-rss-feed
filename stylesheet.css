@@ -1,10 +1,9 @@
 .rss-icon-label {
 	background-color: rgba(53, 132, 228, 1.0);
 	background-color: -st-accent-color;
-	min-width: 22px;
-	height: 22px;
-	border-radius: 11px;
-	padding: 0;
+	width: 8px;
+	height: 8px;
+	border-radius: 4px;
 	margin-right: 4px;
 }
 
