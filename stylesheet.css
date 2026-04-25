@@ -3,10 +3,10 @@
 	background-color: -st-accent-color;
 	color: white;
 	color: -st-accent-fg-color;
-	min-width: 14px;
+	min-width: 16px;
 	height: 16px;
 	border-radius: 8px;
-	padding: 0 5px;
+	padding: 0 3px;
 	font-size: 9pt;
 	font-weight: bold;
 	margin-left: 4px;

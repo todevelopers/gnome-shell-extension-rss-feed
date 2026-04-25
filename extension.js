@@ -140,8 +140,7 @@ const RssFeed2 = GObject.registerClass(
 			{
 				text : '',
 				visible : false,
-				y_expand : true,
-				y_align : Clutter.ActorAlign.START,
+				y_align : Clutter.ActorAlign.CENTER,
 				style_class : 'rss-icon-label'
 			});
 
