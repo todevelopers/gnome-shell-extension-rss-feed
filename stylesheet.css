@@ -123,7 +123,9 @@
 
 .rss-minimal-section-header {
 	margin-top: 4px;
-	spacing: 8px;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+	border-bottom-color: rgba(255, 255, 255, 0.10);
 }
 
 .rss-source-tag {

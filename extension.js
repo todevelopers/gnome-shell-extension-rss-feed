@@ -73,18 +73,11 @@ class RssMinimalSectionHeader extends PopupMenu.PopupBaseMenuItem
 		this._label = new St.Label(
 		{
 			text,
+			x_expand: true,
 			y_align: Clutter.ActorAlign.CENTER,
 			style_class: 'rss-minimal-section-label',
 		});
 		this.add_child(this._label);
-
-		this._sepLine = new St.Widget(
-		{
-			style_class: 'popup-separator-menu-item-separator',
-			x_expand: true,
-			y_align: Clutter.ActorAlign.CENTER,
-		});
-		this.add_child(this._sepLine);
 
 		this._icon = new St.Icon(
 		{
