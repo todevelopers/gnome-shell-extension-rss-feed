@@ -204,8 +204,6 @@ const RssFeed2 = GObject.registerClass(
 
 			this.menu.actor.add_style_class_name('rss-menu');
 
-			let seenOnClose = settings.get_boolean(GSKeys.SET_SEEN_WHEN_CLOSED);
-
 			this.menu.connect('open-state-changed', (self, open) =>
 			{
 				if (open && this._lastOpen)
@@ -213,20 +211,10 @@ const RssFeed2 = GObject.registerClass(
 					this._lastOpen.open();
 				}
 
-				if (open == false)
+				if (open == false && this._activeConfirm)
 				{
-					if (this._activeConfirm)
-					{
-						this._activeConfirm.exitConfirm();
-						this._activeConfirm = null;
-					}
-
-					if (seenOnClose == true)
-					{
-						this._setAllFeedsAsSeen();
-						this._totalUnreadCount = 0;
-						this._updateUnreadCountLabel(0);
-					}
+					this._activeConfirm.exitConfirm();
+					this._activeConfirm = null;
 				}
 			});
 
@@ -545,7 +533,6 @@ const RssFeed2 = GObject.registerClass(
 			this._detectUpdates = this._settings.get_boolean(GSKeys.DETECT_UPDATES);
 			this._notifOnLockScreen = this._settings.get_boolean(GSKeys.NOTIFICATIONS_ON_LOCKSCREEN);
 			this._http_keepalive = this._settings.get_boolean(GSKeys.HTTP_KEEPALIVE);
-			this._setSeenOnClose = this._settings.get_boolean(GSKeys.SET_SEEN_WHEN_CLOSED);
 			this._markInitialAsNew = this._settings.get_boolean(GSKeys.MARK_INITIAL_AS_NEW);
 
 			this._aSettings.load();

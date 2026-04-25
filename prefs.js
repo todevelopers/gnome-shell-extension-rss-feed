@@ -93,7 +93,6 @@ export default class RssFeedPreferences extends ExtensionPreferences
 		menuGroup.add(this._makeSwitchRow(settings, GSKeys.ENABLE_ANIMATIONS, "Enable animations"));
 		menuGroup.add(this._makeSwitchRow(settings, GSKeys.MB_ALIGN_TOP, "Top-align buttons"));
 		menuGroup.add(this._makeSwitchRow(settings, GSKeys.ENABLE_DESC, "Show descriptions"));
-		menuGroup.add(this._makeSwitchRow(settings, GSKeys.SET_SEEN_WHEN_CLOSED, "Set every feed as seen when closed"));
 
 		// Notifications page
 		const notifPage = new Adw.PreferencesPage({ title : "Notifications", icon_name : 'notifications-symbolic' });
