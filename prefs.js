@@ -59,6 +59,72 @@ export default class RssFeedPreferences extends ExtensionPreferences
 		const generalPage = new Adw.PreferencesPage({ title : "General", icon_name : 'preferences-system-symbolic' });
 		window.add(generalPage);
 
+		// Layout group
+		const layoutGroup = new Adw.PreferencesGroup({ title : "Layout" });
+		generalPage.add(layoutGroup);
+
+		const layouts = [
+			{ id: 'classic', title: 'Classic', subtitle: 'Group articles by feed with expandable sections' },
+			{ id: 'minimal', title: 'Minimal', subtitle: 'Flat chronological list, unread first' },
+		];
+
+		let radioGroup = null;
+		const layoutRows = [];
+		for (const layout of layouts)
+		{
+			const row = new Adw.ActionRow({
+				title : layout.title,
+				subtitle : layout.subtitle,
+				activatable : true,
+			});
+
+			const radio = new Gtk.CheckButton({
+				valign : Gtk.Align.CENTER,
+				group : radioGroup,
+			});
+			if (radioGroup === null)
+				radioGroup = radio;
+
+			radio.active = settings.get_string(GSKeys.LAYOUT_MODE) === layout.id;
+			radio.connect('toggled', () =>
+			{
+				if (radio.active)
+					settings.set_string(GSKeys.LAYOUT_MODE, layout.id);
+			});
+
+			row.add_prefix(radio);
+			row.set_activatable_widget(radio);
+			layoutGroup.add(row);
+			layoutRows.push({ row, radio, id: layout.id });
+		}
+
+		const syncLayoutRows = () =>
+		{
+			let current = settings.get_string(GSKeys.LAYOUT_MODE);
+			for (const { row, radio, id } of layoutRows)
+			{
+				let active = id === current;
+				if (radio.active !== active)
+					radio.active = active;
+				if (active)
+					row.add_css_class('selected');
+				else
+					row.remove_css_class('selected');
+			}
+		};
+		syncLayoutRows();
+		settings.connect('changed::' + GSKeys.LAYOUT_MODE, syncLayoutRows);
+
+		// Display group
+		const displayGroup = new Adw.PreferencesGroup({ title : "Display" });
+		generalPage.add(displayGroup);
+
+		displayGroup.add(this._makeSpinRow(settings, GSKeys.MAX_HEIGHT, "Max menu height (px)", 1, MAX_HEIGHT));
+		displayGroup.add(this._makeSpinRow(settings, GSKeys.ITEMS_VISIBLE, "Max items per source", 1, MAX_SOURCES_LIMIT));
+		displayGroup.add(this._makeSwitchRow(settings, GSKeys.ENABLE_ANIMATIONS, "Enable animations"));
+		displayGroup.add(this._makeSwitchRow(settings, GSKeys.MB_ALIGN_TOP, "Top-align buttons"));
+		displayGroup.add(this._makeSwitchRow(settings, GSKeys.ENABLE_DESC, "Show descriptions"));
+
 		// Polling group
 		const pollingGroup = new Adw.PreferencesGroup({ title : "Polling" });
 		generalPage.add(pollingGroup);
@@ -66,33 +132,6 @@ export default class RssFeedPreferences extends ExtensionPreferences
 		pollingGroup.add(this._makeSpinRow(settings, GSKeys.UPDATE_INTERVAL, "Update interval (min)", 1, MAX_UPDATE_INTERVAL));
 		pollingGroup.add(this._makeSpinRow(settings, GSKeys.POLL_DELAY, "Poll delay (ms)", 1, MAX_POLL_DELAY));
 		pollingGroup.add(this._makeSwitchRow(settings, GSKeys.DETECT_UPDATES, "Detect updates"));
-
-		// Menu group
-		const menuGroup = new Adw.PreferencesGroup({ title : "Menu" });
-		generalPage.add(menuGroup);
-
-		const layoutBox = new Gtk.Box({ spacing: 12, margin_top: 4, margin_bottom: 4 });
-		for (const { id, label } of [{ id: 'classic', label: 'Classic' }, { id: 'minimal', label: 'Minimal' }])
-		{
-			let btn = new Gtk.Button({ label, css_classes: ['card'] });
-			btn.connect('clicked', () => settings.set_string(GSKeys.LAYOUT_MODE, id));
-			settings.connect('changed::' + GSKeys.LAYOUT_MODE, () =>
-			{
-				let active = settings.get_string(GSKeys.LAYOUT_MODE) === id;
-				btn.add_css_class(active ? 'suggested-action' : 'flat');
-				btn.remove_css_class(active ? 'flat' : 'suggested-action');
-			});
-			layoutBox.append(btn);
-		}
-		const layoutRow = new Adw.ActionRow({ title: 'Layout' });
-		layoutRow.add_suffix(layoutBox);
-		menuGroup.add(layoutRow);
-
-		menuGroup.add(this._makeSpinRow(settings, GSKeys.MAX_HEIGHT, "Max menu height (px)", 1, MAX_HEIGHT));
-		menuGroup.add(this._makeSpinRow(settings, GSKeys.ITEMS_VISIBLE, "Max items per source", 1, MAX_SOURCES_LIMIT));
-		menuGroup.add(this._makeSwitchRow(settings, GSKeys.ENABLE_ANIMATIONS, "Enable animations"));
-		menuGroup.add(this._makeSwitchRow(settings, GSKeys.MB_ALIGN_TOP, "Top-align buttons"));
-		menuGroup.add(this._makeSwitchRow(settings, GSKeys.ENABLE_DESC, "Show descriptions"));
 
 		// Notifications page
 		const notifPage = new Adw.PreferencesPage({ title : "Notifications", icon_name : 'notifications-symbolic' });
