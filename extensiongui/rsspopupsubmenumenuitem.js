@@ -61,12 +61,20 @@ class RssPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem
 		this._avatar.child = avatarLabel;
 		this.insert_child_at_index(this._avatar, 0);
 
-		this._countBadge = new St.Label(
+		this._countBadgeText = new St.Label(
 		{
 			text: '',
+			x_align: Clutter.ActorAlign.CENTER,
+			y_align: Clutter.ActorAlign.CENTER,
+			style_class: 'rss-badge-text',
+		});
+
+		this._countBadge = new St.Bin(
+		{
 			style_class: 'rss-feed-count',
 			y_align: Clutter.ActorAlign.CENTER,
 			visible: false,
+			child: this._countBadgeText,
 		});
 		this.insert_child_at_index(this._countBadge, this.get_n_children() - 1);
 
@@ -81,12 +89,16 @@ class RssPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem
 	{
 		if (n > 0)
 		{
-			this._countBadge.set_text(n.toString());
+			this._countBadgeText.set_text(n.toString());
 			this._countBadge.show();
 		}
 		else
 		{
 			this._countBadge.hide();
 		}
+	}
+
+	setOrnament(_ornament)
+	{
 	}
 });
