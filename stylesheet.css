@@ -122,8 +122,8 @@
 }
 
 .rss-minimal-section-header {
-	border-top: 1px solid rgba(255, 255, 255, 0.10);
 	margin-top: 4px;
+	spacing: 8px;
 }
 
 .rss-source-tag {

@@ -63,24 +63,32 @@ function _relativeTime(dateStr)
 const RssMinimalSectionHeader = GObject.registerClass(
 class RssMinimalSectionHeader extends PopupMenu.PopupBaseMenuItem
 {
-	_init(text)
+	_init(text, initialCollapsed, onToggle)
 	{
 		super._init({ style_class: 'popup-menu-item rss-minimal-section-header' });
 		this._items = [];
-		this._collapsed = false;
+		this._collapsed = !!initialCollapsed;
+		this._onToggle = onToggle;
 
 		this._label = new St.Label(
 		{
 			text,
-			x_expand: true,
 			y_align: Clutter.ActorAlign.CENTER,
 			style_class: 'rss-minimal-section-label',
 		});
 		this.add_child(this._label);
 
+		this._sepLine = new St.Widget(
+		{
+			style_class: 'popup-separator-menu-item-separator',
+			x_expand: true,
+			y_align: Clutter.ActorAlign.CENTER,
+		});
+		this.add_child(this._sepLine);
+
 		this._icon = new St.Icon(
 		{
-			icon_name: 'pan-down-symbolic',
+			icon_name: this._collapsed ? 'pan-end-symbolic' : 'pan-down-symbolic',
 			style_class: 'popup-menu-icon',
 			y_align: Clutter.ActorAlign.CENTER,
 		});
@@ -104,6 +112,8 @@ class RssMinimalSectionHeader extends PopupMenu.PopupBaseMenuItem
 		this._icon.icon_name = this._collapsed ? 'pan-end-symbolic' : 'pan-down-symbolic';
 		for (let item of this._items)
 			item.visible = !this._collapsed;
+		if (this._onToggle)
+			this._onToggle(this._collapsed);
 	}
 });
 
@@ -343,6 +353,10 @@ const RssFeed2 = GObject.registerClass(
 				return db - da;
 			});
 
+			if (!this._minimalCollapsed)
+				this._minimalCollapsed = {};
+			let collapsedState = this._minimalCollapsed;
+
 			let lastSection = null;
 			let currentHeader = null;
 			for (let { cacheObj, feedTitle } of allItems)
@@ -350,7 +364,11 @@ const RssFeed2 = GObject.registerClass(
 				let section = cacheObj.Unread ? 'unread' : 'read';
 				if (section !== lastSection)
 				{
-					currentHeader = new RssMinimalSectionHeader(section.toUpperCase());
+					let sec = section;
+					currentHeader = new RssMinimalSectionHeader(
+						section.toUpperCase(),
+						collapsedState[sec],
+						(collapsed) => { collapsedState[sec] = collapsed; });
 					this._minimalSection.addMenuItem(currentHeader);
 					lastSection = section;
 				}
