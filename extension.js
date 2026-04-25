@@ -60,6 +60,50 @@ function _relativeTime(dateStr)
 	catch (_) { return ''; }
 }
 
+const RssMinimalSectionHeader = GObject.registerClass(
+class RssMinimalSectionHeader extends PopupMenu.PopupBaseMenuItem
+{
+	_init(text)
+	{
+		super._init();
+		this._items = [];
+		this._collapsed = false;
+
+		this._label = new St.Label(
+		{
+			text,
+			x_expand: true,
+			y_align: Clutter.ActorAlign.CENTER,
+			style_class: 'rss-minimal-section-label',
+		});
+		this.add_child(this._label);
+
+		this._icon = new St.Icon(
+		{
+			icon_name: 'pan-down-symbolic',
+			style_class: 'popup-menu-icon',
+			y_align: Clutter.ActorAlign.CENTER,
+		});
+		this.add_child(this._icon);
+
+		this.connect('activate', () => this.toggle());
+	}
+
+	addItem(item)
+	{
+		this._items.push(item);
+		item.visible = !this._collapsed;
+	}
+
+	toggle()
+	{
+		this._collapsed = !this._collapsed;
+		this._icon.icon_name = this._collapsed ? 'pan-end-symbolic' : 'pan-down-symbolic';
+		for (let item of this._items)
+			item.visible = !this._collapsed;
+	}
+});
+
 const RssMinimalMenuItem = GObject.registerClass(
 class RssMinimalMenuItem extends PopupMenu.PopupBaseMenuItem
 {
@@ -297,18 +341,21 @@ const RssFeed2 = GObject.registerClass(
 			});
 
 			let lastSection = null;
+			let currentHeader = null;
 			for (let { cacheObj, feedTitle } of allItems)
 			{
 				let section = cacheObj.Unread ? 'unread' : 'read';
 				if (section !== lastSection)
 				{
-					let sep = new PopupMenu.PopupSeparatorMenuItem(section.toUpperCase());
-					this._minimalSection.addMenuItem(sep);
+					currentHeader = new RssMinimalSectionHeader(section.toUpperCase());
+					this._minimalSection.addMenuItem(currentHeader);
 					lastSection = section;
 				}
 				let mi = new RssMinimalMenuItem(cacheObj, feedTitle,
 					() => this._rebuildMinimalSection());
 				this._minimalSection.addMenuItem(mi);
+				if (currentHeader)
+					currentHeader.addItem(mi);
 			}
 		}
 
