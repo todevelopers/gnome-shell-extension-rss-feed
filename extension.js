@@ -150,8 +150,8 @@ const RssFeed2 = GObject.registerClass(
 				style_class : 'system-status-icon'
 			});
 
-			button.add_child(icon);
 			button.add_child(this._iconLabel);
+			button.add_child(icon);
 
 			this.add_child(button);
 
