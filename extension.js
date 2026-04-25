@@ -65,7 +65,7 @@ class RssMinimalSectionHeader extends PopupMenu.PopupBaseMenuItem
 {
 	_init(text)
 	{
-		super._init();
+		super._init({ style_class: 'popup-menu-item rss-minimal-section-header' });
 		this._items = [];
 		this._collapsed = false;
 
@@ -85,8 +85,11 @@ class RssMinimalSectionHeader extends PopupMenu.PopupBaseMenuItem
 			y_align: Clutter.ActorAlign.CENTER,
 		});
 		this.add_child(this._icon);
+	}
 
-		this.connect('activate', () => this.toggle());
+	activate(_event)
+	{
+		this.toggle();
 	}
 
 	addItem(item)
