@@ -162,7 +162,8 @@ export default class RssFeedPreferences extends ExtensionPreferences
 		const notifLockRow = this._makeSwitchRow(settings, GSKeys.NOTIFICATIONS_ON_LOCKSCREEN, "Show on lock screen");
 		notifGroup.add(notifLockRow);
 
-		const notifCleanRow = this._makeSwitchRow(settings, GSKeys.CLEANUP_NOTIFICATIONS, "Clean up notifications");
+		const notifCleanRow = this._makeSwitchRow(settings, GSKeys.CLEANUP_NOTIFICATIONS, "Auto-cleanup");
+		notifCleanRow.subtitle = "Removes all RSS notifications from the tray when the extension is disabled.";
 		notifGroup.add(notifCleanRow);
 
 		const updateNotifSensitive = (enabled) =>
