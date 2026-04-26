@@ -877,7 +877,7 @@ const RssFeed2 = GObject.registerClass(
 				if (itemCache[itemID])
 					continue;
 
-				item.Title = Encoder.htmlDecode(item.Title).replace(/<.*?>/g, "").trim();
+				item.Title = Encoder.htmlDecode(Encoder.htmlDecode(item.Title)).replace(/<.*?>/g, "").trim();
 
 				let menu = new RssPopupMenuItem(item);
 				subMenu.menu.addMenuItem(menu, 0);
