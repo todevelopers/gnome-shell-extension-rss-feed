@@ -541,9 +541,18 @@ export default class RssFeedPreferences extends ExtensionPreferences
 
 			const dragSource = new Gtk.DragSource({ actions : Gdk.DragAction.MOVE });
 			dragSource.connect('prepare', () => Gdk.ContentProvider.new_for_value(state.url));
+			let _wasExpanded = false;
 			dragSource.connect('drag-begin', (source, _drag) =>
 			{
 				source.set_icon(new Gtk.WidgetPaintable({ widget : row }), 0, 0);
+				_wasExpanded = row.expanded;
+				if (_wasExpanded)
+					row.expanded = false;
+			});
+			dragSource.connect('drag-end', () =>
+			{
+				if (_wasExpanded)
+					row.expanded = true;
 			});
 			dragHandle.add_controller(dragSource);
 
