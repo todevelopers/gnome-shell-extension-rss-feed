@@ -281,7 +281,14 @@ const RssFeed2 = GObject.registerClass(
 			this._buttonMenu.add_child(iconBox);
 
 			let titleBox = new St.BoxLayout({ vertical : true, x_expand : true });
-			titleBox.add_child(new St.Label({ text : 'RSS Feed', style_class : 'rss-header-title' }));
+			let titleLabel = new St.Label({ text : 'RSS Feed', style_class : 'rss-header-title' });
+			let titleBtn = new St.Button({ child : titleLabel, can_focus : false });
+			titleBtn.connect('clicked', () =>
+			{
+				this.menu.close();
+				Misc.processLinkOpen('https://github.com/todevelopers/gnome-shell-extension-rss-feed', null);
+			});
+			titleBox.add_child(titleBtn);
 			this._headerSubtitle = new St.Label({ text : '', style_class : 'rss-header-subtitle' });
 			titleBox.add_child(this._headerSubtitle);
 			this._buttonMenu.add_child(titleBox);
