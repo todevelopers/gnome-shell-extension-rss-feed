@@ -134,7 +134,7 @@ export default class RssFeedPreferences extends ExtensionPreferences
 		pollingGroup.add(this._makeSwitchRow(settings, GSKeys.DETECT_UPDATES, "Detect updates"));
 
 		// Notifications page
-		const notifPage = new Adw.PreferencesPage({ title : "Notifications", icon_name : 'notifications-symbolic' });
+		const notifPage = new Adw.PreferencesPage({ title : "Notifications", icon_name : 'preferences-system-notifications-symbolic' });
 		window.add(notifPage);
 
 		const notifGroup = new Adw.PreferencesGroup({ title : "Notifications" });
