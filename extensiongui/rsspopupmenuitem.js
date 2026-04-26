@@ -51,6 +51,7 @@ class RssPopupMenuItem extends PopupMenu.PopupMenuItem
 
 		super._init(title);
 
+		this.label.add_style_class_name('rss-article-read');
 		this.label.x_expand = true;
 
 		this._timeLabel = new St.Label(
