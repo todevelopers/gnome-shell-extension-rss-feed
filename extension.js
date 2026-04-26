@@ -1053,6 +1053,7 @@ export default class RssFeedExtension extends Extension
 
 	disable()
 	{
+		// unlock-dialog: stays active on lock screen to dispatch RSS notifications when notifications-on-lockscreen is enabled
 		this._indicator?.destroy();
 		this._indicator = null;
 		console.debug("rss-feed: Extension disabled.");
