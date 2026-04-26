@@ -183,12 +183,6 @@ export default class RssFeedPreferences extends ExtensionPreferences
 		const sourcesPage = new Adw.PreferencesPage({ title : "Sources", icon_name : 'view-list-symbolic' });
 		window.add(sourcesPage);
 
-		const sourcesOptionsGroup = new Adw.PreferencesGroup();
-		sourcesPage.add(sourcesOptionsGroup);
-		const initialUnreadRow = this._makeSwitchRow(settings, GSKeys.MARK_INITIAL_AS_NEW, "Initial unread");
-		initialUnreadRow.subtitle = "Marks all articles as unread on first load after the extension starts.";
-		sourcesOptionsGroup.add(initialUnreadRow);
-
 		const sourcesGroup = new Adw.PreferencesGroup({ title : "RSS Sources" });
 		sourcesPage.add(sourcesGroup);
 
@@ -586,6 +580,12 @@ export default class RssFeedPreferences extends ExtensionPreferences
 			rowMap.set(url, row);
 		}
 		sourcesGroup.add(addRow);
+
+		const sourcesOptionsGroup = new Adw.PreferencesGroup();
+		sourcesPage.add(sourcesOptionsGroup);
+		const initialUnreadRow = this._makeSwitchRow(settings, GSKeys.MARK_INITIAL_AS_NEW, "Initial unread");
+		initialUnreadRow.subtitle = "Marks all articles as unread on first load after the extension starts.";
+		sourcesOptionsGroup.add(initialUnreadRow);
 	}
 
 	_makeSwitchRow(settings, key, title)
