@@ -170,7 +170,6 @@ const RssFeed2 = GObject.registerClass(
 
 			this._startIndex = 0;
 			this._feedsCache = new Array();
-			this._feedTimers = new Array();
 			this._notifCache = new Array();
 
 			this._totalUnreadCount = 0;
@@ -450,9 +449,6 @@ const RssFeed2 = GObject.registerClass(
 			if (this._settingsCWId)
 				GLib.source_remove(this._settingsCWId);
 
-			for (let t in this._feedTimers)
-				GLib.source_remove(t);
-
 			if (this._settings.get_boolean(GSKeys.CLEANUP_NOTIFICATIONS))
 			{
 				let notifCache = this._notifCache;
@@ -522,7 +518,6 @@ const RssFeed2 = GObject.registerClass(
 			this._updateInterval = this._settings.get_int(GSKeys.UPDATE_INTERVAL);
 			this._itemsVisible = this._settings.get_int(GSKeys.ITEMS_VISIBLE);
 			this._rssFeedsSources = this._settings.get_strv(GSKeys.RSS_FEEDS_LIST);
-			this._rssPollDelay = this._settings.get_int(GSKeys.POLL_DELAY);
 			this._enableNotifications = this._settings.get_boolean(GSKeys.ENABLE_NOTIFICATIONS);
 			this._maxMenuHeight = this._settings.get_int(GSKeys.MAX_HEIGHT);
 			this._feedsSection._animate = this._settings.get_boolean(GSKeys.ENABLE_ANIMATIONS);
@@ -579,14 +574,6 @@ const RssFeed2 = GObject.registerClass(
 
 			console.debug("rss-feed: Reload RSS Feeds");
 
-			if (this._feedTimers.length)
-			{
-				for (let t in this._feedTimers)
-					GLib.source_remove(t);
-
-				this._feedTimers = new Array();
-			}
-
 			if (this._timeout)
 				GLib.source_remove(this._timeout);
 
@@ -640,17 +627,7 @@ const RssFeed2 = GObject.registerClass(
 
 					let finalUrl = HTTP.buildUrl(url, jsonObj);
 
-					let sourceID = GLib.timeout_add(GLib.PRIORITY_DEFAULT,
-						i * this._rssPollDelay,
-						() =>
-						{
-							this._httpGetRequestAsync(finalUrl, sourceURL,
-								this._onDownload.bind(this));
-							delete this._feedTimers[sourceID];
-							return GLib.SOURCE_REMOVE;
-						});
-
-					this._feedTimers[sourceID] = true;
+					this._httpGetRequestAsync(finalUrl, sourceURL, this._onDownload.bind(this));
 				}
 			}
 

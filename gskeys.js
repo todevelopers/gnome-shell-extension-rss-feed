@@ -2,7 +2,6 @@ export const RSS_FEEDS_LIST = 'rss-feeds-list';
 export const UPDATE_INTERVAL = 'update-interval';
 export const ITEMS_VISIBLE = 'items-visible';
 export const ENABLE_NOTIFICATIONS = 'enable-notifications';
-export const POLL_DELAY = 'fpoll-timeout';
 export const MAX_HEIGHT = 'max-height';
 export const ENABLE_ANIMATIONS = 'enable-anim';
 export const MAX_NOTIFICATIONS = 'notification-limit';

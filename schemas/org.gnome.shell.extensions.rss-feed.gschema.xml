@@ -17,11 +17,6 @@
 		    <summary>Max menu height (px)</summary>
 		    <description>Maximum popup menu height (in pixels) before it starts scrolling.</description>
 		</key>
-		<key type="i" name="fpoll-timeout">
-		    <default>1000</default>
-		    <summary>Poll delay (ms)</summary>
-		    <description>Throttles RSS source polls to reduce the performance impact on gnome-shell.</description>
-		</key>
 		<key type="i" name="notification-limit">
 		    <default>25</default>
 		    <summary>Notification limit</summary>

@@ -35,7 +35,6 @@ import { createRssParser } from './parsers/factory.js';
 
 const MAX_UPDATE_INTERVAL = 1440;
 const MAX_SOURCES_LIMIT = 1024;
-const MAX_POLL_DELAY = 9999;
 const MAX_HEIGHT = 8192;
 const MAX_NOTIFICATIONS = 100;
 
@@ -128,7 +127,6 @@ export default class RssFeedPreferences extends ExtensionPreferences
 		generalPage.add(pollingGroup);
 
 		pollingGroup.add(this._makeSpinRow(settings, GSKeys.UPDATE_INTERVAL, "Update interval (min)", 1, MAX_UPDATE_INTERVAL));
-		pollingGroup.add(this._makeSpinRow(settings, GSKeys.POLL_DELAY, "Poll delay (ms)", 1, MAX_POLL_DELAY));
 		pollingGroup.add(this._makeSwitchRow(settings, GSKeys.DETECT_UPDATES, "Detect updates"));
 
 		// Notifications page
