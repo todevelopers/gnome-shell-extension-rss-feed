@@ -744,6 +744,21 @@ const RssFeed2 = GObject.registerClass(
 			let itemCache = feedCache.Items;
 			let subMenu;
 
+			let gsData = this._aSettings._gsData[sourceURL];
+			let muteNotifications;
+			let disableUpdates;
+			let customTitle;
+
+			if (gsData)
+			{
+				muteNotifications = gsData['n'];
+				disableUpdates = gsData['u'];
+				customTitle = gsData['t'];
+			}
+
+			if (customTitle)
+				rssParser.Publisher.Title = customTitle;
+
 			if (!feedCache.Menu)
 			{
 				subMenu = new RssPopupSubMenuMenuItem(rssParser.Publisher, nItems);
@@ -769,16 +784,13 @@ const RssFeed2 = GObject.registerClass(
 				feedCache.Menu = subMenu;
 			}
 			else
-				subMenu = feedCache.Menu;
-
-			let gsData = this._aSettings._gsData[sourceURL];
-			let muteNotifications;
-			let disableUpdates;
-
-			if (gsData)
 			{
-				muteNotifications = gsData['n'];
-				disableUpdates = gsData['u'];
+				subMenu = feedCache.Menu;
+				if (customTitle && subMenu._olabeltext !== customTitle)
+				{
+					subMenu.label.set_text(customTitle);
+					subMenu._olabeltext = customTitle;
+				}
 			}
 
 			let i = itemCache.length;
