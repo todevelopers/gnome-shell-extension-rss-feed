@@ -220,16 +220,18 @@ export default class RssFeedPreferences extends ExtensionPreferences
 			}
 			.source-action-btn {
 				border-radius: 9999px;
-				min-width: 30px;
-				min-height: 30px;
+				min-width: 24px;
+				min-height: 24px;
 				padding: 0;
 			}
 			.source-action-btn:checked {
 				background-color: transparent;
 			}
+			.source-delete-btn {
+				color: @error_color;
+			}
 			.source-delete-btn:hover {
 				background-color: alpha(@error_color, 0.12);
-				color: @error_color;
 			}
 		`);
 		Gtk.StyleContext.add_provider_for_display(
@@ -392,6 +394,7 @@ export default class RssFeedPreferences extends ExtensionPreferences
 			noUpdBtn.add_css_class('flat');
 			noUpdBtn.add_css_class('source-action-btn');
 			noUpdBtn.active = !!aSettings.get(url, 'u');
+			noUpdBtn.opacity = noUpdBtn.active ? 0.4 : 1.0;
 			noUpdBtn.connect('toggled', () =>
 			{
 				aSettings.set(url, 'u', noUpdBtn.active);
@@ -400,7 +403,7 @@ export default class RssFeedPreferences extends ExtensionPreferences
 
 			const isMuted = !!aSettings.get(url, 'n');
 			const noNotifBtn = new Gtk.ToggleButton({
-				icon_name : isMuted ? 'notifications-disabled-symbolic' : 'alarm-symbolic',
+				icon_name : isMuted ? 'notifications-disabled-symbolic' : 'preferences-system-notifications-symbolic',
 				tooltip_text : 'Notifications',
 				valign : Gtk.Align.CENTER,
 			});
@@ -410,7 +413,7 @@ export default class RssFeedPreferences extends ExtensionPreferences
 			noNotifBtn.connect('toggled', () =>
 			{
 				aSettings.set(url, 'n', noNotifBtn.active);
-				noNotifBtn.set_icon_name(noNotifBtn.active ? 'notifications-disabled-symbolic' : 'alarm-symbolic');
+				noNotifBtn.set_icon_name(noNotifBtn.active ? 'notifications-disabled-symbolic' : 'preferences-system-notifications-symbolic');
 			});
 
 			const delBtn = new Gtk.Button({
@@ -432,25 +435,6 @@ export default class RssFeedPreferences extends ExtensionPreferences
 				sourcesGroup.remove(row);
 				rowMap.delete(url);
 			});
-
-			const showBtns = () =>
-			{
-				noUpdBtn.opacity = noUpdBtn.active ? 0.4 : 1.0;
-				noNotifBtn.opacity = 1.0;
-				delBtn.opacity = 1.0;
-			};
-			const hideBtns = () =>
-			{
-				noUpdBtn.opacity = 0;
-				noNotifBtn.opacity = 0;
-				delBtn.opacity = 0;
-			};
-			hideBtns();
-
-			const motionCtrl = new Gtk.EventControllerMotion();
-			motionCtrl.connect('enter', showBtns);
-			motionCtrl.connect('leave', hideBtns);
-			row.add_controller(motionCtrl);
 
 			row.add_suffix(statusLabel);
 			row.add_suffix(noUpdBtn);
