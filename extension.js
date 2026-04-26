@@ -424,6 +424,9 @@ const RssFeed2 = GObject.registerClass(
 			if (feedCache.Menu)
 				feedCache.Menu.setUnreadCount(0);
 
+			if (feedCache._url)
+				this._aSettings.set(feedCache._url, 'i', undefined);
+
 			this._totalUnreadCount = Math.max(0, this._totalUnreadCount - delta);
 			this._updateUnreadCountLabel(this._totalUnreadCount);
 
@@ -499,6 +502,7 @@ const RssFeed2 = GObject.registerClass(
 				feedCache.Menu.setUnreadCount(0);
 				feedCache.Menu.setOrnament(PopupMenu.Ornament.NONE);
 				this._feedsCache[url] = feedCache;
+				this._aSettings.set(url, 'i', undefined);
 			}
 		}
 
@@ -737,6 +741,7 @@ const RssFeed2 = GObject.registerClass(
 				feedCache.UnreadCount = 0;
 				feedCache.pUnreadCount = 0;
 				feedCache.parentClass = this;
+				feedCache._url = sourceURL;
 			}
 			else
 				feedCache = this._feedsCache[sourceURL];
@@ -757,6 +762,8 @@ const RssFeed2 = GObject.registerClass(
 				customTitle = gsData['t'];
 				customAvatar = gsData['v'];
 			}
+
+			let persistedUnread = (gsData && Array.isArray(gsData['i'])) ? new Set(gsData['i']) : new Set();
 
 			if (customTitle)
 				rssParser.Publisher.Title = customTitle;
@@ -784,6 +791,7 @@ const RssFeed2 = GObject.registerClass(
 				subMenu._countBadge.onEnterConfirm = (b) => this._activateConfirm(b);
 
 				feedCache.Menu = subMenu;
+				this._reorderClassicSection();
 			}
 			else
 			{
@@ -885,7 +893,7 @@ const RssFeed2 = GObject.registerClass(
 					}
 				}
 
-				if (!feedCache._initialRefresh && !this._markInitialAsNew)
+				if (!feedCache._initialRefresh && !this._markInitialAsNew && !persistedUnread.has(itemID))
 					continue;
 
 				feedCache.UnreadCount++;
@@ -912,6 +920,15 @@ const RssFeed2 = GObject.registerClass(
 
 			if (!feedCache._initialRefresh)
 				feedCache._initialRefresh = true;
+
+			let unreadIds = [];
+			for (let k = 0; k < itemCache.length; k++)
+			{
+				let id = itemCache[k];
+				if (itemCache[id] && itemCache[id].Unread)
+					unreadIds.push(id);
+			}
+			this._aSettings.set(sourceURL, 'i', unreadIds.length ? unreadIds : undefined);
 
 			if (feedCache.UnreadCount != feedCache.pUnreadCount)
 				subMenu.setUnreadCount(feedCache.UnreadCount);
