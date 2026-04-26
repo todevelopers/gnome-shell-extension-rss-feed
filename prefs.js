@@ -220,8 +220,8 @@ export default class RssFeedPreferences extends ExtensionPreferences
 			}
 			.source-action-btn {
 				border-radius: 9999px;
-				min-width: 24px;
-				min-height: 24px;
+				min-width: 30px;
+				min-height: 30px;
 				padding: 0;
 			}
 			.source-action-btn:checked {
