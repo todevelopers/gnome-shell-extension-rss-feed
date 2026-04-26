@@ -331,9 +331,15 @@ export default class RssFeedPreferences extends ExtensionPreferences
 					row._statusLabel.set_label("OK (" + parser._type + ")");
 					row._statusLabel.remove_css_class('status-error');
 					row._statusLabel.add_css_class('status-ok');
-					row.set_title(parser.Publisher.Title);
-					row._avatarLabel.set_label(getInitials(parser.Publisher.Title));
-					aSettings.set(url, 't', parser.Publisher.Title);
+					if (!aSettings.get(url, 't'))
+					{
+						row.set_title(parser.Publisher.Title);
+						aSettings.set(url, 't', parser.Publisher.Title);
+						if (row._titleEntry && !row._titleEntry.get_text().trim())
+							row._titleEntry.set_text(parser.Publisher.Title);
+					}
+					if (!aSettings.get(url, 'v'))
+						row._avatarLabel.set_label(getInitials(parser.Publisher.Title));
 				});
 		};
 
@@ -363,11 +369,19 @@ export default class RssFeedPreferences extends ExtensionPreferences
 
 		const buildSourceRow = (url) =>
 		{
+			const state = { url };
+
 			const storedTitle = aSettings.get(url, 't');
-			const domain = url.replace(/^https?:\/\//, '').split('/')[0];
+			const storedAvatar = aSettings.get(url, 'v');
+
+			const dragHandle = new Gtk.Image({
+				icon_name : 'list-drag-handle-symbolic',
+				valign : Gtk.Align.CENTER,
+				opacity : 0.35,
+			});
 
 			const avatarLabel = new Gtk.Label({
-				label : storedTitle ? getInitials(storedTitle) : urlToInitials(url),
+				label : storedAvatar || (storedTitle ? getInitials(storedTitle) : urlToInitials(url)),
 				width_request : 32,
 				height_request : 32,
 				valign : Gtk.Align.CENTER,
@@ -375,10 +389,11 @@ export default class RssFeedPreferences extends ExtensionPreferences
 			});
 			avatarLabel.add_css_class('source-avatar');
 
-			const row = new Adw.ActionRow({
-				title : storedTitle || domain,
+			const row = new Adw.ExpanderRow({
+				title : storedTitle || url.replace(/^https?:\/\//, '').split('/')[0],
 				subtitle : url,
 			});
+			row.add_prefix(dragHandle);
 			row.add_prefix(avatarLabel);
 
 			const statusLabel = new Gtk.Label({
@@ -400,7 +415,7 @@ export default class RssFeedPreferences extends ExtensionPreferences
 			noUpdBtn.opacity = noUpdBtn.active ? 0.4 : 1.0;
 			noUpdBtn.connect('toggled', () =>
 			{
-				aSettings.set(url, 'u', noUpdBtn.active);
+				aSettings.set(state.url, 'u', noUpdBtn.active);
 				noUpdBtn.opacity = noUpdBtn.active ? 0.4 : 1.0;
 			});
 
@@ -415,7 +430,7 @@ export default class RssFeedPreferences extends ExtensionPreferences
 			noNotifBtn.active = isMuted;
 			noNotifBtn.connect('toggled', () =>
 			{
-				aSettings.set(url, 'n', noNotifBtn.active);
+				aSettings.set(state.url, 'n', noNotifBtn.active);
 				noNotifBtn.set_icon_name(noNotifBtn.active ? 'notifications-disabled-symbolic' : 'preferences-system-notifications-symbolic');
 			});
 
@@ -429,14 +444,14 @@ export default class RssFeedPreferences extends ExtensionPreferences
 			delBtn.add_css_class('source-delete-btn');
 			delBtn.connect('clicked', () =>
 			{
-				aSettings.remove(url);
+				aSettings.remove(state.url);
 				let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
-				let idx = feeds.indexOf(url);
-				if (idx != -1)
+				let idx = feeds.indexOf(state.url);
+				if (idx !== -1)
 					feeds.splice(idx, 1);
 				settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
 				sourcesGroup.remove(row);
-				rowMap.delete(url);
+				rowMap.delete(state.url);
 			});
 
 			row.add_suffix(statusLabel);
@@ -444,8 +459,78 @@ export default class RssFeedPreferences extends ExtensionPreferences
 			row.add_suffix(noNotifBtn);
 			row.add_suffix(delBtn);
 
+			const avatarEntry = new Adw.EntryRow({ title : 'Avatar' });
+			avatarEntry.set_text(storedAvatar || '');
+			let _avatarUpdating = false;
+			avatarEntry.connect('changed', () =>
+			{
+				if (_avatarUpdating) return;
+				let raw = avatarEntry.get_text();
+				let val = raw.replace(/\s/g, '').toUpperCase().slice(0, 2);
+				if (val !== raw)
+				{
+					_avatarUpdating = true;
+					avatarEntry.set_text(val);
+					_avatarUpdating = false;
+				}
+				if (val.length > 0)
+				{
+					avatarLabel.set_label(val);
+					aSettings.set(state.url, 'v', val);
+				}
+				else
+				{
+					let t = aSettings.get(state.url, 't');
+					avatarLabel.set_label(t ? getInitials(t) : urlToInitials(state.url));
+					aSettings.set(state.url, 'v', undefined);
+				}
+			});
+
+			const titleEntry = new Adw.EntryRow({ title : 'Title' });
+			titleEntry.set_text(storedTitle || '');
+			titleEntry.connect('changed', () =>
+			{
+				let val = titleEntry.get_text().trim();
+				let domain = state.url.replace(/^https?:\/\//, '').split('/')[0];
+				row.set_title(val || domain);
+				if (val)
+					aSettings.set(state.url, 't', val);
+				if (!aSettings.get(state.url, 'v'))
+					avatarLabel.set_label(val ? getInitials(val) : urlToInitials(state.url));
+			});
+			row._titleEntry = titleEntry;
+
+			const urlEntry = new Adw.EntryRow({ title : 'URL', show_apply_button : true });
+			urlEntry.set_text(url);
+			urlEntry.connect('apply', () =>
+			{
+				let newUrl = urlEntry.get_text().trim();
+				if (!newUrl.length || newUrl === state.url)
+					return;
+
+				let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
+				let idx = feeds.indexOf(state.url);
+				if (idx !== -1)
+				{
+					feeds[idx] = newUrl;
+					settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
+				}
+
+				aSettings.rename(state.url, newUrl);
+				rowMap.delete(state.url);
+				state.url = newUrl;
+				rowMap.set(newUrl, row);
+
+				row.set_subtitle(newUrl);
+				validateUrl(row, newUrl);
+			});
+
+			row.add_row(avatarEntry);
+			row.add_row(titleEntry);
+			row.add_row(urlEntry);
+
 			const dragSource = new Gtk.DragSource({ actions : Gdk.DragAction.MOVE });
-			dragSource.connect('prepare', () => Gdk.ContentProvider.new_for_value(url));
+			dragSource.connect('prepare', () => Gdk.ContentProvider.new_for_value(state.url));
 			row.add_controller(dragSource);
 
 			const dropTarget = new Gtk.DropTarget({ actions : Gdk.DragAction.MOVE });
@@ -459,9 +544,9 @@ export default class RssFeedPreferences extends ExtensionPreferences
 			dropTarget.connect('drop', (target, value) =>
 			{
 				row.remove_css_class('dnd-over');
-				if (value === url)
+				if (value === state.url)
 					return false;
-				reorderFeeds(value, url);
+				reorderFeeds(value, state.url);
 				return true;
 			});
 			row.add_controller(dropTarget);
