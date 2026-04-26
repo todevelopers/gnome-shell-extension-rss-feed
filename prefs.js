@@ -384,7 +384,7 @@ export default class RssFeedPreferences extends ExtensionPreferences
 
 			const isMuted = !!aSettings.get(url, 'n');
 			const noNotifBtn = new Gtk.ToggleButton({
-				icon_name : isMuted ? 'notifications-disabled-symbolic' : 'alarm-symbolic',
+				icon_name : isMuted ? 'notifications-disabled-symbolic' : 'preferences-system-notifications-symbolic',
 				tooltip_text : 'Notifications',
 				valign : Gtk.Align.CENTER,
 			});
@@ -392,7 +392,7 @@ export default class RssFeedPreferences extends ExtensionPreferences
 			noNotifBtn.connect('toggled', () =>
 			{
 				aSettings.set(url, 'n', noNotifBtn.active);
-				noNotifBtn.set_icon_name(noNotifBtn.active ? 'notifications-disabled-symbolic' : 'alarm-symbolic');
+				noNotifBtn.set_icon_name(noNotifBtn.active ? 'notifications-disabled-symbolic' : 'preferences-system-notifications-symbolic');
 			});
 
 			const delBtn = new Gtk.Button({
