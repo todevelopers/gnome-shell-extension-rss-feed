@@ -201,7 +201,7 @@ const RssFeed2 = GObject.registerClass(
 
 			this.menu.actor.add_style_class_name('rss-menu');
 
-			this.menu.connect('open-state-changed', (self, open) =>
+			this._menuOpenId = this.menu.connect('open-state-changed', (self, open) =>
 			{
 				if (open && this._lastOpen)
 				{
@@ -216,7 +216,7 @@ const RssFeed2 = GObject.registerClass(
 			});
 
 			this._activeConfirm = null;
-			this.menu.actor.connect('captured-event', (_actor, event) =>
+			this._menuCapturedId = this.menu.actor.connect('captured-event', (_actor, event) =>
 			{
 				if (!this._activeConfirm)
 					return Clutter.EVENT_PROPAGATE;
@@ -461,6 +461,12 @@ const RssFeed2 = GObject.registerClass(
 			this._isDiscarded = true;
 
 			this._cancellable.cancel();
+
+			if (this._menuOpenId)
+				this.menu.disconnect(this._menuOpenId);
+
+			if (this._menuCapturedId)
+				this.menu.actor.disconnect(this._menuCapturedId);
 
 			if (this._scid)
 				this._settings.disconnect(this._scid);
