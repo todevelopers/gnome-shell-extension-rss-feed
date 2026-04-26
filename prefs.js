@@ -53,10 +53,10 @@ function urlToInitials(url)
 
 function getInitials(title)
 {
-	let words = title.trim().split(/\s+/).filter(w => w.length > 0);
+	let words = title.trim().split(/\s+/).filter(w => /\p{L}/u.test(w[0]));
 	if (words.length >= 2)
 		return (words[0][0] + words[1][0]).toUpperCase();
-	return title.slice(0, 2).toUpperCase() || '--';
+	return title.substring(0, 2).toUpperCase();
 }
 
 export default class RssFeedPreferences extends ExtensionPreferences
@@ -315,6 +315,7 @@ export default class RssFeedPreferences extends ExtensionPreferences
 					row._statusLabel.add_css_class('status-ok');
 					row.set_title(parser.Publisher.Title);
 					row._avatarLabel.set_label(getInitials(parser.Publisher.Title));
+					aSettings.set(url, 't', parser.Publisher.Title);
 				});
 		};
 
@@ -344,10 +345,11 @@ export default class RssFeedPreferences extends ExtensionPreferences
 
 		const buildSourceRow = (url) =>
 		{
+			const storedTitle = aSettings.get(url, 't');
 			const domain = url.replace(/^https?:\/\//, '').split('/')[0];
 
 			const avatarLabel = new Gtk.Label({
-				label : urlToInitials(url),
+				label : storedTitle ? getInitials(storedTitle) : urlToInitials(url),
 				width_request : 32,
 				height_request : 32,
 				valign : Gtk.Align.CENTER,
@@ -356,7 +358,7 @@ export default class RssFeedPreferences extends ExtensionPreferences
 			avatarLabel.add_css_class('source-avatar');
 
 			const row = new Adw.ActionRow({
-				title : domain,
+				title : storedTitle || domain,
 				subtitle : url,
 			});
 			row.add_prefix(avatarLabel);

@@ -431,6 +431,19 @@ const RssFeed2 = GObject.registerClass(
 				this._rebuildMinimalSection();
 		}
 
+		_reorderClassicSection()
+		{
+			let pos = 0;
+			for (let i = 0; i < this._rssFeedsSources.length; i++)
+			{
+				let feedCache = this._feedsCache[this._rssFeedsSources[i]];
+				if (!feedCache || !feedCache.Menu)
+					continue;
+				this._feedsSection.box.set_child_at_index(feedCache.Menu, pos);
+				pos++;
+			}
+		}
+
 		destroy()
 		{
 			this._isDiscarded = true;
@@ -626,6 +639,8 @@ const RssFeed2 = GObject.registerClass(
 
 					this._httpGetRequestAsync(finalUrl, sourceURL, this._onDownload.bind(this));
 				}
+
+				this._reorderClassicSection();
 			}
 
 			if (this._updateInterval > 0)
