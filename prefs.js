@@ -218,6 +218,19 @@ export default class RssFeedPreferences extends ExtensionPreferences
 			.dnd-over {
 				border-top: 2px solid @accent_color;
 			}
+			.source-action-btn {
+				border-radius: 9999px;
+				min-width: 30px;
+				min-height: 30px;
+				padding: 0;
+			}
+			.source-action-btn:checked {
+				background-color: transparent;
+			}
+			.source-delete-btn:hover {
+				background-color: alpha(@error_color, 0.12);
+				color: @error_color;
+			}
 		`);
 		Gtk.StyleContext.add_provider_for_display(
 			Gdk.Display.get_default(),
@@ -376,8 +389,9 @@ export default class RssFeedPreferences extends ExtensionPreferences
 				tooltip_text : 'Updates detection',
 				valign : Gtk.Align.CENTER,
 			});
+			noUpdBtn.add_css_class('flat');
+			noUpdBtn.add_css_class('source-action-btn');
 			noUpdBtn.active = !!aSettings.get(url, 'u');
-			noUpdBtn.opacity = noUpdBtn.active ? 0.4 : 1.0;
 			noUpdBtn.connect('toggled', () =>
 			{
 				aSettings.set(url, 'u', noUpdBtn.active);
@@ -386,15 +400,17 @@ export default class RssFeedPreferences extends ExtensionPreferences
 
 			const isMuted = !!aSettings.get(url, 'n');
 			const noNotifBtn = new Gtk.ToggleButton({
-				icon_name : isMuted ? 'notifications-disabled-symbolic' : 'preferences-system-notifications-symbolic',
+				icon_name : isMuted ? 'notifications-disabled-symbolic' : 'alarm-symbolic',
 				tooltip_text : 'Notifications',
 				valign : Gtk.Align.CENTER,
 			});
+			noNotifBtn.add_css_class('flat');
+			noNotifBtn.add_css_class('source-action-btn');
 			noNotifBtn.active = isMuted;
 			noNotifBtn.connect('toggled', () =>
 			{
 				aSettings.set(url, 'n', noNotifBtn.active);
-				noNotifBtn.set_icon_name(noNotifBtn.active ? 'notifications-disabled-symbolic' : 'preferences-system-notifications-symbolic');
+				noNotifBtn.set_icon_name(noNotifBtn.active ? 'notifications-disabled-symbolic' : 'alarm-symbolic');
 			});
 
 			const delBtn = new Gtk.Button({
@@ -402,7 +418,9 @@ export default class RssFeedPreferences extends ExtensionPreferences
 				tooltip_text : 'Remove',
 				valign : Gtk.Align.CENTER,
 			});
-			delBtn.add_css_class('destructive-action');
+			delBtn.add_css_class('flat');
+			delBtn.add_css_class('source-action-btn');
+			delBtn.add_css_class('source-delete-btn');
 			delBtn.connect('clicked', () =>
 			{
 				aSettings.remove(url);
@@ -414,6 +432,25 @@ export default class RssFeedPreferences extends ExtensionPreferences
 				sourcesGroup.remove(row);
 				rowMap.delete(url);
 			});
+
+			const showBtns = () =>
+			{
+				noUpdBtn.opacity = noUpdBtn.active ? 0.4 : 1.0;
+				noNotifBtn.opacity = 1.0;
+				delBtn.opacity = 1.0;
+			};
+			const hideBtns = () =>
+			{
+				noUpdBtn.opacity = 0;
+				noNotifBtn.opacity = 0;
+				delBtn.opacity = 0;
+			};
+			hideBtns();
+
+			const motionCtrl = new Gtk.EventControllerMotion();
+			motionCtrl.connect('enter', showBtns);
+			motionCtrl.connect('leave', hideBtns);
+			row.add_controller(motionCtrl);
 
 			row.add_suffix(statusLabel);
 			row.add_suffix(noUpdBtn);
