@@ -459,6 +459,7 @@ const RssFeed2 = GObject.registerClass(
 		{
 			this._isDiscarded = true;
 
+			this._httpSession.abort();
 			this._cancellable.cancel();
 
 			if (this._menuOpenId)
