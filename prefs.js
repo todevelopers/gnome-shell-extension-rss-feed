@@ -22,8 +22,10 @@
  */
 
 import Adw from 'gi://Adw';
+import Gdk from 'gi://Gdk';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
 import Soup from 'gi://Soup';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
@@ -37,6 +39,25 @@ const MAX_UPDATE_INTERVAL = 1440;
 const MAX_SOURCES_LIMIT = 1024;
 const MAX_HEIGHT = 8192;
 const MAX_NOTIFICATIONS = 100;
+
+function urlToInitials(url)
+{
+	let domain = url.replace(/^https?:\/\//, '').split('/')[0];
+	let parts = domain.split('.').filter(p => p.length > 0);
+	let filtered = parts.filter(p => !['www', 'feeds', 'feed', 'rss', 'com', 'org', 'net', 'co', 'uk', 'io', 'news'].includes(p));
+	if (!filtered.length) filtered = parts;
+	if (filtered.length >= 2)
+		return (filtered[0][0] + filtered[1][0]).toUpperCase();
+	return filtered[0] ? filtered[0].slice(0, 2).toUpperCase() : '--';
+}
+
+function getInitials(title)
+{
+	let words = title.trim().split(/\s+/).filter(w => w.length > 0);
+	if (words.length >= 2)
+		return (words[0][0] + words[1][0]).toUpperCase();
+	return title.slice(0, 2).toUpperCase() || '--';
+}
 
 export default class RssFeedPreferences extends ExtensionPreferences
 {
@@ -168,31 +189,45 @@ export default class RssFeedPreferences extends ExtensionPreferences
 		const sourcesGroup = new Adw.PreferencesGroup({ title : "RSS Sources" });
 		sourcesPage.add(sourcesGroup);
 
-		// Header suffix: Add + Re-check buttons
-		const headerBox = new Gtk.Box({ spacing : 8 });
+		const cssProvider = new Gtk.CssProvider();
+		cssProvider.load_from_string(`
+			.source-avatar {
+				border-radius: 9999px;
+				background-color: alpha(@window_fg_color, 0.08);
+				color: alpha(@window_fg_color, 0.4);
+				min-width: 32px;
+				min-height: 32px;
+				font-size: 11px;
+				font-weight: bold;
+			}
+			.status-pill {
+				border-radius: 9999px;
+				padding: 2px 8px;
+				font-size: 11px;
+				font-weight: 500;
+				background-color: alpha(@window_fg_color, 0.06);
+			}
+			.status-ok {
+				background-color: alpha(@success_color, 0.15);
+				color: @success_color;
+			}
+			.status-error {
+				background-color: alpha(@error_color, 0.13);
+				color: @error_color;
+			}
+			.dnd-over {
+				border-top: 2px solid @accent_color;
+			}
+		`);
+		Gtk.StyleContext.add_provider_for_display(
+			Gdk.Display.get_default(),
+			cssProvider,
+			Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+		);
 
-		const recheckBtn = new Gtk.Button(
-		{
-			icon_name : 'view-refresh-symbolic',
-			tooltip_text : "Re-check all RSS sources",
-			valign : Gtk.Align.CENTER,
-		});
-		headerBox.append(recheckBtn);
-
-		const addBtn = new Gtk.Button(
-		{
-			icon_name : 'list-add-symbolic',
-			tooltip_text : "Add source",
-			valign : Gtk.Align.CENTER,
-		});
-		headerBox.append(addBtn);
-
-		sourcesGroup.set_header_suffix(headerBox);
-
-		// Cache for pending requests: url -> cancellable
 		const fCache = new Object();
 
-		const validateUrl = (entryRow, url) =>
+		const validateUrl = (row, url) =>
 		{
 			if (!url.length)
 				return;
@@ -205,7 +240,9 @@ export default class RssFeedPreferences extends ExtensionPreferences
 			let msg = Soup.Message.new('GET', finalUrl);
 			if (!msg)
 			{
-				entryRow.set_title("Invalid URL");
+				row._statusLabel.set_label("Invalid URL");
+				row._statusLabel.remove_css_class('status-ok');
+				row._statusLabel.add_css_class('status-error');
 				return;
 			}
 
@@ -215,7 +252,9 @@ export default class RssFeedPreferences extends ExtensionPreferences
 			let rowCancellable = new Gio.Cancellable();
 			fCache[url] = rowCancellable;
 
-			entryRow._statusLabel.set_text("Checking..");
+			row._statusLabel.set_label("Checking…");
+			row._statusLabel.remove_css_class('status-ok');
+			row._statusLabel.remove_css_class('status-error');
 
 			httpSession.send_and_read_async(msg, GLib.PRIORITY_DEFAULT, rowCancellable,
 				(session, result) =>
@@ -231,17 +270,21 @@ export default class RssFeedPreferences extends ExtensionPreferences
 					{
 						if (e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
 						{
-							entryRow._statusLabel.set_text("");
+							row._statusLabel.set_label("");
 							return;
 						}
-						entryRow._statusLabel.set_text("Error");
+						row._statusLabel.set_label("Error");
+						row._statusLabel.remove_css_class('status-ok');
+						row._statusLabel.add_css_class('status-error');
 						return;
 					}
 
 					let status = msg.get_status();
 					if (!(status >= 200 && status < 300))
 					{
-						entryRow._statusLabel.set_text(Soup.Status.get_phrase(status));
+						row._statusLabel.set_label(Soup.Status.get_phrase(status));
+						row._statusLabel.remove_css_class('status-ok');
+						row._statusLabel.add_css_class('status-error');
 						return;
 					}
 
@@ -253,133 +296,111 @@ export default class RssFeedPreferences extends ExtensionPreferences
 					}
 					catch (e)
 					{
-						entryRow._statusLabel.set_text(e.message || "Parse error");
+						row._statusLabel.set_label(e.message || "Parse error");
+						row._statusLabel.remove_css_class('status-ok');
+						row._statusLabel.add_css_class('status-error');
 						return;
 					}
 
 					if (parser == null)
 					{
-						entryRow._statusLabel.set_text("Unable to parse");
+						row._statusLabel.set_label("Unable to parse");
+						row._statusLabel.remove_css_class('status-ok');
+						row._statusLabel.add_css_class('status-error');
 						return;
 					}
 					parser.parse();
-					entryRow._statusLabel.set_text("OK (" + parser._type + ")");
-					entryRow._titleLabel.set_text(parser.Publisher.Title);
+					row._statusLabel.set_label("OK (" + parser._type + ")");
+					row._statusLabel.remove_css_class('status-error');
+					row._statusLabel.add_css_class('status-ok');
+					row.set_title(parser.Publisher.Title);
+					row._avatarLabel.set_label(getInitials(parser.Publisher.Title));
 				});
+		};
+
+		const rowMap = new Map();
+
+		const reorderFeeds = (draggedUrl, targetUrl) =>
+		{
+			let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
+			let srcIdx = feeds.indexOf(draggedUrl);
+			let dstIdx = feeds.indexOf(targetUrl);
+			if (srcIdx === -1 || dstIdx === -1 || srcIdx === dstIdx)
+				return;
+			feeds.splice(srcIdx, 1);
+			feeds.splice(dstIdx, 0, draggedUrl);
+			settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
+
+			sourcesGroup.remove(addRow);
+			for (let [, r] of rowMap)
+				sourcesGroup.remove(r);
+			for (let feedUrl of feeds)
+			{
+				let r = rowMap.get(feedUrl);
+				if (r) sourcesGroup.add(r);
+			}
+			sourcesGroup.add(addRow);
 		};
 
 		const buildSourceRow = (url) =>
 		{
-			const row = new Adw.EntryRow({ title : url });
+			const domain = url.replace(/^https?:\/\//, '').split('/')[0];
 
-			const titleLabel = new Gtk.Label({ label : "", xalign : 0.0, hexpand : true });
-			titleLabel.add_css_class('dim-label');
-			row._titleLabel = titleLabel;
+			const avatarLabel = new Gtk.Label({
+				label : urlToInitials(url),
+				width_request : 32,
+				height_request : 32,
+				valign : Gtk.Align.CENTER,
+				halign : Gtk.Align.CENTER,
+			});
+			avatarLabel.add_css_class('source-avatar');
 
-			const statusLabel = new Gtk.Label({ label : "", xalign : 1.0 });
-			statusLabel.add_css_class('dim-label');
-			row._statusLabel = statusLabel;
+			const row = new Adw.ActionRow({
+				title : domain,
+				subtitle : url,
+			});
+			row.add_prefix(avatarLabel);
 
-			const noNotifBtn = new Gtk.ToggleButton(
-			{
-				icon_name : 'notifications-disabled-symbolic',
-				tooltip_text : "No notifications",
+			const statusLabel = new Gtk.Label({
+				label : 'Checking…',
 				valign : Gtk.Align.CENTER,
 			});
-			noNotifBtn.active = !!aSettings.get(url, 'n');
-			noNotifBtn.connect('toggled', () =>
-			{
-				aSettings.set(url, 'n', noNotifBtn.active);
-			});
+			statusLabel.add_css_class('status-pill');
+			row._statusLabel = statusLabel;
+			row._avatarLabel = avatarLabel;
 
-			const noUpdBtn = new Gtk.ToggleButton(
-			{
-				icon_name : 'software-update-urgent-symbolic',
-				tooltip_text : "No updates detection",
+			const noUpdBtn = new Gtk.ToggleButton({
+				icon_name : 'view-refresh-symbolic',
+				tooltip_text : 'Updates detection',
 				valign : Gtk.Align.CENTER,
 			});
 			noUpdBtn.active = !!aSettings.get(url, 'u');
+			noUpdBtn.opacity = noUpdBtn.active ? 0.4 : 1.0;
 			noUpdBtn.connect('toggled', () =>
 			{
 				aSettings.set(url, 'u', noUpdBtn.active);
+				noUpdBtn.opacity = noUpdBtn.active ? 0.4 : 1.0;
 			});
 
-			const upBtn = new Gtk.Button(
-			{
-				icon_name : 'go-up-symbolic',
-				tooltip_text : "Move up",
+			const isMuted = !!aSettings.get(url, 'n');
+			const noNotifBtn = new Gtk.ToggleButton({
+				icon_name : isMuted ? 'notifications-disabled-symbolic' : 'alarm-symbolic',
+				tooltip_text : 'Notifications',
 				valign : Gtk.Align.CENTER,
 			});
-
-			const downBtn = new Gtk.Button(
+			noNotifBtn.active = isMuted;
+			noNotifBtn.connect('toggled', () =>
 			{
-				icon_name : 'go-down-symbolic',
-				tooltip_text : "Move down",
-				valign : Gtk.Align.CENTER,
+				aSettings.set(url, 'n', noNotifBtn.active);
+				noNotifBtn.set_icon_name(noNotifBtn.active ? 'notifications-disabled-symbolic' : 'alarm-symbolic');
 			});
 
-			const delBtn = new Gtk.Button(
-			{
-				icon_name : 'list-remove-symbolic',
-				tooltip_text : "Remove",
+			const delBtn = new Gtk.Button({
+				icon_name : 'user-trash-symbolic',
+				tooltip_text : 'Remove',
 				valign : Gtk.Align.CENTER,
 			});
 			delBtn.add_css_class('destructive-action');
-
-			row.add_suffix(titleLabel);
-			row.add_suffix(statusLabel);
-			row.add_suffix(noNotifBtn);
-			row.add_suffix(noUpdBtn);
-			row.add_suffix(upBtn);
-			row.add_suffix(downBtn);
-			row.add_suffix(delBtn);
-
-			row.connect('apply', () =>
-			{
-				let newUrl = row.get_text().trim();
-				if (!newUrl.length)
-					return;
-
-				let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
-				let idx = feeds.indexOf(url);
-				if (idx == -1)
-					return;
-
-				aSettings.rename(url, newUrl);
-				feeds[idx] = newUrl;
-				settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
-
-				url = newUrl;
-				row.set_title(newUrl);
-				validateUrl(row, newUrl);
-			});
-
-			upBtn.connect('clicked', () =>
-			{
-				let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
-				let idx = feeds.indexOf(url);
-				if (idx <= 0)
-					return;
-
-				[feeds[idx - 1], feeds[idx]] = [feeds[idx], feeds[idx - 1]];
-				settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
-
-				refreshSourcesList();
-			});
-
-			downBtn.connect('clicked', () =>
-			{
-				let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
-				let idx = feeds.indexOf(url);
-				if (idx == -1 || idx >= feeds.length - 1)
-					return;
-
-				[feeds[idx], feeds[idx + 1]] = [feeds[idx + 1], feeds[idx]];
-				settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
-
-				refreshSourcesList();
-			});
-
 			delBtn.connect('clicked', () =>
 			{
 				aSettings.remove(url);
@@ -388,103 +409,72 @@ export default class RssFeedPreferences extends ExtensionPreferences
 				if (idx != -1)
 					feeds.splice(idx, 1);
 				settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
-
 				sourcesGroup.remove(row);
+				rowMap.delete(url);
 			});
+
+			row.add_suffix(statusLabel);
+			row.add_suffix(noUpdBtn);
+			row.add_suffix(noNotifBtn);
+			row.add_suffix(delBtn);
+
+			const dragSource = new Gtk.DragSource({ actions : Gdk.DragAction.MOVE });
+			dragSource.connect('prepare', () => Gdk.ContentProvider.new_for_value(url));
+			row.add_controller(dragSource);
+
+			const dropTarget = new Gtk.DropTarget({ actions : Gdk.DragAction.MOVE });
+			dropTarget.set_gtypes([GObject.TYPE_STRING]);
+			dropTarget.connect('enter', () =>
+			{
+				row.add_css_class('dnd-over');
+				return Gdk.DragAction.MOVE;
+			});
+			dropTarget.connect('leave', () => row.remove_css_class('dnd-over'));
+			dropTarget.connect('drop', (target, value) =>
+			{
+				row.remove_css_class('dnd-over');
+				if (value === url)
+					return false;
+				reorderFeeds(value, url);
+				return true;
+			});
+			row.add_controller(dropTarget);
 
 			validateUrl(row, url);
 
 			return row;
 		};
 
-		const rowMap = new Map();
-
-		const refreshSourcesList = () =>
+		const addRow = new Adw.EntryRow({
+			title : 'New RSS source URL',
+			show_apply_button : true,
+		});
+		addRow.connect('apply', () =>
 		{
+			let url = addRow.get_text().trim();
+			if (!url.length)
+				return;
 			let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
-
-			for (let [url, row] of rowMap)
-			{
-				if (!feeds.includes(url))
-				{
-					sourcesGroup.remove(row);
-					rowMap.delete(url);
-				}
-			}
-
-			for (let i = 0; i < feeds.length; i++)
-			{
-				let url = feeds[i];
-				if (!rowMap.has(url))
-				{
-					let row = buildSourceRow(url);
-					sourcesGroup.add(row);
-					rowMap.set(url, row);
-				}
-			}
-		};
-
-		refreshSourcesList();
-
-		recheckBtn.connect('clicked', () =>
-		{
-			let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
-			for (let url of feeds)
-			{
-				let row = rowMap.get(url);
-				if (row)
-					validateUrl(row, url);
-			}
+			if (feeds.includes(url))
+				return;
+			feeds.push(url);
+			settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
+			let newRow = buildSourceRow(url);
+			rowMap.set(url, newRow);
+			sourcesGroup.remove(addRow);
+			sourcesGroup.add(newRow);
+			sourcesGroup.add(addRow);
+			addRow.set_text('');
 		});
 
-		addBtn.connect('clicked', () =>
+		let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
+		for (let url of feeds)
 		{
-			let dialog = new Adw.MessageDialog(
-			{
-				transient_for : window,
-				heading : "New RSS Feed source",
-			});
-
-			let entry = new Gtk.Entry(
-			{
-				placeholder_text : "https://example.com/rss",
-				activates_default : true,
-			});
-
-			dialog.set_extra_child(entry);
-			dialog.add_response('cancel', "Cancel");
-			dialog.add_response('ok', "Add");
-			dialog.set_default_response('ok');
-			dialog.set_response_appearance('ok', Adw.ResponseAppearance.SUGGESTED);
-
-			dialog.connect('response', (d, response) =>
-			{
-				if (response != 'ok')
-				{
-					d.destroy();
-					return;
-				}
-
-				let url = entry.get_text().trim();
-				if (!url.length)
-				{
-					d.destroy();
-					return;
-				}
-
-				let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
-				feeds.push(url);
-				settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
-
-				let row = buildSourceRow(url);
-				sourcesGroup.add(row);
-				rowMap.set(url, row);
-
-				d.destroy();
-			});
-
-			dialog.present();
-		});
+			let row = buildSourceRow(url);
+			sourcesGroup.add(row);
+			rowMap.set(url, row);
+		}
+		sourcesGroup.add(addRow);
 	}
 
 	_makeSwitchRow(settings, key, title)
