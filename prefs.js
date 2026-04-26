@@ -123,8 +123,6 @@ export default class RssFeedPreferences extends ExtensionPreferences
 		displayGroup.add(this._makeSpinRow(settings, GSKeys.ITEMS_VISIBLE, "Max items per source", 1, MAX_SOURCES_LIMIT));
 		displayGroup.add(this._makeSwitchRow(settings, GSKeys.ENABLE_ANIMATIONS, "Enable animations"));
 		displayGroup.add(this._makeSwitchRow(settings, GSKeys.MB_ALIGN_TOP, "Top-align buttons"));
-		displayGroup.add(this._makeSwitchRow(settings, GSKeys.ENABLE_DESC, "Show descriptions"));
-
 		// Polling group
 		const pollingGroup = new Adw.PreferencesGroup({ title : "Polling" });
 		generalPage.add(pollingGroup);

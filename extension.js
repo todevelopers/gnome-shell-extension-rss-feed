@@ -176,8 +176,6 @@ const RssFeed2 = GObject.registerClass(
 			this._totalUnreadCount = 0;
 			this._notifLimit = 10;
 
-			this._miStPadding = Array(158).join(" ");
-
 			let button = new St.BoxLayout(
 			{
 				vertical : false,
@@ -873,35 +871,10 @@ const RssFeed2 = GObject.registerClass(
 
 					if (itemDescription.length > 0)
 					{
-						cacheObj._bItemDescription = Misc.lineBreak(itemDescription, 80, 90, "  ");
-
 						if (itemDescription.length > 290)
 							itemDescription = itemDescription.substr(0, 290) + "...";
 
 						cacheObj._itemDescription = itemDescription;
-
-						menu.connect('notify::active', (self) =>
-						{
-							if (!this._settings.get_boolean(GSKeys.ENABLE_DESC))
-								return;
-
-							let label_actor = self.label;
-
-							if (self.active)
-							{
-								label_actor._originalHeight = label_actor.get_height();
-
-								label_actor.set_text(self._cacheObj.lText + "\n  "
-									+ this._miStPadding + "\n" + self._cacheObj._bItemDescription);
-
-								label_actor.set_height(120);
-							}
-							else
-							{
-								label_actor.set_text(self._cacheObj.lText);
-								label_actor.set_height(label_actor._originalHeight);
-							}
-						});
 					}
 				}
 
