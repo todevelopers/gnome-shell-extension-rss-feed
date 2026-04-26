@@ -454,13 +454,13 @@ export default class RssFeedPreferences extends ExtensionPreferences
 				rowMap.delete(state.url);
 			});
 
-			row.add_suffix(statusLabel);
-			row.add_suffix(noUpdBtn);
-			row.add_suffix(noNotifBtn);
 			row.add_suffix(delBtn);
+			row.add_suffix(noNotifBtn);
+			row.add_suffix(noUpdBtn);
+			row.add_suffix(statusLabel);
 
 			const avatarEntry = new Adw.EntryRow({ title : 'Avatar' });
-			avatarEntry.set_text(storedAvatar || '');
+			avatarEntry.set_text(storedAvatar || (storedTitle ? getInitials(storedTitle) : urlToInitials(url)));
 			let _avatarUpdating = false;
 			avatarEntry.connect('changed', () =>
 			{
