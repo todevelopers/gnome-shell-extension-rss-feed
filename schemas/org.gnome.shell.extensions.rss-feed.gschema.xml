@@ -42,11 +42,6 @@
 		    <summary>Enable animations</summary>
 		    <description>Enable animations</description>
 		</key>
-		<key type="b" name="detect-updates">
-		    <default>true</default>
-		    <summary>Detect updates</summary>
-		    <description>Detect updates.</description>
-		</key>
 		<key type="b" name="enable-descriptions">
 		    <default>false</default>
 		    <summary>Show descriptions</summary>
@@ -62,12 +57,7 @@
 		    <summary>RSS feeds settings</summary>
 		    <description></description>
 		</key>
-		<key type="b" name="menu-buttons-align-top">
-		    <default>false</default>
-		    <summary>Top-align menu buttons</summary>
-		    <description>Top-align menu buttons</description>
-		</key>
-		<key type="b" name="http-keep-alive">
+<key type="b" name="http-keep-alive">
 		    <default>true</default>
 		    <summary>HTTP Keep-Alive</summary>
 		    <description>Set Keep-Alive in HTTP request headers</description>

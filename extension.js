@@ -523,7 +523,6 @@ const RssFeed2 = GObject.registerClass(
 			this._feedsSection._animate = this._settings.get_boolean(GSKeys.ENABLE_ANIMATIONS);
 			this._minimalSection._animate = this._feedsSection._animate;
 			this._notifLimit = this._settings.get_int(GSKeys.MAX_NOTIFICATIONS);
-			this._detectUpdates = this._settings.get_boolean(GSKeys.DETECT_UPDATES);
 			this._notifOnLockScreen = this._settings.get_boolean(GSKeys.NOTIFICATIONS_ON_LOCKSCREEN);
 			this._http_keepalive = this._settings.get_boolean(GSKeys.HTTP_KEEPALIVE);
 			this._markInitialAsNew = this._settings.get_boolean(GSKeys.MARK_INITIAL_AS_NEW);
@@ -782,8 +781,7 @@ const RssFeed2 = GObject.registerClass(
 
 					if (cacheID == item.ID)
 					{
-						if (this._detectUpdates
-							&& !disableUpdates
+						if (!disableUpdates
 							&& (cacheObj.Item.PublishDate != item.PublishDate || cacheObj.Item.UpdateTime != item.UpdateTime))
 						{
 							item._update = true;
