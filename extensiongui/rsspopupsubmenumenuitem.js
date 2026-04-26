@@ -85,7 +85,7 @@ class RssPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem
 	{
 		if (n > 0)
 		{
-			this._countBadgeText.set_text(n.toString());
+			this._countBadgeText.set_text(n > 99 ? '99+' : n.toString());
 			this._countBadge.show();
 		}
 		else

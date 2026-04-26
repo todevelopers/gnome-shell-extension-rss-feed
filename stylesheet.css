@@ -37,9 +37,9 @@
 }
 
 .rss-unread-badge {
-	min-width: 24px;
-	height: 24px;
-	border-radius: 12px;
+	min-width: 30px;
+	height: 30px;
+	border-radius: 15px;
 	background-color: rgba(53, 132, 228, 1.0);
 	background-color: -st-accent-color;
 	padding: 0;
@@ -71,9 +71,9 @@
 }
 
 .rss-feed-count {
-	min-width: 22px;
-	height: 22px;
-	border-radius: 11px;
+	min-width: 30px;
+	height: 30px;
+	border-radius: 15px;
 	background-color: rgba(53, 132, 228, 1.0);
 	background-color: -st-accent-color;
 	padding: 0;
@@ -84,7 +84,7 @@
 	color: -st-accent-fg-color;
 	font-size: 10px;
 	font-weight: bold;
-	padding: 0 4px;
+	padding: 1px 5px 0;
 }
 
 .rss-badge-confirm-icon {

@@ -513,7 +513,7 @@ const RssFeed2 = GObject.registerClass(
 			{
 				if (count > 0)
 				{
-					this._unreadBadgeText.set_text(count.toString());
+					this._unreadBadgeText.set_text(count > 99 ? '99+' : count.toString());
 					this._unreadBadge.show();
 				}
 				else
