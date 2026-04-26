@@ -271,24 +271,23 @@ const RssFeed2 = GObject.registerClass(
 		{
 			this._buttonMenu = new PopupMenu.PopupBaseMenuItem({ reactive : false, style_class : 'rss-header' });
 
-			let iconBox = new St.Bin(
+			let iconBox = new St.Button(
 			{
 				style_class : 'rss-header-icon',
 				x_align : Clutter.ActorAlign.CENTER,
 				y_align : Clutter.ActorAlign.CENTER,
+				can_focus : false,
 				child : new St.Icon({ icon_name : 'application-rss+xml-symbolic', icon_size : 20 }),
 			});
-			this._buttonMenu.add_child(iconBox);
-
-			let titleBox = new St.BoxLayout({ vertical : true, x_expand : true });
-			let titleLabel = new St.Label({ text : 'RSS Feed', style_class : 'rss-header-title' });
-			let titleBtn = new St.Button({ child : titleLabel, can_focus : false });
-			titleBtn.connect('clicked', () =>
+			iconBox.connect('clicked', () =>
 			{
 				this.menu.close();
 				Misc.processLinkOpen('https://github.com/todevelopers/gnome-shell-extension-rss-feed', null);
 			});
-			titleBox.add_child(titleBtn);
+			this._buttonMenu.add_child(iconBox);
+
+			let titleBox = new St.BoxLayout({ vertical : true, x_expand : true });
+			titleBox.add_child(new St.Label({ text : 'RSS Feed', style_class : 'rss-header-title' }));
 			this._headerSubtitle = new St.Label({ text : '', style_class : 'rss-header-subtitle' });
 			titleBox.add_child(this._headerSubtitle);
 			this._buttonMenu.add_child(titleBox);
