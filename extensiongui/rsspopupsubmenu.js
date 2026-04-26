@@ -35,16 +35,6 @@ export class RssPopupSubMenu extends PopupMenu.PopupSubMenu
 		});
 	}
 
-	open(_animate)
-	{
-		super.open(this._parent._animate);
-	}
-
-	close(_animate)
-	{
-		super.close(this._parent._animate);
-	}
-
 	_needsScrollbar(_o)
 	{
 		return true;

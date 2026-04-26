@@ -37,12 +37,7 @@
 		    <summary>Clean notifications on disable</summary>
 		    <description>Clean notifications on plugin disabled.</description>
 		</key>
-		<key type="b" name="enable-anim">
-		    <default>true</default>
-		    <summary>Enable animations</summary>
-		    <description>Enable animations</description>
-		</key>
-		<key type="b" name="enable-descriptions">
+<key type="b" name="enable-descriptions">
 		    <default>false</default>
 		    <summary>Show descriptions</summary>
 		    <description>Show description received from RSS feed when selecting an article.</description>
