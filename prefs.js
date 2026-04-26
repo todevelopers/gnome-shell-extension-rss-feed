@@ -330,7 +330,10 @@ export default class RssFeedPreferences extends ExtensionPreferences
 						row.set_title(parser.Publisher.Title);
 						aSettings.set(url, 't', parser.Publisher.Title);
 						if (row._titleEntry && !row._titleEntry.get_text().trim())
+						{
 							row._titleEntry.set_text(parser.Publisher.Title);
+							row._titleDirty = false;
+						}
 					}
 					if (!aSettings.get(url, 'v'))
 						row._avatarLabel.set_label(getInitials(parser.Publisher.Title));
@@ -484,6 +487,7 @@ export default class RssFeedPreferences extends ExtensionPreferences
 			titleEntry.set_text(storedTitle || '');
 			titleEntry.connect('changed', () =>
 			{
+				row._titleDirty = true;
 				let val = titleEntry.get_text().trim();
 				let domain = state.url.replace(/^https?:\/\//, '').split('/')[0];
 				row.set_title(val || domain);
@@ -493,6 +497,7 @@ export default class RssFeedPreferences extends ExtensionPreferences
 					avatarLabel.set_label(val ? getInitials(val) : urlToInitials(state.url));
 			});
 			row._titleEntry = titleEntry;
+			row._titleDirty = false;
 
 			const urlEntry = new Adw.EntryRow({ title : 'URL', show_apply_button : true });
 			urlEntry.set_text(url);
@@ -501,6 +506,12 @@ export default class RssFeedPreferences extends ExtensionPreferences
 				let newUrl = urlEntry.get_text().trim();
 				if (!newUrl.length || newUrl === state.url)
 					return;
+
+				if (fCache[state.url])
+				{
+					fCache[state.url].cancel();
+					delete fCache[state.url];
+				}
 
 				let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
 				let idx = feeds.indexOf(state.url);
@@ -511,6 +522,11 @@ export default class RssFeedPreferences extends ExtensionPreferences
 				}
 
 				aSettings.rename(state.url, newUrl);
+
+				let titleIsManual = row._titleDirty && row._titleEntry.get_text().trim().length > 0;
+				if (!titleIsManual)
+					aSettings.set(newUrl, 't', undefined);
+
 				rowMap.delete(state.url);
 				state.url = newUrl;
 				rowMap.set(newUrl, row);
@@ -525,7 +541,11 @@ export default class RssFeedPreferences extends ExtensionPreferences
 
 			const dragSource = new Gtk.DragSource({ actions : Gdk.DragAction.MOVE });
 			dragSource.connect('prepare', () => Gdk.ContentProvider.new_for_value(state.url));
-			row.add_controller(dragSource);
+			dragSource.connect('drag-begin', (source, _drag) =>
+			{
+				source.set_icon(new Gtk.WidgetPaintable({ widget : row }), 0, 0);
+			});
+			dragHandle.add_controller(dragSource);
 
 			const dropTarget = new Gtk.DropTarget({ actions : Gdk.DragAction.MOVE });
 			dropTarget.set_gtypes([GObject.TYPE_STRING]);

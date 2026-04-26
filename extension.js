@@ -748,12 +748,14 @@ const RssFeed2 = GObject.registerClass(
 			let muteNotifications;
 			let disableUpdates;
 			let customTitle;
+			let customAvatar;
 
 			if (gsData)
 			{
 				muteNotifications = gsData['n'];
 				disableUpdates = gsData['u'];
 				customTitle = gsData['t'];
+				customAvatar = gsData['v'];
 			}
 
 			if (customTitle)
@@ -792,6 +794,9 @@ const RssFeed2 = GObject.registerClass(
 					subMenu._olabeltext = customTitle;
 				}
 			}
+
+			if (customAvatar)
+				subMenu._avatar.child.set_text(customAvatar);
 
 			let i = itemCache.length;
 
