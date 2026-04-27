@@ -4,3 +4,6 @@
 .eslintrc.json    export-ignore
 package.json      export-ignore
 package-lock.json export-ignore
+CHANGELOG.md      export-ignore
+README.md         export-ignore
+LICENSE           export-ignore
