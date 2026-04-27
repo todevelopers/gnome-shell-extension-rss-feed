@@ -879,6 +879,9 @@ const RssFeed2 = GObject.registerClass(
 
 				item.Title = Encoder.htmlDecode(Encoder.htmlDecode(item.Title)).replace(/<.*?>/g, "").trim();
 
+				if (!item.PublishDate)
+					item.PublishDate = new Date().toISOString();
+
 				let menu = new RssPopupMenuItem(item);
 				subMenu.menu.addMenuItem(menu, 0);
 
