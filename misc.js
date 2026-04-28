@@ -111,11 +111,8 @@ export function makeAvatarIcon(title)
 		.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 	let svg = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">'
-		+ '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">'
-		+ '<stop offset="0" stop-color="#4a4a4a"/>'
-		+ '<stop offset="1" stop-color="#353535"/></linearGradient></defs>'
-		+ '<circle cx="16" cy="16" r="16" fill="url(#g)"/>'
-		+ '<text x="16" y="20" text-anchor="middle" fill="#e8e8e8"'
+		+ '<circle cx="16" cy="16" r="16" fill="rgba(255,255,255,0.10)"/>'
+		+ '<text x="16" y="20" text-anchor="middle" fill="rgba(255,255,255,0.55)"'
 		+ ' font-family="sans-serif" font-size="13" font-weight="700">'
 		+ initials + '</text></svg>';
 

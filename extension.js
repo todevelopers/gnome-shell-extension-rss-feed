@@ -46,6 +46,7 @@ import { RssPopupMenuSection } from './extensiongui/rsspopupmenusection.js';
 import { RssBadgeButton } from './extensiongui/rssbadgebutton.js';
 
 const Encoder = getInstance();
+const NOTIFICATION_ICON = 'application-rss+xml';
 const MINIMAL_READ_INITIAL_LIMIT = 30;
 
 function _relativeTime(dateStr)
@@ -1106,7 +1107,7 @@ const RssFeed2 = GObject.registerClass(
 				source,
 				title,
 				body : message,
-				gicon : Misc.makeAvatarIcon(feedTitle),
+				iconName : NOTIFICATION_ICON,
 				resident : true,
 				isTransient : false,
 				urgency : MessageTray.Urgency.HIGH,
