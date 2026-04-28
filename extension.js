@@ -87,25 +87,41 @@ class RssMinimalSectionHeader extends PopupMenu.PopupBaseMenuItem
 			y_align: Clutter.ActorAlign.CENTER,
 		});
 		this.add_child(this._icon);
+
+		this.connect('destroy', () =>
+		{
+			this._destroyed = true;
+			this._items = [];
+			this._onToggle = null;
+		});
 	}
 
 	activate(_event)
 	{
+		if (this._destroyed)
+			return;
 		this.toggle();
 	}
 
 	addItem(item)
 	{
+		if (this._destroyed)
+			return;
 		this._items.push(item);
 		item.visible = !this._collapsed;
 	}
 
 	toggle()
 	{
+		if (this._destroyed)
+			return;
 		this._collapsed = !this._collapsed;
 		this._icon.icon_name = this._collapsed ? 'pan-end-symbolic' : 'pan-down-symbolic';
 		for (let item of this._items)
-			item.visible = !this._collapsed;
+		{
+			if (item && !item._destroyed)
+				item.visible = !this._collapsed;
+		}
 		if (this._onToggle)
 			this._onToggle(this._collapsed);
 	}
@@ -143,6 +159,11 @@ class RssMinimalMenuItem extends PopupMenu.PopupBaseMenuItem
 				Misc.processLinkOpen(item.HttpLink, cacheObj);
 				onRead();
 			}
+		});
+
+		this.connect('destroy', () =>
+		{
+			this._destroyed = true;
 		});
 	}
 });
@@ -420,8 +441,8 @@ const RssFeed2 = GObject.registerClass(
 			if (this._layoutMode !== 'minimal' || !this._menuIsOpen)
 				return;
 			if (this._minimalRebuildId)
-				return;
-			this._minimalRebuildId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () =>
+				GLib.source_remove(this._minimalRebuildId);
+			this._minimalRebuildId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 50, () =>
 			{
 				this._minimalRebuildId = 0;
 				this._flushMinimalRebuild();
