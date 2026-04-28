@@ -56,7 +56,8 @@ function getInitials(title)
 	let words = title.trim().split(/\s+/).filter(w => /\p{L}/u.test(w[0]));
 	if (words.length >= 2)
 		return (words[0][0] + words[1][0]).toUpperCase();
-	return title.substring(0, 2).toUpperCase();
+	let letters = title.replace(/[^\p{L}]/gu, '');
+	return (letters.slice(0, 2) || '--').toUpperCase();
 }
 
 export default class RssFeedPreferences extends ExtensionPreferences
@@ -269,7 +270,10 @@ export default class RssFeedPreferences extends ExtensionPreferences
 				return;
 			}
 
-			if (fCache[url])
+			msg.get_request_headers().replace("User-Agent",
+			"Mozilla/5.0 (compatible; gnome-shell-extension-rss-feed/1.0; +https://github.com/todevelopers/gnome-shell-extension-rss-feed)");
+
+		if (fCache[url])
 				fCache[url].cancel();
 
 			let rowCancellable = new Gio.Cancellable();
