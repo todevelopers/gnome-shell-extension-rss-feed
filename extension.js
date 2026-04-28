@@ -804,6 +804,9 @@ const RssFeed2 = GObject.registerClass(
 				return;
 			}
 
+			message.get_request_headers().replace("User-Agent",
+			"Mozilla/5.0 (compatible; gnome-shell-extension-rss-feed/1.0; +https://github.com/todevelopers/gnome-shell-extension-rss-feed)");
+
 			if (!this._http_keepalive)
 				message.get_request_headers().replace("Connection", "close");
 
