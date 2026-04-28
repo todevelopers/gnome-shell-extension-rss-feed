@@ -57,7 +57,8 @@ function _relativeTime(dateStr)
 		let diff = (Date.now() - new Date(dateStr).getTime()) / 60000;
 		if (diff < 60) return Math.round(Math.max(1, diff)) + 'm';
 		if (diff < 1440) return Math.round(diff / 60) + 'h';
-		return Math.round(diff / 1440) + 'd';
+		if (diff < 20160) return Math.round(diff / 1440) + 'd';
+		return Math.round(diff / 10080) + 'w';
 	}
 	catch (_) { return ''; }
 }
