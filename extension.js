@@ -835,7 +835,7 @@ const RssFeed2 = GObject.registerClass(
 					if (cacheID == item.ID)
 					{
 						if (!disableUpdates
-							&& (cacheObj.Item.PublishDate != item.PublishDate || cacheObj.Item.UpdateTime != item.UpdateTime))
+							&& ((item.PublishDate && cacheObj.Item.PublishDate != item.PublishDate) || cacheObj.Item.UpdateTime != item.UpdateTime))
 						{
 							item._update = true;
 						}
