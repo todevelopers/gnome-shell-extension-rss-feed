@@ -1156,6 +1156,9 @@ const RssFeed2 = GObject.registerClass(
 
 			notification.connect('destroy', (self) =>
 			{
+				if (self.source._rssDestroying)
+					return;
+				self.source._rssDestroying = true;
 				self.source.destroy();
 			});
 
