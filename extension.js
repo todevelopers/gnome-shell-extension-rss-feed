@@ -203,10 +203,15 @@ const RssFeed2 = GObject.registerClass(
 
 			this._menuOpenId = this.menu.connect('open-state-changed', (self, open) =>
 			{
+				this._menuIsOpen = open;
+
 				if (open && this._lastOpen)
 				{
 					this._lastOpen.open();
 				}
+
+				if (open && this._minimalDirty && this._layoutMode === 'minimal')
+					this._flushMinimalRebuild();
 
 				if (open == false && this._activeConfirm)
 				{
@@ -263,7 +268,7 @@ const RssFeed2 = GObject.registerClass(
 				this._layoutMode = settings.get_string(GSKeys.LAYOUT_MODE);
 				this._applyLayoutMode();
 				if (this._layoutMode === 'minimal')
-					this._rebuildMinimalSection();
+					this._markMinimalDirty();
 			});
 		}
 
@@ -308,7 +313,7 @@ const RssFeed2 = GObject.registerClass(
 				this._totalUnreadCount = 0;
 				this._updateUnreadCountLabel(0);
 				if (this._layoutMode === 'minimal')
-					this._rebuildMinimalSection();
+					this._markMinimalDirty();
 			};
 			this._unreadBadge.onEnterConfirm = (b) => this._activateConfirm(b);
 			this._buttonMenu.add_child(this._unreadBadge);
@@ -342,11 +347,9 @@ const RssFeed2 = GObject.registerClass(
 			this._minimalSection.actor.visible = !classic;
 		}
 
-		_rebuildMinimalSection()
+		_computeMinimalList()
 		{
-			this._minimalSection.removeAll();
-
-			let allItems = [];
+			let out = [];
 			let urls = this._rssFeedsSources || [];
 			for (let i = 0; i < urls.length; i++)
 			{
@@ -359,19 +362,30 @@ const RssFeed2 = GObject.registerClass(
 					let id = feedCache.Items[j];
 					let cacheObj = feedCache.Items[id];
 					if (!cacheObj) continue;
-					allItems.push({ cacheObj, feedTitle });
+					out.push({
+						cacheObj,
+						feedTitle,
+						section: cacheObj.Unread ? 'unread' : 'read',
+						ts: new Date(cacheObj.Item.PublishDate || 0).getTime(),
+					});
 				}
 			}
 
-
-			allItems.sort((a, b) =>
+			out.sort((a, b) =>
 			{
-				if (!!a.cacheObj.Unread !== !!b.cacheObj.Unread)
-					return a.cacheObj.Unread ? -1 : 1;
-				let da = new Date(a.cacheObj.Item.PublishDate || 0).getTime();
-				let db = new Date(b.cacheObj.Item.PublishDate || 0).getTime();
-				return db - da;
+				if (a.section !== b.section)
+					return a.section === 'unread' ? -1 : 1;
+				return b.ts - a.ts;
 			});
+
+			return out;
+		}
+
+		_rebuildMinimalSection()
+		{
+			this._minimalSection.removeAll();
+
+			let items = this._computeMinimalList();
 
 			if (!this._minimalCollapsed)
 				this._minimalCollapsed = {};
@@ -379,9 +393,9 @@ const RssFeed2 = GObject.registerClass(
 
 			let lastSection = null;
 			let currentHeader = null;
-			for (let { cacheObj, feedTitle } of allItems)
+			for (let entry of items)
 			{
-				let section = cacheObj.Unread ? 'unread' : 'read';
+				let { cacheObj, feedTitle, section } = entry;
 				if (section !== lastSection)
 				{
 					let sec = section;
@@ -393,11 +407,43 @@ const RssFeed2 = GObject.registerClass(
 					lastSection = section;
 				}
 				let mi = new RssMinimalMenuItem(cacheObj, feedTitle,
-					() => this._rebuildMinimalSection());
+					() => this._markMinimalDirty());
 				this._minimalSection.addMenuItem(mi);
 				if (currentHeader)
 					currentHeader.addItem(mi);
 			}
+		}
+
+		_markMinimalDirty()
+		{
+			this._minimalDirty = true;
+			if (this._layoutMode !== 'minimal' || !this._menuIsOpen)
+				return;
+			if (this._minimalRebuildId)
+				return;
+			this._minimalRebuildId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () =>
+			{
+				this._minimalRebuildId = 0;
+				this._flushMinimalRebuild();
+				return GLib.SOURCE_REMOVE;
+			});
+		}
+
+		_flushMinimalRebuild()
+		{
+			if (this._minimalRebuildId)
+			{
+				GLib.source_remove(this._minimalRebuildId);
+				this._minimalRebuildId = 0;
+			}
+			if (!this._minimalDirty)
+				return;
+			this._minimalDirty = false;
+
+			const _t0 = GLib.get_monotonic_time();
+			this._rebuildMinimalSection();
+			const _t1 = GLib.get_monotonic_time();
+			console.log(`rss-feed trace [_minimalRebuild]: total=${_t1-_t0}µs`);
 		}
 
 		_activateConfirm(badge)
@@ -437,7 +483,7 @@ const RssFeed2 = GObject.registerClass(
 			this._updateUnreadCountLabel(this._totalUnreadCount);
 
 			if (this._layoutMode === 'minimal')
-				this._rebuildMinimalSection();
+				this._markMinimalDirty();
 		}
 
 		_reorderClassicSection()
@@ -479,6 +525,12 @@ const RssFeed2 = GObject.registerClass(
 
 			if (this._settingsCWId)
 				GLib.source_remove(this._settingsCWId);
+
+			if (this._minimalRebuildId)
+			{
+				GLib.source_remove(this._minimalRebuildId);
+				this._minimalRebuildId = 0;
+			}
 
 			if (this._settings.get_boolean(GSKeys.CLEANUP_NOTIFICATIONS))
 			{
@@ -586,7 +638,7 @@ const RssFeed2 = GObject.registerClass(
 			this._feedsCache[key] = undefined;
 
 			if (this._layoutMode === 'minimal')
-				this._rebuildMinimalSection();
+				this._markMinimalDirty();
 		}
 
 		_pollFeeds()
@@ -973,15 +1025,9 @@ const RssFeed2 = GObject.registerClass(
 			const _t5 = GLib.get_monotonic_time();
 
 			if (this._layoutMode === 'minimal')
-			{
-				this._rebuildMinimalSection();
-				const _t6 = GLib.get_monotonic_time();
-				console.log(`rss-feed trace [${sourceURL}]: detect=${_t1-_t0}µs parse=${_t2-_t1}µs cache-diff=${_t3-_t2}µs ui=${_t4-_t3}µs post=${_t5-_t4}µs minimal=${_t6-_t5}µs total=${_t6-_t0}µs`);
-			}
-			else
-			{
-				console.log(`rss-feed trace [${sourceURL}]: detect=${_t1-_t0}µs parse=${_t2-_t1}µs cache-diff=${_t3-_t2}µs ui=${_t4-_t3}µs post=${_t5-_t4}µs total=${_t5-_t0}µs`);
-			}
+				this._markMinimalDirty();
+
+			console.log(`rss-feed trace [${sourceURL}]: detect=${_t1-_t0}µs parse=${_t2-_t1}µs cache-diff=${_t3-_t2}µs ui=${_t4-_t3}µs post=${_t5-_t4}µs total=${_t5-_t0}µs`);
 		}
 
 		_dispatchNotification(title, message, url, cacheObj)
