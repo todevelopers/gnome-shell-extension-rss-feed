@@ -191,6 +191,11 @@ const RssFeed2 = GObject.registerClass(
 				this._pollFeeds();
 			});
 
+			this._fscid = settings.connect('changed::' + GSKeys.RSS_FEEDS_SETTINGS, () =>
+			{
+				this._applyFeedSettings();
+			});
+
 			this._startIndex = 0;
 			this._feedsCache = new Array();
 			this._notifCache = new Array();
@@ -369,6 +374,42 @@ const RssFeed2 = GObject.registerClass(
 			let classic = this._layoutMode !== 'minimal';
 			this._feedsSection.actor.visible = classic;
 			this._minimalSection.actor.visible = !classic;
+		}
+
+		_applyFeedSettings()
+		{
+			this._aSettings.load();
+
+			if (!this._rssFeedsSources)
+				return;
+
+			for (let i = 0; i < this._rssFeedsSources.length; i++)
+			{
+				let url = this._rssFeedsSources[i];
+				let feedCache = this._feedsCache[url];
+
+				if (!feedCache || !feedCache.Menu)
+					continue;
+
+				let gsData = this._aSettings._gsData[url];
+				let customTitle = gsData && gsData['t'];
+				let customAvatar = gsData && gsData['v'];
+				let subMenu = feedCache.Menu;
+
+				if (customTitle && subMenu._olabeltext !== customTitle)
+				{
+					subMenu.label.set_text(customTitle);
+					subMenu._olabeltext = customTitle;
+				}
+
+				if (customAvatar)
+					subMenu._avatar.child.set_text(customAvatar);
+				else
+					subMenu._avatar.child.set_text(Misc.feedInitials(subMenu._olabeltext));
+			}
+
+			if (this._layoutMode === 'minimal')
+				this._markMinimalDirty();
 		}
 
 		_computeMinimalList()
@@ -577,6 +618,9 @@ const RssFeed2 = GObject.registerClass(
 
 			if (this._scid)
 				this._settings.disconnect(this._scid);
+
+			if (this._fscid)
+				this._settings.disconnect(this._fscid);
 
 			if (this._lcid)
 				this._settings.disconnect(this._lcid);
