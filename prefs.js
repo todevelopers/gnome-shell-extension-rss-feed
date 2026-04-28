@@ -139,12 +139,20 @@ export default class RssFeedPreferences extends ExtensionPreferences
 		const displayGroup = new Adw.PreferencesGroup({ title : "Display" });
 		generalPage.add(displayGroup);
 
-		displayGroup.add(this._makeSpinRow(settings, GSKeys.MAX_HEIGHT, "Max menu height (px)", 1, MAX_HEIGHT));
-		displayGroup.add(this._makeSpinRow(settings, GSKeys.ITEMS_VISIBLE, "Max items per source", 1, MAX_SOURCES_LIMIT));
+		const maxHeightRow = this._makeSpinRow(settings, GSKeys.MAX_HEIGHT, "Menu height (px)", 1, MAX_HEIGHT);
+		maxHeightRow.subtitle = "Menu scrolls when content exceeds this height.";
+		displayGroup.add(maxHeightRow);
+
+		const itemsPerSourceRow = this._makeSpinRow(settings, GSKeys.ITEMS_VISIBLE, "Articles per source", 1, MAX_SOURCES_LIMIT);
+		itemsPerSourceRow.subtitle = "Maximum number of articles fetched and shown per feed.";
+		displayGroup.add(itemsPerSourceRow);
+
 		const pollingGroup = new Adw.PreferencesGroup({ title : "Polling" });
 		generalPage.add(pollingGroup);
 
-		pollingGroup.add(this._makeSpinRow(settings, GSKeys.UPDATE_INTERVAL, "Update interval (min)", 1, MAX_UPDATE_INTERVAL));
+		const updateIntervalRow = this._makeSpinRow(settings, GSKeys.UPDATE_INTERVAL, "Update interval (min)", 1, MAX_UPDATE_INTERVAL);
+		updateIntervalRow.subtitle = "How often all feeds are downloaded in the background.";
+		pollingGroup.add(updateIntervalRow);
 
 		// Notifications page
 		const notifPage = new Adw.PreferencesPage({ title : "Notifications", icon_name : 'preferences-system-notifications-symbolic' });
@@ -154,15 +162,18 @@ export default class RssFeedPreferences extends ExtensionPreferences
 		notifPage.add(notifGroup);
 
 		const notifSwitch = this._makeSwitchRow(settings, GSKeys.ENABLE_NOTIFICATIONS, "Show notifications");
+		notifSwitch.subtitle = "Displays a system notification when new articles are found.";
 		notifGroup.add(notifSwitch);
 
-		const notifMaxRow = this._makeSpinRow(settings, GSKeys.MAX_NOTIFICATIONS, "Max notifications", 1, MAX_NOTIFICATIONS);
+		const notifMaxRow = this._makeSpinRow(settings, GSKeys.MAX_NOTIFICATIONS, "Notifications limit", 1, MAX_NOTIFICATIONS);
+		notifMaxRow.subtitle = "Limits how many notifications are shown in a single batch.";
 		notifGroup.add(notifMaxRow);
 
 		const notifLockRow = this._makeSwitchRow(settings, GSKeys.NOTIFICATIONS_ON_LOCKSCREEN, "Show on lock screen");
+		notifLockRow.subtitle = "Allow notifications to appear when the screen is locked.";
 		notifGroup.add(notifLockRow);
 
-		const notifCleanRow = this._makeSwitchRow(settings, GSKeys.CLEANUP_NOTIFICATIONS, "Auto-cleanup");
+		const notifCleanRow = this._makeSwitchRow(settings, GSKeys.CLEANUP_NOTIFICATIONS, "Clear on disable");
 		notifCleanRow.subtitle = "Removes all RSS notifications from the tray when the extension is disabled.";
 		notifGroup.add(notifCleanRow);
 
