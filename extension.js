@@ -729,7 +729,9 @@ const RssFeed2 = GObject.registerClass(
 
 		_onDownload(responseData, sourceURL)
 		{
+			const _t0 = GLib.get_monotonic_time();
 			let rssParser = createRssParser(responseData);
+			const _t1 = GLib.get_monotonic_time();
 
 			if (rssParser == null)
 			{
@@ -738,6 +740,7 @@ const RssFeed2 = GObject.registerClass(
 			}
 
 			rssParser.parse();
+			const _t2 = GLib.get_monotonic_time();
 
 			let nItems = rssParser.Items.length > this._itemsVisible ? this._itemsVisible
 				: rssParser.Items.length;
@@ -866,6 +869,7 @@ const RssFeed2 = GObject.registerClass(
 				}
 			}
 
+			const _t3 = GLib.get_monotonic_time();
 			i = nItems;
 
 			while (i--)
@@ -934,6 +938,8 @@ const RssFeed2 = GObject.registerClass(
 				}
 			}
 
+			const _t4 = GLib.get_monotonic_time();
+
 			if (!feedCache._initialRefresh)
 				feedCache._initialRefresh = true;
 
@@ -961,7 +967,16 @@ const RssFeed2 = GObject.registerClass(
 				this._headerSubtitle.set_text('Updated at ' + new Date().toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' }));
 
 			if (this._layoutMode === 'minimal')
+			{
+				const _t5 = GLib.get_monotonic_time();
 				this._rebuildMinimalSection();
+				const _t6 = GLib.get_monotonic_time();
+				console.log(`rss-feed trace [${sourceURL}]: detect=${((_t1-_t0)/1e6).toFixed(3)}s parse=${((_t2-_t1)/1e6).toFixed(3)}s cache-diff=${((_t3-_t2)/1e6).toFixed(3)}s ui=${((_t4-_t3)/1e6).toFixed(3)}s minimal=${((_t6-_t5)/1e6).toFixed(3)}s total=${((_t6-_t0)/1e6).toFixed(3)}s`);
+			}
+			else
+			{
+				console.log(`rss-feed trace [${sourceURL}]: detect=${((_t1-_t0)/1e6).toFixed(3)}s parse=${((_t2-_t1)/1e6).toFixed(3)}s cache-diff=${((_t3-_t2)/1e6).toFixed(3)}s ui=${((_t4-_t3)/1e6).toFixed(3)}s total=${((_t4-_t0)/1e6).toFixed(3)}s`);
+			}
 		}
 
 		_dispatchNotification(title, message, url, cacheObj)
