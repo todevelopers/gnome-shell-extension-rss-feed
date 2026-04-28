@@ -53,11 +53,15 @@ function urlToInitials(url)
 
 function getInitials(title)
 {
-	let words = title.trim().split(/\s+/).filter(w => /\p{L}/u.test(w[0]));
-	if (words.length >= 2)
-		return (words[0][0] + words[1][0]).toUpperCase();
-	let letters = title.replace(/[^\p{L}]/gu, '');
-	return (letters.slice(0, 2) || '--').toUpperCase();
+	let stopWords = /^(the|a|an|der|die|das|le|la)$/i;
+	let words = title.replace(/[^\p{L}\p{N}\s]/gu, ' ')
+		.split(/\s+/)
+		.filter(w => w && !stopWords.test(w));
+	if (words.length === 0)
+		return '--';
+	if (words.length === 1)
+		return words[0].slice(0, 2).toUpperCase();
+	return (words[0][0] + words[1][0]).toUpperCase();
 }
 
 export default class RssFeedPreferences extends ExtensionPreferences

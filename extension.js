@@ -937,6 +937,8 @@ const RssFeed2 = GObject.registerClass(
 				{
 					subMenu.label.set_text(customTitle);
 					subMenu._olabeltext = customTitle;
+					if (!customAvatar)
+						subMenu._avatar.child.set_text(Misc.feedInitials(customTitle));
 				}
 			}
 

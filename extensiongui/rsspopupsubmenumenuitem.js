@@ -28,16 +28,9 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import { getInstance } from '../encoder.js';
 import { RssPopupSubMenu } from './rsspopupsubmenu.js';
 import { RssBadgeButton } from './rssbadgebutton.js';
+import { feedInitials } from '../misc.js';
 
 const Encoder = getInstance();
-
-function _feedInitials(title)
-{
-	let words = title.trim().split(/\s+/).filter(w => /\p{L}/u.test(w[0]));
-	if (words.length >= 2)
-		return (words[0][0] + words[1][0]).toUpperCase();
-	return title.substring(0, 2).toUpperCase();
-}
 
 export const RssPopupSubMenuMenuItem = GObject.registerClass(
 class RssPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem
@@ -56,7 +49,7 @@ class RssPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem
 			y_align: Clutter.ActorAlign.CENTER,
 			x_align: Clutter.ActorAlign.CENTER,
 		});
-		let avatarLabel = new St.Label({ text: _feedInitials(title) });
+		let avatarLabel = new St.Label({ text: feedInitials(title) });
 		avatarLabel.x_align = Clutter.ActorAlign.CENTER;
 		avatarLabel.y_align = Clutter.ActorAlign.CENTER;
 		this._avatar.child = avatarLabel;
