@@ -47,6 +47,7 @@ import { RssBadgeButton } from './extensiongui/rssbadgebutton.js';
 
 const Encoder = getInstance();
 const NOTIFICATION_ICON = 'application-rss+xml';
+const MINIMAL_READ_INITIAL_LIMIT = 30;
 
 function _relativeTime(dateStr)
 {
@@ -186,12 +187,14 @@ const RssFeed2 = GObject.registerClass(
 
 			this._scid = settings.connect('changed::' + GSKeys.RSS_FEEDS_LIST, () =>
 			{
+				this._readShowAll = false;
 				this._pollFeeds();
 			});
 
 			this._startIndex = 0;
 			this._feedsCache = new Array();
 			this._notifCache = new Array();
+			this._readShowAll = false;
 
 			this._totalUnreadCount = 0;
 			this._notifLimit = 10;
@@ -412,8 +415,15 @@ const RssFeed2 = GObject.registerClass(
 				this._minimalCollapsed = {};
 			let collapsedState = this._minimalCollapsed;
 
+			let readTotal = 0;
+			for (let i = 0; i < items.length; i++)
+				if (items[i].section === 'read') readTotal++;
+
+			let readLimit = this._readShowAll ? readTotal : MINIMAL_READ_INITIAL_LIMIT;
+			let readRendered = 0;
 			let lastSection = null;
 			let currentHeader = null;
+			let readHeader = null;
 			for (let entry of items)
 			{
 				let { cacheObj, feedTitle, section } = entry;
@@ -425,13 +435,35 @@ const RssFeed2 = GObject.registerClass(
 						collapsedState[sec],
 						(collapsed) => { collapsedState[sec] = collapsed; });
 					this._minimalSection.addMenuItem(currentHeader);
+					if (sec === 'read') readHeader = currentHeader;
 					lastSection = section;
+				}
+				if (section === 'read')
+				{
+					if (readRendered >= readLimit)
+						continue;
+					readRendered++;
 				}
 				let mi = new RssMinimalMenuItem(cacheObj, feedTitle,
 					() => this._markMinimalDirty());
 				this._minimalSection.addMenuItem(mi);
 				if (currentHeader)
 					currentHeader.addItem(mi);
+			}
+
+			let hidden = readTotal - readRendered;
+			if (hidden > 0)
+			{
+				let showAll = new PopupMenu.PopupMenuItem("Show all (" + hidden + " more)",
+					{ style_class: 'rss-minimal-show-all' });
+				showAll.connect('activate', () =>
+				{
+					this._readShowAll = true;
+					this._markMinimalDirty();
+				});
+				this._minimalSection.addMenuItem(showAll);
+				if (readHeader)
+					readHeader.addItem(showAll);
 			}
 		}
 
