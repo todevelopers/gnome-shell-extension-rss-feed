@@ -17,6 +17,7 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
@@ -50,41 +51,75 @@ export function processLinkOpen(url, cacheObj)
 		return false;
 	}
 
-	if (cacheObj && cacheObj.Unread)
-	{
-		cacheObj.Unread = null;
-
-		if (cacheObj.Menu)
-			cacheObj.Menu.setOrnament(PopupMenu.Ornament.NONE);
-
-		let feedCacheObj = cacheObj.parent;
-
-		if (feedCacheObj)
-		{
-			feedCacheObj.UnreadCount--;
-
-			let subMenu = feedCacheObj.Menu;
-
-			feedCacheObj.pUnreadCount = feedCacheObj.UnreadCount;
-			if (feedCacheObj.Menu)
-				feedCacheObj.Menu.setUnreadCount(feedCacheObj.UnreadCount);
-
-			let parentClass = feedCacheObj.parentClass;
-
-			if (parentClass)
-			{
-				parentClass._totalUnreadCount--;
-				parentClass._updateUnreadCountLabel(parentClass._totalUnreadCount);
-			}
-
-			if (!feedCacheObj.UnreadCount)
-			{
-				subMenu.setOrnament(PopupMenu.Ornament.NONE);
-			}
-		}
-	}
+	markRead(cacheObj);
 
 	return true;
+}
+
+export function markRead(cacheObj)
+{
+	if (!cacheObj || !cacheObj.Unread)
+		return;
+
+	cacheObj.Unread = null;
+
+	if (cacheObj.Menu)
+		cacheObj.Menu.setOrnament(PopupMenu.Ornament.NONE);
+
+	let feedCacheObj = cacheObj.parent;
+	if (!feedCacheObj)
+		return;
+
+	feedCacheObj.UnreadCount--;
+	feedCacheObj.pUnreadCount = feedCacheObj.UnreadCount;
+
+	if (feedCacheObj.Menu)
+	{
+		feedCacheObj.Menu.setUnreadCount(feedCacheObj.UnreadCount);
+		if (!feedCacheObj.UnreadCount)
+			feedCacheObj.Menu.setOrnament(PopupMenu.Ornament.NONE);
+	}
+
+	let parentClass = feedCacheObj.parentClass;
+	if (parentClass)
+	{
+		parentClass._totalUnreadCount--;
+		parentClass._updateUnreadCountLabel(parentClass._totalUnreadCount);
+	}
+}
+
+export function feedInitials(title)
+{
+	if (!title)
+		return '··';
+
+	let stopWords = /^(the|a|an|der|die|das|le|la)$/i;
+	let words = title.replace(/[^\p{L}\p{N}\s]/gu, ' ')
+		.split(/\s+/)
+		.filter(w => w && !stopWords.test(w));
+
+	if (words.length === 0)
+		return '··';
+	if (words.length === 1)
+		return words[0].slice(0, 2).toUpperCase();
+	return (words[0][0] + words[1][0]).toUpperCase();
+}
+
+export function makeAvatarIcon(title)
+{
+	let initials = feedInitials(title)
+		.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+	let svg = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">'
+		+ '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">'
+		+ '<stop offset="0" stop-color="#4a4a4a"/>'
+		+ '<stop offset="1" stop-color="#353535"/></linearGradient></defs>'
+		+ '<circle cx="16" cy="16" r="16" fill="url(#g)"/>'
+		+ '<text x="16" y="20" text-anchor="middle" fill="#e8e8e8"'
+		+ ' font-family="sans-serif" font-size="13" font-weight="700">'
+		+ initials + '</text></svg>';
+
+	return Gio.BytesIcon.new(GLib.Bytes.new(new TextEncoder().encode(svg)));
 }
 
 export function clampTitle(title)

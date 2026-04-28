@@ -10,6 +10,7 @@
     "N_": "readonly",
     "ngettext": "readonly",
     "TextDecoder": "readonly",
+    "TextEncoder": "readonly",
     "console": "readonly"
   },
   "parserOptions": {

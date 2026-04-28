@@ -46,7 +46,6 @@ import { RssPopupMenuSection } from './extensiongui/rsspopupmenusection.js';
 import { RssBadgeButton } from './extensiongui/rssbadgebutton.js';
 
 const Encoder = getInstance();
-const NOTIFICATION_ICON = 'application-rss+xml';
 const MINIMAL_READ_INITIAL_LIMIT = 30;
 
 function _relativeTime(dateStr)
@@ -1045,13 +1044,10 @@ const RssFeed2 = GObject.registerClass(
 				{
 					let itemTitle = item.Title;
 
-					cacheObj.Notification = this._dispatchNotification(item._update ? ("UPDATE"
-						+ ': ' + item.Title) : itemTitle, "Source"
-						+ ': '
-						+ Encoder.htmlDecode(rssParser.Publisher.Title)
-						+ (item.Author.length ? ', ' + "Author" + ': '
-							+ Encoder.htmlDecode(item.Author) : '') + '\n\n'
-						+ (cacheObj._itemDescription ? cacheObj._itemDescription : itemTitle),
+					cacheObj.Notification = this._dispatchNotification(
+						Encoder.htmlDecode(rssParser.Publisher.Title),
+						item._update ? ("UPDATE" + ': ' + item.Title) : itemTitle,
+						cacheObj._itemDescription ? cacheObj._itemDescription : itemTitle,
 						itemURL, cacheObj);
 				}
 			}
@@ -1092,15 +1088,15 @@ const RssFeed2 = GObject.registerClass(
 			console.log(`rss-feed trace [${sourceURL}]: detect=${_t1-_t0}µs parse=${_t2-_t1}µs cache-diff=${_t3-_t2}µs ui=${_t4-_t3}µs post=${_t5-_t4}µs total=${_t5-_t0}µs`);
 		}
 
-		_dispatchNotification(title, message, url, cacheObj)
+		_dispatchNotification(feedTitle, title, message, url, cacheObj)
 		{
 			if (Misc.isScreenLocked() && !this._notifOnLockScreen)
 				return null;
 
 			let source = new MessageTray.Source(
 			{
-				title : 'RSS Feed',
-				icon : new Gio.ThemedIcon({ name : NOTIFICATION_ICON }),
+				title : feedTitle,
+				icon : Misc.makeAvatarIcon(feedTitle),
 			});
 
 			Main.messageTray.add(source);
@@ -1110,7 +1106,7 @@ const RssFeed2 = GObject.registerClass(
 				source,
 				title,
 				body : message,
-				iconName : NOTIFICATION_ICON,
+				gicon : Misc.makeAvatarIcon(feedTitle),
 				resident : true,
 				isTransient : false,
 				urgency : MessageTray.Urgency.HIGH,
@@ -1133,7 +1129,7 @@ const RssFeed2 = GObject.registerClass(
 			notification._itemURL = url;
 			notification._cacheObj = cacheObj;
 
-			notification.addAction('Open URL', () =>
+			notification.addAction('Open', () =>
 			{
 				Misc.processLinkOpen(notification._itemURL, notification._cacheObj);
 				notification.destroy();
@@ -1146,6 +1142,12 @@ const RssFeed2 = GObject.registerClass(
 
 				if (Main.messageTray._banner)
 					Main.messageTray._banner.emit('done-displaying');
+			});
+
+			notification.addAction('Mark as read', () =>
+			{
+				Misc.markRead(notification._cacheObj);
+				notification.destroy();
 			});
 
 			notification.connect('activated', (self) =>
