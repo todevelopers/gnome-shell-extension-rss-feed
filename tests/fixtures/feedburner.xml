@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:feedburner="http://rssnamespace.org/feedburner/ext/1.0">
+	<channel>
+		<title>Test Feedburner Feed</title>
+		<link>https://example.com</link>
+		<description>Test Feedburner feed description</description>
+		<lastBuildDate>Mon, 01 Jan 2024 00:00:00 +0000</lastBuildDate>
+		<item>
+			<title>Feedburner Item</title>
+			<link>https://example.com/fb/1</link>
+			<description>Feedburner item description</description>
+			<pubDate>Mon, 01 Jan 2024 12:00:00 +0000</pubDate>
+			<author>John Doe</author>
+			<guid>fb-guid-001</guid>
+		</item>
+	</channel>
+</rss>

@@ -131,6 +131,94 @@ jobs:
           name: eslint-log
           path: eslint.log
 
+  test:
+    name: Vitest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+      - run: npm install
+      - name: Run tests
+        run: |
+          set -o pipefail
+          npx vitest run --reporter=verbose --reporter=json --outputFile=vitest-results.json 2>&1 | tee vitest.log
+      - name: Compute stats
+        id: stats
+        if: always()
+        env:
+          RESULTS: vitest-results.json
+        run: |
+          passed=0
+          failed=0
+          if [ -f "$RESULTS" ]; then
+            passed=$(jq -r '.numPassedTests // 0' "$RESULTS")
+            failed=$(jq -r '.numFailedTests // 0' "$RESULTS")
+          fi
+          total=$((passed + failed))
+          if [ "$failed" -gt 0 ]; then
+            emoji="❌"; alert="CAUTION"; status_text="failed"; color="red"
+            message="$failed failed"
+          else
+            emoji="✅"; alert="NOTE"; status_text="passed"; color="brightgreen"
+            message="$passed passing"
+          fi
+          {
+            echo "passed=$passed"
+            echo "failed=$failed"
+            echo "total=$total"
+            echo "emoji=$emoji"
+            echo "alert=$alert"
+            echo "status_text=$status_text"
+            echo "color=$color"
+            echo "message=$message"
+          } >> "$GITHUB_OUTPUT"
+      - name: Write summary
+        if: always()
+        env:
+          LOG: vitest.log
+          EMOJI: ${{ steps.stats.outputs.emoji }}
+          ALERT: ${{ steps.stats.outputs.alert }}
+          STATUS: ${{ steps.stats.outputs.status_text }}
+          PASSED: ${{ steps.stats.outputs.passed }}
+          FAILED: ${{ steps.stats.outputs.failed }}
+          TOTAL: ${{ steps.stats.outputs.total }}
+        run: |
+          {
+            echo "## $EMOJI Vitest"
+            echo ""
+            echo "> [!$ALERT]"
+            echo "> Status: $STATUS — $TOTAL tests ($PASSED passed, $FAILED failed)"
+            echo ""
+            echo "<details><summary>Full output (click to expand)</summary>"
+            echo ""
+            echo '```text'
+            cat "$LOG"
+            echo '```'
+            echo ""
+            echo "</details>"
+            echo ""
+            echo "---"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish badge
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: 87195eb23e76eae80cd14a6d80e56072
+          filename: vitest.json
+          label: vitest
+          message: ${{ steps.stats.outputs.message }}
+          color: ${{ steps.stats.outputs.color }}
+          cacheSeconds: 0
+      - name: Upload log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-log
+          path: vitest.log
+
   lint-gnome:
     name: shexli (GNOME static analysis)
     runs-on: ubuntu-latest

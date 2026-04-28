@@ -2,10 +2,13 @@
   "name": "gnome-shell-extension-rss-feed",
   "version": "2.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest run"
   },
   "devDependencies": {
-    "eslint": "^8.57.0"
+    "eslint": "^8.57.0",
+    "vitest": "^3.0.0"
   }
 }

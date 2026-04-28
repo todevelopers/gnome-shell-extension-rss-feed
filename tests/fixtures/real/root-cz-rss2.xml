@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
+<channel>
+<image>
+<link>https://www.root.cz/</link>
+<title>Root.cz</title>
+<url>https://i.iinfo.cz/r/rss-88x31.gif</url>
+<width>88</width>
+<height>31</height>
+</image>
+<title>Root.cz - články</title>
+<link>https://www.root.cz/clanky/</link>
+<description>Root.cz - informace nejen ze světa Linuxu</description>
+<language>cs</language>
+<pubDate>Sun, 26 Apr 2026 22:00:10 GMT</pubDate>
+<item>
+<title>Postřehy z bezpečnosti: ransomware Gentlemen posílený botnetem</title>
+<link>https://www.root.cz/clanky/postrehy-z-bezpecnosti-ransomware-gentlemen-posileny-botnetem/?utm_source=rss&amp;utm_medium=text&amp;utm_campaign=rss</link>
+<description>V tomto vydání seriálu se podíváme na vishingové útoky skupiny BlackFile, perzistentní malware na zařízeních Cisco, chybu v iOS umožňující obnovu smazaných dat a zneužívané zranitelnosti SharePointu.</description>
+
+<author>redakce@root.cz (Root.cz: Monika Kutějová)</author>
+<pubDate>Sun, 26 Apr 2026 22:00:10 GMT</pubDate>
+<enclosure url="https://i.iinfo.cz/images/678/gentlemen.jpg" length='48849' type="image/jpeg"/>
+<guid isPermaLink="false">www.root.cz-text-19392</guid>
+
+
+</item>
+<item>
+<title>Ubuntu 26.10 bude Stonking Stingray, Debian má novou vedoucí projektu</title>
+<link>https://www.root.cz/clanky/ubuntu-26-10-bude-stonking-stingray-debian-ma-novou-vedouci-projektu/?utm_source=rss&amp;utm_medium=text&amp;utm_campaign=rss</link>
+<description>Canonical zveřejnil harmonogram pro Ubuntu 26.10 „Stonking Stingray“. Debian má novou vedoucí projektu, indickou vývojářku Sruthi Chandran. Vyšlo prostředí LXQt 2.4 s dalšími vylepšeními pro Wayland.</description>
+
+<author>redakce@root.cz (Root.cz: Filip Zatloukal)</author>
+<pubDate>Sun, 26 Apr 2026 22:00:05 GMT</pubDate>
+<enclosure url="https://i.iinfo.cz/images/264/stonking-stingray.jpg" length='49118' type="image/jpeg"/>
+<guid isPermaLink="false">www.root.cz-text-19389</guid>
+
+
+</item>
+<item>
+<title>Z jádra mizí podpora ISDN a AX.25, GCC posoudí využití AI/LLM ve vývoji</title>
+<link>https://www.root.cz/clanky/z-jadra-mizi-podpora-isdn-a-ax-25-gcc-posoudi-vyuziti-ai-llm-ve-vyvoji/?utm_source=rss&amp;utm_medium=text&amp;utm_campaign=rss</link>
+<description>Týden v KDE a zejména opravy pro Plasmu 6.6.5, týden v GNOME a libadwaita pro Android. Fwupd 2.1.2 s podporou dalšího hardwaru, GCC zřizuje pracovní skupinu pro posouzení politiky kolem AI/LLM.</description>
+
+<author>redakce@root.cz (Root.cz: David Ježek)</author>
+<pubDate>Sat, 25 Apr 2026 22:00:00 GMT</pubDate>
+<enclosure url="https://i.iinfo.cz/images/130/kde-discover-s-fwupd-1.png" length='110875' type="image/png"/>
+<guid isPermaLink="false">www.root.cz-text-19386</guid>
+
+
+</item>
+<item>
+<title>Ubuntu 26.04 LTS Resolute Raccoon už jen s Waylandem a novou sadou aplikací</title>
+<link>https://www.root.cz/clanky/ubuntu-26-04-lts-resolute-raccoon-uz-jen-s-waylandem-a-novou-sadou-aplikaci/?utm_source=rss&amp;utm_medium=text&amp;utm_campaign=rss</link>
+<description>Na světě je nové vydání Ubuntu, které je současně pravidelnou LTS verzí, tedy tou, která nechává svého uživatele v klidu nejméně 10 let od vydání. Nové Ubuntu je podařeným mixem novinek evolučních i revolučních.</description>
+
+<author>redakce@root.cz (Root.cz: David Ježek)</author>
+<pubDate>Thu, 23 Apr 2026 22:00:10 GMT</pubDate>
+<enclosure url="https://i.iinfo.cz/images/190/ubuntu-26-04-lts-resolute-raccoon.jpg" length='38578' type="image/jpeg"/>
+<guid isPermaLink="false">www.root.cz-text-19383</guid>
+
+
+</item>
+<item>
+<title>Pokusy s MeshCore: vlastní repeater, spojení přes republiku a klient Meshy</title>
+<link>https://www.root.cz/clanky/pokusy-s-meshcore-vlastni-repeater-spojeni-pres-republiku-a-klient-meshy/?utm_source=rss&amp;utm_medium=text&amp;utm_campaign=rss</link>
+<description>Několik postřehů z používání decentralizované sítě MeshCore za poslední dva měsíce. Síť se neuvěřitelně rozrostla a já jsem přispěl stavbou vlastního repeateru a napsáním linuxového klienta s názvem Meshy.</description>
+
+<author>redakce@root.cz (Root.cz: Jiří Eischmann)</author>
+<pubDate>Wed, 22 Apr 2026 22:00:10 GMT</pubDate>
+<enclosure url="https://i.iinfo.cz/images/28/meshcore.jpg" length='76945' type="image/jpeg"/>
+<guid isPermaLink="false">www.root.cz-text-19362</guid>
+
+
+</item>
+<item>
+<title>SciPy: konvoluce, fitrace a další operace prováděné s dvourozměrnými signály</title>
+<link>https://www.root.cz/clanky/scipy-konvoluce-fitrace-a-dalsi-operace-provadene-s-dvourozmernymi-signaly/?utm_source=rss&amp;utm_medium=text&amp;utm_campaign=rss</link>
+<description>Dokončíme popis operací, které je možné provádět s dvourozměrnými signály, tj. především s rastrovými obrázky. Ukážeme si zejména klasickou konvoluci s konvolučním jádrem zadaným maticí a funkce balíčku ndimage.</description>
+
+<author>redakce@root.cz (Root.cz: Pavel Tišnovský)</author>
+<pubDate>Wed, 22 Apr 2026 22:00:05 GMT</pubDate>
+<enclosure url="https://i.iinfo.cz/images/610/vedec-pouziva-ke-sve-praci-pocitac-a-python.jpg" length='32525' type="image/jpeg"/>
+<guid isPermaLink="false">www.root.cz-text-19371</guid>
+
+
+</item>
+<item>
+<title>Framework představil přepracovaný Laptop 13 Pro a dok pro externí grafiky</title>
+<link>https://www.root.cz/clanky/framework-predstavil-prepracovany-laptop-13-pro-a-dok-pro-externi-grafiky/?utm_source=rss&amp;utm_medium=text&amp;utm_campaign=rss</link>
+<description>Společnost Framework Computers představila několik velkých novinek: přepracovaný Framework Laptop 13 Pro, vylepšený Framework Laptop 16, dokovací stanici OCuLink Dev Kit a bezdrátovou klávesnici s touchpadem.</description>
+
+<author>redakce@root.cz (Root.cz: Redakce)</author>
+<pubDate>Wed, 22 Apr 2026 10:00:00 GMT</pubDate>
+<enclosure url="https://i.iinfo.cz/images/216/framework-laptop-13-pro.jpg" length='37911' type="image/jpeg"/>
+<guid isPermaLink="false">www.root.cz-text-19365</guid>
+
+
+</item>
+<item>
+<title>Skryté virtuální stroje: útočníci zneužívají QEMU k šíření malwaru</title>
+<link>https://www.root.cz/clanky/skryte-virtualni-stroje-utocnici-zneuzivaji-qemu-k-sireni-malwaru/?utm_source=rss&amp;utm_medium=text&amp;utm_campaign=rss</link>
+<description>Útočníci zneužívají otevřeného nástroje QEMU k ukrývání malwaru ve virtuálních strojích. Obcházejí tak detekci, kradou citlivá data a nasazují ransomware tak, že po sobě nezanechají žádné stopy.</description>
+
+<author>redakce@root.cz (Root.cz: Petr Krčmář)</author>
+<pubDate>Tue, 21 Apr 2026 22:00:10 GMT</pubDate>
+<enclosure url="https://i.iinfo.cz/images/217/qemu-hacker-notebook.jpg" length='51332' type="image/jpeg"/>
+<guid isPermaLink="false">www.root.cz-text-19359</guid>
+
+
+</item>
+<item>
+<title>Softwarová sklizeň (22. 4. 2026): omezte řádění agentů AI ve svém systému</title>
+<link>https://www.root.cz/clanky/softwarova-sklizen-22-4-2026-omezte-radeni-agentu-ai-ve-svem-systemu/?utm_source=rss&amp;utm_medium=text&amp;utm_campaign=rss</link>
+<description>Sonda do světa otevřeného softwaru. Dnes si zabezpečíme práci s AI agenty, převedeme si text na řeč, uděláme si pořádek v citacích a podíváme se na jednotné rozhraní pro práci s více databázemi.</description>
+
+<author>redakce@root.cz (Root.cz: Filip Zatloukal)</author>
+<pubDate>Tue, 21 Apr 2026 22:00:05 GMT</pubDate>
+<enclosure url="https://i.iinfo.cz/images/root/368/kombajn-sklizen.jpg" length='91140' type="image/jpeg"/>
+<guid isPermaLink="false">www.root.cz-text-19356</guid>
+
+
+</item>
+<item>
+<title>Rust už v linuxovém jádře není experiment, použití AI dostává pravidla</title>
+<link>https://www.root.cz/clanky/rust-uz-v-linuxovem-jadre-neni-experiment-pouziti-ai-dostava-pravidla/?utm_source=rss&amp;utm_medium=text&amp;utm_campaign=rss</link>
+<description>Linus Torvalds vydal 12. dubna linuxové jádro 7.0. Skok verze je kosmetika, zajímavější jsou dvě jiné věci: Rust formálně ztratil nálepku „experimentální“ a v dokumentaci jsou poprvé pravidla pro AI.</description>
+
+<author>redakce@root.cz (Root.cz: Ondřej Dolejš)</author>
+<pubDate>Mon, 20 Apr 2026 22:00:10 GMT</pubDate>
+<enclosure url="https://i.iinfo.cz/images/386/tux-rust-ai.jpg" length='70145' type="image/jpeg"/>
+<guid isPermaLink="false">www.root.cz-text-19350</guid>
+
+
+</item>
+</channel>
+</rss>

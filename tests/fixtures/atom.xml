@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+	<title>Test Atom Feed</title>
+	<link rel="alternate" href="https://example.com"/>
+	<link rel="self" href="https://example.com/feed.atom"/>
+	<updated>2024-01-01T00:00:00Z</updated>
+	<entry>
+		<title>First Entry</title>
+		<link href="https://example.com/entry/1"/>
+		<published>2024-01-01T12:00:00Z</published>
+		<updated>2024-01-02T10:00:00Z</updated>
+		<author>
+			<name>John Doe</name>
+		</author>
+		<id>urn:uuid:entry-001</id>
+	</entry>
+	<entry>
+		<title>Second Entry</title>
+		<link href="https://example.com/entry/2"/>
+		<published>2024-01-02T12:00:00Z</published>
+		<updated>2024-01-02T13:00:00Z</updated>
+		<author>
+			<name>Jane Smith</name>
+		</author>
+		<id>urn:uuid:entry-002</id>
+	</entry>
+</feed>

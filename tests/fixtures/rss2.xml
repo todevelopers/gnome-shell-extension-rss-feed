@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+	<channel>
+		<title>Test RSS Feed</title>
+		<link>https://example.com</link>
+		<description>Test RSS feed description</description>
+		<pubDate>Mon, 01 Jan 2024 00:00:00 +0000</pubDate>
+		<item>
+			<title>First Item</title>
+			<link>https://example.com/item/1</link>
+			<description><![CDATA[First item body]]></description>
+			<pubDate>Mon, 01 Jan 2024 12:00:00 +0000</pubDate>
+			<author>John Doe</author>
+			<guid>guid-001</guid>
+		</item>
+		<item>
+			<title>Second Item</title>
+			<link>https://example.com/item/2</link>
+			<description>Second item body</description>
+			<pubDate>Tue, 02 Jan 2024 12:00:00 +0000</pubDate>
+			<author>Jane Smith</author>
+		</item>
+	</channel>
+</rss>

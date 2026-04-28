@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+	<channel>
+		<title>Test RDF Feed</title>
+		<link>https://example.com</link>
+		<description>Test RDF feed description</description>
+		<dc:date>2024-01-01T00:00:00Z</dc:date>
+	</channel>
+	<item>
+		<title>RDF Item One</title>
+		<link>https://example.com/rdf/1</link>
+		<description>RDF item one description</description>
+		<dc:date>2024-01-01T12:00:00Z</dc:date>
+		<dc:creator>John Doe</dc:creator>
+	</item>
+	<item>
+		<title>RDF Item Two</title>
+		<link>https://example.com/rdf/2</link>
+		<description>RDF item two description</description>
+		<dc:date>2024-01-02T12:00:00Z</dc:date>
+		<dc:creator>Jane Smith</dc:creator>
+	</item>
+</rdf:RDF>
