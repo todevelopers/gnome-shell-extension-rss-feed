@@ -1097,7 +1097,7 @@ const RssFeed2 = GObject.registerClass(
 			let source = new MessageTray.Source(
 			{
 				title : feedTitle,
-				icon : Misc.makeAvatarIcon(feedTitle),
+				icon : new Gio.ThemedIcon({ name : NOTIFICATION_ICON }),
 			});
 
 			Main.messageTray.add(source);
@@ -1107,7 +1107,7 @@ const RssFeed2 = GObject.registerClass(
 				source,
 				title,
 				body : message,
-				iconName : NOTIFICATION_ICON,
+				gicon : Misc.makeAvatarIcon(feedTitle),
 				resident : true,
 				isTransient : false,
 				urgency : MessageTray.Urgency.HIGH,
