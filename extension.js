@@ -187,7 +187,6 @@ const RssFeed2 = GObject.registerClass(
 
 			this._scid = settings.connect('changed::' + GSKeys.RSS_FEEDS_LIST, () =>
 			{
-				this._readShowAll = false;
 				this._pollFeeds();
 			});
 
@@ -454,13 +453,21 @@ const RssFeed2 = GObject.registerClass(
 			let hidden = readTotal - readRendered;
 			if (hidden > 0)
 			{
-				let showAll = new PopupMenu.PopupMenuItem("Show all (" + hidden + " more)",
-					{ style_class: 'rss-minimal-show-all' });
-				showAll.connect('activate', () =>
+				let showAll = new PopupMenu.PopupBaseMenuItem(
+					{ style_class: 'popup-menu-item rss-minimal-section-header' });
+				let showAllLabel = new St.Label(
+				{
+					text: "Show all (" + hidden + " more)",
+					x_expand: true,
+					y_align: Clutter.ActorAlign.CENTER,
+					style_class: 'rss-minimal-section-label',
+				});
+				showAll.add_child(showAllLabel);
+				showAll.activate = () =>
 				{
 					this._readShowAll = true;
 					this._markMinimalDirty();
-				});
+				};
 				this._minimalSection.addMenuItem(showAll);
 				if (readHeader)
 					readHeader.addItem(showAll);
@@ -697,6 +704,7 @@ const RssFeed2 = GObject.registerClass(
 		_pollFeeds()
 		{
 			const _p0 = GLib.get_monotonic_time();
+			this._readShowAll = false;
 			this._getSettings();
 
 			if (this._maxMenuHeight != this._pMaxMenuHeight)
