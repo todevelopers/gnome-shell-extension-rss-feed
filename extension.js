@@ -591,6 +591,7 @@ const RssFeed2 = GObject.registerClass(
 
 		_pollFeeds()
 		{
+			const _p0 = GLib.get_monotonic_time();
 			this._getSettings();
 
 			if (this._maxMenuHeight != this._pMaxMenuHeight)
@@ -659,7 +660,10 @@ const RssFeed2 = GObject.registerClass(
 					this._httpGetRequestAsync(finalUrl, sourceURL, this._onDownload.bind(this));
 				}
 
+				const _p1 = GLib.get_monotonic_time();
 				this._reorderClassicSection();
+				const _p2 = GLib.get_monotonic_time();
+				console.log(`rss-feed trace [_pollFeeds]: setup=${_p1-_p0}µs reorder=${_p2-_p1}µs total=${_p2-_p0}µs`);
 			}
 
 			if (this._updateInterval > 0)
@@ -966,16 +970,17 @@ const RssFeed2 = GObject.registerClass(
 			if (this._headerSubtitle)
 				this._headerSubtitle.set_text('Updated at ' + new Date().toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' }));
 
+			const _t5 = GLib.get_monotonic_time();
+
 			if (this._layoutMode === 'minimal')
 			{
-				const _t5 = GLib.get_monotonic_time();
 				this._rebuildMinimalSection();
 				const _t6 = GLib.get_monotonic_time();
-				console.log(`rss-feed trace [${sourceURL}]: detect=${((_t1-_t0)/1e6).toFixed(3)}s parse=${((_t2-_t1)/1e6).toFixed(3)}s cache-diff=${((_t3-_t2)/1e6).toFixed(3)}s ui=${((_t4-_t3)/1e6).toFixed(3)}s minimal=${((_t6-_t5)/1e6).toFixed(3)}s total=${((_t6-_t0)/1e6).toFixed(3)}s`);
+				console.log(`rss-feed trace [${sourceURL}]: detect=${_t1-_t0}µs parse=${_t2-_t1}µs cache-diff=${_t3-_t2}µs ui=${_t4-_t3}µs post=${_t5-_t4}µs minimal=${_t6-_t5}µs total=${_t6-_t0}µs`);
 			}
 			else
 			{
-				console.log(`rss-feed trace [${sourceURL}]: detect=${((_t1-_t0)/1e6).toFixed(3)}s parse=${((_t2-_t1)/1e6).toFixed(3)}s cache-diff=${((_t3-_t2)/1e6).toFixed(3)}s ui=${((_t4-_t3)/1e6).toFixed(3)}s total=${((_t4-_t0)/1e6).toFixed(3)}s`);
+				console.log(`rss-feed trace [${sourceURL}]: detect=${_t1-_t0}µs parse=${_t2-_t1}µs cache-diff=${_t3-_t2}µs ui=${_t4-_t3}µs post=${_t5-_t4}µs total=${_t5-_t0}µs`);
 			}
 		}
 
