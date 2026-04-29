@@ -322,7 +322,24 @@ export default class RssFeedPreferences extends ExtensionPreferences
 					let parser;
 					try
 					{
-						let data = new TextDecoder().decode(bytes.toArray());
+						let rawBytes = bytes.toArray();
+						let encoding = 'utf-8';
+
+						let ctHeader = msg.get_response_headers().get_one('content-type');
+						if (ctHeader)
+						{
+							let m = ctHeader.match(/charset=([^\s;]+)/i);
+							if (m) encoding = m[1];
+						}
+
+						if (encoding === 'utf-8')
+						{
+							let prolog = new TextDecoder('latin1').decode(rawBytes.subarray(0, 200));
+							let m = prolog.match(/encoding=["']([^"']+)["']/i);
+							if (m) encoding = m[1];
+						}
+
+						let data = new TextDecoder(encoding).decode(rawBytes);
 						parser = createRssParser(data);
 					}
 					catch (e)
