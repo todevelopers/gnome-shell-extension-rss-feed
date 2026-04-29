@@ -605,7 +605,16 @@ const RssFeed2 = GObject.registerClass(
 					continue;
 				this._feedsSection.box.set_child_at_index(feedCache.Menu, pos);
 				pos++;
-				this._feedsSection.box.set_child_at_index(feedCache.Menu.menu.actor, pos);
+				let subActor = feedCache.Menu.menu.actor;
+				if (subActor.get_parent() !== this._feedsSection.box)
+				{
+					let p = subActor.get_parent();
+					if (p)
+						p.remove_child(subActor);
+					this._feedsSection.box.insert_child_at_index(subActor, pos);
+				}
+				else
+					this._feedsSection.box.set_child_at_index(subActor, pos);
 				pos++;
 			}
 		}
