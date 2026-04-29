@@ -49,6 +49,13 @@ const Encoder = getInstance();
 const NOTIFICATION_ICON = 'application-rss+xml';
 const MINIMAL_READ_INITIAL_LIMIT = 30;
 
+function _normDate(s)
+{
+	if (!s) return '';
+	let t = new Date(s).getTime();
+	return isNaN(t) ? s : String(t);
+}
+
 function _relativeTime(dateStr)
 {
 	if (!dateStr) return '';
@@ -1022,7 +1029,7 @@ const RssFeed2 = GObject.registerClass(
 					if (cacheID == item.ID)
 					{
 						if (!disableUpdates
-							&& ((item.PublishDate && cacheObj.Item.PublishDate != item.PublishDate) || cacheObj.Item.UpdateTime != item.UpdateTime))
+							&& ((item.PublishDate && _normDate(cacheObj.Item.PublishDate) != _normDate(item.PublishDate)) || _normDate(cacheObj.Item.UpdateTime) != _normDate(item.UpdateTime)))
 						{
 							item._update = true;
 						}
