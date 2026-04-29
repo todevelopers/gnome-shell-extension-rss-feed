@@ -47,7 +47,7 @@ import { RssBadgeButton } from './extensiongui/rssbadgebutton.js';
 
 const Encoder = getInstance();
 const NOTIFICATION_ICON = 'application-rss+xml';
-const MINIMAL_READ_INITIAL_LIMIT = 30;
+const MINIMAL_READ_INITIAL_LIMIT = 15;
 
 function _normDate(s)
 {
