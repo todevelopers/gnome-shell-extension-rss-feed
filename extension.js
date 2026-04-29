@@ -291,8 +291,8 @@ const RssFeed2 = GObject.registerClass(
 
 			this._createHeader();
 
-			this._feedsSection = new RssPopupMenuSection("max-height: " + this._pMaxMenuHeight + "px;");
-			this._minimalSection = new RssPopupMenuSection("max-height: " + this._pMaxMenuHeight + "px;");
+			this._feedsSection = new RssPopupMenuSection(this._generatePopupMenuCSS(this._pMaxMenuHeight));
+			this._minimalSection = new RssPopupMenuSection(this._generatePopupMenuCSS(this._pMaxMenuHeight));
 			this.menu.addMenuItem(this._feedsSection);
 			this.menu.addMenuItem(this._minimalSection);
 
@@ -706,7 +706,7 @@ const RssFeed2 = GObject.registerClass(
 
 		_generatePopupMenuCSS(value)
 		{
-			return "max-height: " + value + "px;";
+			return "min-height: 300px; max-height: " + value + "px;";
 		}
 
 		_getSettings()
