@@ -34,6 +34,9 @@ import * as GSKeys from './gskeys.js';
 import { GSAA } from './gsaa.js';
 import * as HTTP from './http.js';
 import { createRssParser } from './parsers/factory.js';
+import { getInstance } from './encoder.js';
+
+const Encoder = getInstance();
 
 const MAX_UPDATE_INTERVAL = 1440;
 const MAX_SOURCES_LIMIT = 1024;
@@ -363,16 +366,17 @@ export default class RssFeedPreferences extends ExtensionPreferences
 					row._statusLabel.add_css_class('status-ok');
 					if (!aSettings.get(url, 't'))
 					{
-						row.set_title(parser.Publisher.Title);
-						aSettings.set(url, 't', parser.Publisher.Title);
+						let feedTitle = Encoder.htmlDecode(parser.Publisher.Title);
+						row.set_title(feedTitle);
+						aSettings.set(url, 't', feedTitle);
 						if (row._titleEntry && !row._titleEntry.get_text().trim())
 						{
-							row._titleEntry.set_text(parser.Publisher.Title);
+							row._titleEntry.set_text(feedTitle);
 							row._titleDirty = false;
 						}
 					}
 					if (!aSettings.get(url, 'v'))
-						row._avatarLabel.set_label(getInitials(parser.Publisher.Title));
+						row._avatarLabel.set_label(getInitials(Encoder.htmlDecode(parser.Publisher.Title)));
 				});
 		};
 

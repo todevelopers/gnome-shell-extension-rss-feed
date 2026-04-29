@@ -186,7 +186,23 @@ const Encoder =
 		// convert HTML entites back to numerical entites first
 		d = this.HTML2Numerical(d);
 
-		// look for numerical entities &#34;
+		// look for hex numerical entities &#x2F;
+		var arrHex = d.match(/&#x[0-9a-fA-F]{1,4};/gi);
+
+		if (arrHex != null)
+		{
+			for (var x = 0; x < arrHex.length; x++)
+			{
+				m = arrHex[x];
+				c = parseInt(m.substring(3, m.length - 1), 16);
+				if (c >= 0 && c <= 65535)
+					d = d.replace(m, String.fromCharCode(c));
+				else
+					d = d.replace(m, "");
+			}
+		}
+
+		// look for decimal numerical entities &#34;
 		var arr = d.match(/&#[0-9]{1,5};/g);
 
 		// if no matches found in string then skip
