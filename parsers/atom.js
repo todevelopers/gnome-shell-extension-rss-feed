@@ -1,9 +1,7 @@
 /*
  * RSS Feed extension for GNOME Shell
  *
- * Copyright (C) 2015
- *     Tomas Gazovic <gazovic.tomasgmail.com>,
- *     Janka Gazovicova <jana.gazovicova@gmail.com>
+ * Copyright (C) 2015 - 2026
  *
  * This file is part of gnome-shell-extension-rss-feed.
  *

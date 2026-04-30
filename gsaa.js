@@ -1,7 +1,7 @@
 /*
  * RSS Feed extension for GNOME Shell
  *
- * Copyright (C) 2017
+ * Copyright (C) 2017 - 2026
  *
  * This file is part of gnome-shell-extension-rss-feed.
  *

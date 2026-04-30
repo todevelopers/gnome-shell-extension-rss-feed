@@ -1,6 +1,8 @@
 /*
  * RSS Feed extension for GNOME Shell
  *
+ * Copyright (C) 2015 - 2026
+ *
  * This file is part of gnome-shell-extension-rss-feed.
  *
  * gnome-shell-extension-rss-feed is free software: you can redistribute it and/or modify
