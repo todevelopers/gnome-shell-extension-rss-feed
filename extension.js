@@ -42,6 +42,8 @@ import { RssPopupMenuItem } from './extensiongui/rsspopupmenuitem.js';
 import { RssPopupSubMenuMenuItem } from './extensiongui/rsspopupsubmenumenuitem.js';
 import { RssPopupMenuSection } from './extensiongui/rsspopupmenusection.js';
 import { RssBadgeButton } from './extensiongui/rssbadgebutton.js';
+import { RssMinimalSectionHeader } from './extensiongui/rssminimalsectionheader.js';
+import { RssMinimalMenuItem } from './extensiongui/rssminimalmenuitem.js';
 
 const Encoder = getInstance();
 const MINIMAL_READ_INITIAL_LIMIT = 15;
@@ -52,113 +54,6 @@ function _normDate(s)
 	let t = new Date(s).getTime();
 	return isNaN(t) ? s : String(t);
 }
-
-const RssMinimalSectionHeader = GObject.registerClass(
-class RssMinimalSectionHeader extends PopupMenu.PopupBaseMenuItem
-{
-	_init(text, initialCollapsed, onToggle)
-	{
-		super._init({ style_class: 'popup-menu-item rss-minimal-section-header' });
-		this._items = [];
-		this._collapsed = !!initialCollapsed;
-		this._onToggle = onToggle;
-
-		this._label = new St.Label(
-		{
-			text,
-			x_expand: true,
-			y_align: Clutter.ActorAlign.CENTER,
-			style_class: 'rss-minimal-section-label',
-		});
-		this.add_child(this._label);
-
-		this._icon = new St.Icon(
-		{
-			icon_name: this._collapsed ? 'pan-end-symbolic' : 'pan-down-symbolic',
-			style_class: 'popup-menu-icon',
-			y_align: Clutter.ActorAlign.CENTER,
-		});
-		this.add_child(this._icon);
-
-		this.connect('destroy', () =>
-		{
-			this._destroyed = true;
-			this._items = [];
-			this._onToggle = null;
-		});
-	}
-
-	activate(_event)
-	{
-		if (this._destroyed)
-			return;
-		this.toggle();
-	}
-
-	addItem(item)
-	{
-		if (this._destroyed)
-			return;
-		this._items.push(item);
-		item.visible = !this._collapsed;
-	}
-
-	toggle()
-	{
-		if (this._destroyed)
-			return;
-		this._collapsed = !this._collapsed;
-		this._icon.icon_name = this._collapsed ? 'pan-end-symbolic' : 'pan-down-symbolic';
-		for (let item of this._items)
-		{
-			if (item && !item._destroyed)
-				item.visible = !this._collapsed;
-		}
-		if (this._onToggle)
-			this._onToggle(this._collapsed);
-	}
-});
-
-const RssMinimalMenuItem = GObject.registerClass(
-class RssMinimalMenuItem extends PopupMenu.PopupBaseMenuItem
-{
-	_init(cacheObj, feedTitle, onRead)
-	{
-		super._init();
-		this._cacheObj = cacheObj;
-		let item = cacheObj.Item;
-
-		let contentBox = new St.BoxLayout({ vertical: true, x_expand: true });
-		this._titleLabel = new St.Label({ text: item.Title });
-		this._titleLabel.add_style_class_name(cacheObj.Unread ? 'rss-article-unread' : 'rss-article-read');
-		contentBox.add_child(this._titleLabel);
-
-		let metaBox = new St.BoxLayout({ style: 'spacing: 6px;' });
-		metaBox.add_child(new St.Label({ text: feedTitle, style_class: 'rss-source-tag' }));
-		metaBox.add_child(new St.Label({ text: Misc.relativeTime(item.PublishDate), style_class: 'rss-article-time' }));
-		contentBox.add_child(metaBox);
-		this.add_child(contentBox);
-
-		this.connect('activate', (self, event) =>
-		{
-			if (event.type() == Clutter.EventType.BUTTON_RELEASE
-				&& event.get_button() == Clutter.BUTTON_SECONDARY)
-			{
-				St.Clipboard.get_default().set_text(St.ClipboardType.CLIPBOARD, item.HttpLink);
-			}
-			else
-			{
-				Misc.processLinkOpen(item.HttpLink, cacheObj);
-				onRead();
-			}
-		});
-
-		this.connect('destroy', () =>
-		{
-			this._destroyed = true;
-		});
-	}
-});
 
 const RssFeed2 = GObject.registerClass(
 	class RssFeed2 extends PanelMenu.Button
