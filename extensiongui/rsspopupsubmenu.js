@@ -19,6 +19,7 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import Clutter from 'gi://Clutter';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 export class RssPopupSubMenu extends PopupMenu.PopupSubMenu
@@ -27,11 +28,36 @@ export class RssPopupSubMenu extends PopupMenu.PopupSubMenu
 	{
 		super(sourceActor, sourceArrow);
 
-		this.box.connect('scroll-event', (actor, event) =>
+		this.box.connect('scroll-event', (_actor, event) =>
 		{
-			let adj = this._parent.actor ? this._parent.actor.vadjustment : this._parent.vadjustment;
-			if (adj)
-				adj.emit('scroll-event', event);
+			let scrollView = this._parent ? this._parent.actor : null;
+			if (!scrollView) return Clutter.EVENT_PROPAGATE;
+			let adj = scrollView.vadjustment;
+			if (!adj) return Clutter.EVENT_PROPAGATE;
+
+			let direction = event.get_scroll_direction();
+			let step = adj.step_increment || 40;
+
+			if (direction === Clutter.ScrollDirection.SMOOTH)
+			{
+				let [, dy] = event.get_scroll_delta();
+				adj.value = Math.max(adj.lower,
+					Math.min(adj.upper - adj.page_size, adj.value + dy * step));
+			}
+			else if (direction === Clutter.ScrollDirection.UP)
+			{
+				adj.value = Math.max(adj.lower, adj.value - step);
+			}
+			else if (direction === Clutter.ScrollDirection.DOWN)
+			{
+				adj.value = Math.min(adj.upper - adj.page_size, adj.value + step);
+			}
+			else
+			{
+				return Clutter.EVENT_PROPAGATE;
+			}
+
+			return Clutter.EVENT_STOP;
 		});
 	}
 
