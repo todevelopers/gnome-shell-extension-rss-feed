@@ -28,11 +28,11 @@ export class RssPopupSubMenu extends PopupMenu.PopupSubMenu
 	{
 		super(sourceActor, sourceArrow);
 
-		this.box.connect('scroll-event', (_actor, event) =>
+		this.actor.connect('scroll-event', (_actor, event) =>
 		{
-			let scrollView = this._parent ? this._parent.actor : null;
-			if (!scrollView) return Clutter.EVENT_PROPAGATE;
-			let adj = scrollView.vadjustment;
+			let outerScrollView = this._parent ? this._parent.actor : null;
+			if (!outerScrollView) return Clutter.EVENT_PROPAGATE;
+			let adj = outerScrollView.vadjustment;
 			if (!adj) return Clutter.EVENT_PROPAGATE;
 
 			let direction = event.get_scroll_direction();
