@@ -55,12 +55,12 @@ function _normDate(s)
 	return isNaN(t) ? s : String(t);
 }
 
-const RssFeed2 = GObject.registerClass(
-	class RssFeed2 extends PanelMenu.Button
+const RssFeedButton = GObject.registerClass(
+	class RssFeedButton extends PanelMenu.Button
 	{
 		_init(settings, extension)
 		{
-			super._init(0.0, "RSS Feed 2");
+			super._init(0.0, "RSS Feed");
 
 			this._settings = settings;
 			this._extension = extension;
@@ -1121,9 +1121,9 @@ export default class RssFeedExtension extends Extension
 	enable()
 	{
 		let settings = this.getSettings();
-		this._indicator = new RssFeed2(settings, this);
+		this._indicator = new RssFeedButton(settings, this);
 		this._indicator._pollFeeds();
-		Main.panel.addToStatusArea('rssFeed2Menu', this._indicator, 0, 'right');
+		Main.panel.addToStatusArea('rssFeedMenu', this._indicator, 0, 'right');
 		console.debug("rss-feed: Extension enabled.");
 	}
 
