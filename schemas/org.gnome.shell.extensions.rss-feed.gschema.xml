@@ -47,11 +47,6 @@
 		    <summary>RSS feeds settings</summary>
 		    <description></description>
 		</key>
-<key type="b" name="http-keep-alive">
-		    <default>true</default>
-		    <summary>HTTP Keep-Alive</summary>
-		    <description>Set Keep-Alive in HTTP request headers</description>
-		</key>
 		<key type="s" name="layout-mode">
 		    <default>'classic'</default>
 		    <summary>Popup layout mode</summary>

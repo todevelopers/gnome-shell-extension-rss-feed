@@ -610,7 +610,6 @@ const RssFeedButton = GObject.registerClass(
 			this._maxMenuHeight = this._settings.get_int(GSKeys.MAX_HEIGHT);
 			this._notifLimit = this._settings.get_int(GSKeys.MAX_NOTIFICATIONS);
 			this._notifOnLockScreen = this._settings.get_boolean(GSKeys.NOTIFICATIONS_ON_LOCKSCREEN);
-			this._http_keepalive = this._settings.get_boolean(GSKeys.HTTP_KEEPALIVE);
 			this._markInitialAsNew = this._settings.get_boolean(GSKeys.MARK_INITIAL_AS_NEW);
 
 			this._aSettings.load();
@@ -729,9 +728,6 @@ const RssFeedButton = GObject.registerClass(
 
 			message.get_request_headers().replace("User-Agent",
 			"Mozilla/5.0 (compatible; gnome-shell-extension-rss-feed/1.0; +https://github.com/todevelopers/gnome-shell-extension-rss-feed)");
-
-			if (!this._http_keepalive)
-				message.get_request_headers().replace("Connection", "close");
 
 			let cancellable = this._cancellable;
 

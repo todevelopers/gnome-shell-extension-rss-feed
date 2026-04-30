@@ -7,6 +7,5 @@ export const MAX_NOTIFICATIONS = 'notification-limit';
 export const NOTIFICATIONS_ON_LOCKSCREEN = 'enable-notifications-locked';
 export const CLEANUP_NOTIFICATIONS = 'notifications-cleanup';
 export const RSS_FEEDS_SETTINGS = 'rss-feeds-settings';
-export const HTTP_KEEPALIVE = 'http-keep-alive';
 export const LAYOUT_MODE = 'layout-mode';
 export const MARK_INITIAL_AS_NEW = 'mark-initial-as-new';
