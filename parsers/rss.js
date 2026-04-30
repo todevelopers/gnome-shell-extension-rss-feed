@@ -29,7 +29,6 @@ export class RssParser extends BaseParser
 	{
 		super(root);
 		this._type = "RSS 2.0";
-		console.debug("rss-feed: RSS 2.0 parser");
 	}
 
 	parse()

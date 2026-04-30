@@ -26,10 +26,10 @@ export class GSAA
 		this.autoload = false;
 
 		if (!settings)
-			throw "GSAA: missing settings";
+			throw new Error("GSAA: missing settings");
 
 		if (!key)
-			throw "GSAA: missing key";
+			throw new Error("GSAA: missing key");
 
 		this._settings = settings;
 		this._gsKey = key;
@@ -48,7 +48,7 @@ export class GSAA
 		let data = this._settings.get_string(this._gsKey);
 
 		if (!data)
-			throw "GSAA.load: could not read data (" + this._gsKey + ")";
+			throw new Error("GSAA.load: could not read data (" + this._gsKey + ")");
 
 		this._gsData = JSON.parse(data);
 

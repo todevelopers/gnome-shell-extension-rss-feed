@@ -29,7 +29,6 @@ export class AtomParser extends BaseParser
 	{
 		super(root);
 		this._type = "Atom";
-		console.debug("rss-feed: Atom parser");
 	}
 
 	parse()

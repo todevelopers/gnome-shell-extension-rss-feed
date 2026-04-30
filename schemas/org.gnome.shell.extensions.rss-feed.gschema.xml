@@ -37,11 +37,6 @@
 		    <summary>Clean notifications on disable</summary>
 		    <description>Clean notifications on plugin disabled.</description>
 		</key>
-<key type="b" name="enable-descriptions">
-		    <default>false</default>
-		    <summary>Show descriptions</summary>
-		    <description>Show description received from RSS feed when selecting an article.</description>
-		</key>
 		<key type="as" name="rss-feeds-list">
 		    <default>[]</default>
 		    <summary>RSS feeds</summary>

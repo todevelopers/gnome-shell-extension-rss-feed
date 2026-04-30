@@ -27,20 +27,6 @@ import St from 'gi://St';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import * as Misc from '../misc.js';
 
-function _relativeTime(dateStr)
-{
-	if (!dateStr) return '';
-	try
-	{
-		let diff = (Date.now() - new Date(dateStr).getTime()) / 60000;
-		if (diff < 60) return Math.round(Math.max(1, diff)) + 'm';
-		if (diff < 1440) return Math.round(diff / 60) + 'h';
-		if (diff < 20160) return Math.round(diff / 1440) + 'd';
-		return Math.round(diff / 10080) + 'w';
-	}
-	catch (_) { return ''; }
-}
-
 export const RssPopupMenuItem = GObject.registerClass(
 class RssPopupMenuItem extends PopupMenu.PopupMenuItem
 {
@@ -57,7 +43,7 @@ class RssPopupMenuItem extends PopupMenu.PopupMenuItem
 
 		this._timeLabel = new St.Label(
 		{
-			text: _relativeTime(item.PublishDate),
+			text: Misc.relativeTime(item.PublishDate),
 			style_class: 'rss-article-time',
 			y_align: Clutter.ActorAlign.CENTER,
 			x_align: Clutter.ActorAlign.END,
@@ -71,13 +57,10 @@ class RssPopupMenuItem extends PopupMenu.PopupMenuItem
 			if (event.type() == Clutter.EventType.BUTTON_RELEASE
 				&& event.get_button() == Clutter.BUTTON_SECONDARY)
 			{
-				console.debug("rss-feed: Copied link to clipboard: " + this._link);
 				St.Clipboard.get_default().set_text(St.ClipboardType.CLIPBOARD, this._link);
 			}
 			else
 			{
-				console.debug("rss-feed: Opening browser with link: " + this._link);
-
 				if (Misc.processLinkOpen(this._link, this._cacheObj))
 				{
 					if (this._cacheObj.Notification)

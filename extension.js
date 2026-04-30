@@ -56,20 +56,6 @@ function _normDate(s)
 	return isNaN(t) ? s : String(t);
 }
 
-function _relativeTime(dateStr)
-{
-	if (!dateStr) return '';
-	try
-	{
-		let diff = (Date.now() - new Date(dateStr).getTime()) / 60000;
-		if (diff < 60) return Math.round(Math.max(1, diff)) + 'm';
-		if (diff < 1440) return Math.round(diff / 60) + 'h';
-		if (diff < 20160) return Math.round(diff / 1440) + 'd';
-		return Math.round(diff / 10080) + 'w';
-	}
-	catch (_) { return ''; }
-}
-
 const RssMinimalSectionHeader = GObject.registerClass(
 class RssMinimalSectionHeader extends PopupMenu.PopupBaseMenuItem
 {
@@ -152,7 +138,7 @@ class RssMinimalMenuItem extends PopupMenu.PopupBaseMenuItem
 
 		let metaBox = new St.BoxLayout({ style: 'spacing: 6px;' });
 		metaBox.add_child(new St.Label({ text: feedTitle, style_class: 'rss-source-tag' }));
-		metaBox.add_child(new St.Label({ text: _relativeTime(item.PublishDate), style_class: 'rss-article-time' }));
+		metaBox.add_child(new St.Label({ text: Misc.relativeTime(item.PublishDate), style_class: 'rss-article-time' }));
 		contentBox.add_child(metaBox);
 		this.add_child(contentBox);
 
@@ -549,10 +535,7 @@ const RssFeed2 = GObject.registerClass(
 				return;
 			this._minimalDirty = false;
 
-			const _t0 = GLib.get_monotonic_time();
 			this._rebuildMinimalSection();
-			const _t1 = GLib.get_monotonic_time();
-			console.log(`rss-feed trace [_minimalRebuild]: total=${_t1-_t0}µs`);
 		}
 
 		_activateConfirm(badge)
@@ -654,9 +637,6 @@ const RssFeed2 = GObject.registerClass(
 
 			if (this._timeout)
 				GLib.source_remove(this._timeout);
-
-			if (this._settingsCWId)
-				GLib.source_remove(this._settingsCWId);
 
 			if (this._minimalRebuildId)
 			{
@@ -767,7 +747,6 @@ const RssFeed2 = GObject.registerClass(
 				feedCache.Menu.destroy();
 
 			delete this._feedsCache[key];
-			this._feedsCache[key] = undefined;
 
 			if (this._layoutMode === 'minimal')
 				this._markMinimalDirty();
@@ -775,7 +754,6 @@ const RssFeed2 = GObject.registerClass(
 
 		_pollFeeds()
 		{
-			const _p0 = GLib.get_monotonic_time();
 			this._readShowAll = false;
 			this._getSettings();
 
@@ -786,8 +764,6 @@ const RssFeed2 = GObject.registerClass(
 			}
 
 			this._pMaxMenuHeight = this._maxMenuHeight;
-
-			console.debug("rss-feed: Reload RSS Feeds");
 
 			if (this._timeout)
 				GLib.source_remove(this._timeout);
@@ -807,22 +783,10 @@ const RssFeed2 = GObject.registerClass(
 
 				this._pItemsVisible = this._itemsVisible;
 
-				for (var key in this._feedsCache)
+				let live = new Set(this._rssFeedsSources);
+				for (let key in this._feedsCache)
 				{
-					let h = false;
-
-					for (let j = 0; j < this._rssFeedsSources.length; j++)
-					{
-						let url = this._rssFeedsSources[j];
-
-						if (key == url)
-						{
-							h = true;
-							break;
-						}
-					}
-
-					if (!h)
+					if (!live.has(key))
 						this._purgeSource(key);
 				}
 
@@ -845,15 +809,11 @@ const RssFeed2 = GObject.registerClass(
 					this._httpGetRequestAsync(finalUrl, sourceURL, this._onDownload.bind(this));
 				}
 
-				const _p1 = GLib.get_monotonic_time();
 				this._reorderClassicSection();
-				const _p2 = GLib.get_monotonic_time();
-				console.log(`rss-feed trace [_pollFeeds]: setup=${_p1-_p0}µs reorder=${_p2-_p1}µs total=${_p2-_p0}µs`);
 			}
 
 			if (this._updateInterval > 0)
 			{
-				console.debug("rss-feed: Next scheduled reload after " + this._updateInterval * 60 + " seconds");
 				this._timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT,
 					this._updateInterval * 60,
 					() =>
@@ -871,7 +831,7 @@ const RssFeed2 = GObject.registerClass(
 
 			if (!message)
 			{
-				console.debug("rss-feed: Soup.Message.new returned null for URL '" + url + "'");
+				console.warn("rss-feed: Soup.Message.new returned null for URL '" + url + "'");
 				return;
 			}
 
@@ -904,11 +864,9 @@ const RssFeed2 = GObject.registerClass(
 
 					if (!(status >= 200 && status < 300))
 					{
-						console.debug("rss-feed: HTTP GET " + sourceURL + ": " + status + " " + statusPhrase);
+						console.warn("rss-feed: HTTP GET " + sourceURL + ": " + status + " " + statusPhrase);
 						return;
 					}
-
-					console.debug("rss-feed: HTTP GET " + sourceURL + ": " + status + " " + statusPhrase);
 
 					if (bytes)
 					{
@@ -938,9 +896,7 @@ const RssFeed2 = GObject.registerClass(
 
 		_onDownload(responseData, sourceURL)
 		{
-			const _t0 = GLib.get_monotonic_time();
 			let rssParser = createRssParser(responseData);
-			const _t1 = GLib.get_monotonic_time();
 
 			if (rssParser == null)
 			{
@@ -949,7 +905,6 @@ const RssFeed2 = GObject.registerClass(
 			}
 
 			rssParser.parse();
-			const _t2 = GLib.get_monotonic_time();
 
 			let nItems = rssParser.Items.length > this._itemsVisible ? this._itemsVisible
 				: rssParser.Items.length;
@@ -1083,12 +1038,10 @@ const RssFeed2 = GObject.registerClass(
 					}
 
 					delete itemCache[cacheID];
-					itemCache[cacheID] = undefined;
 					itemCache.splice(i, 1);
 				}
 			}
 
-			const _t3 = GLib.get_monotonic_time();
 			i = nItems;
 
 			while (i--)
@@ -1154,10 +1107,7 @@ const RssFeed2 = GObject.registerClass(
 				}
 			}
 
-			const _t4 = GLib.get_monotonic_time();
-
-			if (!feedCache._initialRefresh)
-				feedCache._initialRefresh = true;
+			feedCache._initialRefresh = true;
 
 			let unreadIds = [];
 			for (let k = 0; k < itemCache.length; k++)
@@ -1182,12 +1132,8 @@ const RssFeed2 = GObject.registerClass(
 			if (this._headerSubtitle)
 				this._headerSubtitle.set_text('Updated at ' + new Date().toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' }));
 
-			const _t5 = GLib.get_monotonic_time();
-
 			if (this._layoutMode === 'minimal')
 				this._markMinimalDirty();
-
-			console.log(`rss-feed trace [${sourceURL}]: detect=${_t1-_t0}µs parse=${_t2-_t1}µs cache-diff=${_t3-_t2}µs ui=${_t4-_t3}µs post=${_t5-_t4}µs total=${_t5-_t0}µs`);
 		}
 
 		_dispatchNotification(feedTitle, title, message, url, cacheObj)

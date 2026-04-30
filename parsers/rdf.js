@@ -29,7 +29,6 @@ export class RdfParser extends BaseParser
 	{
 		super(root);
 		this._type = "RSS 1.0";
-		console.debug("rss-feed: RSS 1.0 parser");
 	}
 
 	parse()

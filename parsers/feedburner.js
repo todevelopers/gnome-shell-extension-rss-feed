@@ -29,7 +29,6 @@ export class FeedburnerParser extends BaseParser
 	{
 		super(root);
 		this._type = "Feedburner";
-		console.debug("rss-feed: Feedburner parser");
 	}
 
 	parse()
