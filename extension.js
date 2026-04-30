@@ -562,6 +562,17 @@ const RssFeed2 = GObject.registerClass(
 			this._activeConfirm = badge;
 		}
 
+		_scrollFeedSectionTo(menuItem)
+		{
+			let scrollView = this._feedsSection.actor;
+			let adj = scrollView.vadjustment;
+			if (!adj) return;
+			let [, itemGlobalY] = menuItem.get_transformed_position();
+			let [, scrollGlobalY] = scrollView.get_transformed_position();
+			let targetY = itemGlobalY - scrollGlobalY + adj.value;
+			adj.value = Math.max(0, Math.min(targetY, adj.upper - adj.page_size));
+		}
+
 		_markFeedAsSeen(feedCache)
 		{
 			if (!feedCache)
@@ -990,7 +1001,15 @@ const RssFeed2 = GObject.registerClass(
 				subMenu.menu.connect('open-state-changed', (self, open) =>
 				{
 					if (open)
+					{
 						this._lastOpen = self;
+						GLib.idle_add(GLib.PRIORITY_DEFAULT, () =>
+						{
+							if (!this._isDiscarded)
+								this._scrollFeedSectionTo(subMenu);
+							return GLib.SOURCE_REMOVE;
+						});
+					}
 					else if (this.menu.isOpen && this._lastOpen == self)
 						this._lastOpen = undefined;
 				});

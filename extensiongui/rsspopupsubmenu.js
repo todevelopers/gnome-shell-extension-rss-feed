@@ -37,6 +37,6 @@ export class RssPopupSubMenu extends PopupMenu.PopupSubMenu
 
 	_needsScrollbar(_o)
 	{
-		return true;
+		return false;
 	}
 }
