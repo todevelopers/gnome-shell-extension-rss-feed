@@ -44,7 +44,6 @@ import { RssPopupMenuSection } from './extensiongui/rsspopupmenusection.js';
 import { RssBadgeButton } from './extensiongui/rssbadgebutton.js';
 
 const Encoder = getInstance();
-const NOTIFICATION_ICON = 'application-rss+xml';
 const MINIMAL_READ_INITIAL_LIMIT = 15;
 
 function _normDate(s)
@@ -1142,7 +1141,7 @@ const RssFeed2 = GObject.registerClass(
 			let source = new MessageTray.Source(
 			{
 				title : feedTitle,
-				icon : new Gio.ThemedIcon({ name : NOTIFICATION_ICON }),
+				icon : new Gio.ThemedIcon({ name : 'application-rss+xml' }),
 			});
 
 			Main.messageTray.add(source);
