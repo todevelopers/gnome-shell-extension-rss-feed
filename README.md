@@ -36,6 +36,21 @@ https://github.com/user-attachments/assets/e5ef8e0b-430c-4573-9138-17b900cd8596
 
 ---
 
+## Installation
+
+1. Download `rss-feed@gnome-shell-extension.todevelopers.github.com.zip` from the [latest release](https://github.com/todevelopers/gnome-shell-extension-rss-feed/releases/latest)
+2. Install it with:
+   ```
+   gnome-extensions install rss-feed@gnome-shell-extension.todevelopers.github.com.zip
+   ```
+3. Restart GNOME Shell (`Alt+F2` → `r` → `Enter`, or log out and back in)
+4. Enable the extension in GNOME Extensions app or with:
+   ```
+   gnome-extensions enable rss-feed@gnome-shell-extension.todevelopers.github.com
+   ```
+
+---
+
 ## Thank You
 
 This project has been kept alive by the contributions of many people over the years. A big thank you to everyone who submitted patches, reported bugs, and helped maintain the extension:
