@@ -34,6 +34,12 @@ https://github.com/user-attachments/assets/e5ef8e0b-430c-4573-9138-17b900cd8596
 
 ---
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for the full version history.
+
+---
+
 ## Thank You
 
 This project has been kept alive by the contributions of many people over the years. A big thank you to everyone who submitted patches, reported bugs, and helped maintain the extension:

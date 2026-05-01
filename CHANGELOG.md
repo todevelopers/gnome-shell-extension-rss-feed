@@ -1,5 +1,31 @@
 ## Changelog
 
+### v7 (01.05.2026)
+
+*Complete rewrite for modern GNOME*
+
+* main feature: Ported to GNOME 46+ — updated to GJS ES module system and current Shell APIs
+* feature: Supports GNOME Shell 46, 47, 48, 49, and 50
+* main feature: Fully redesigned UI built from scratch for the modern GNOME desktop
+* main feature: Two layout modes selectable from preferences:
+  * Classic — per-feed submenus with feed avatars and unread count pills
+  * Minimal — single chronological list mixing all sources
+* feature: Panel indicator — shows a dot when there are unread articles
+* feature: Relative timestamps on every article (2m, 4h, 3d, 2w)
+* feature: Mark as read via two-step confirmation button — no accidental clicks
+* feature: Show all / collapse sections for read articles
+* feature: Native GNOME notifications redesigned — optional lock screen delivery
+* feature: Closes the system tray panel when opening an article link
+* feature: Preferences redesigned — sources page, notifications page, layout selector
+* feature: Feed sources — add, remove, inline edit, and drag-and-drop reordering
+* feature: Configurable initial unread state for articles on first load
+* feature: Added `User-Agent` header to feed requests
+* bugfix: Fixed text encoding and HTML entity handling in feed content
+* bugfix: Fixed settings persistence across sessions
+* feature: Added unit tests (vitest) and CI workflow (ESLint, shexli, vitest)
+
+---
+
 ### v2.0 (03.03.2017)
 
 *Major rework*
