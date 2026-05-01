@@ -4,11 +4,6 @@
 [![shexli](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tommy-gun/87195eb23e76eae80cd14a6d80e56072/raw/shexli.json&cacheSeconds=0)](https://github.com/todevelopers/gnome-shell-extension-rss-feed/actions/workflows/ci.yml?query=branch%3Amaster)
 [![vitest](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tommy-gun/87195eb23e76eae80cd14a6d80e56072/raw/vitest.json&cacheSeconds=0)](https://github.com/todevelopers/gnome-shell-extension-rss-feed/actions/workflows/ci.yml?query=branch%3Amaster)
 
-> **Work in progress** — A new version for the current GNOME release is in active development,
-> with a fully redesigned UI. The preview above shows the current state.
-
----
-
 ## Preview
 
 <img width="3044" height="2633" alt="RSS Feed Banner - Copy" src="https://github.com/user-attachments/assets/11a5d97b-7717-4d69-b873-fc5be2ce400e" />
