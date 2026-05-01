@@ -14,16 +14,16 @@ A modern GNOME Shell extension for following your favorite feeds right from the 
 
 ## What it does
 
-Keeps your RSS feeds one click away — right in the GNOME status panel.
+Keeps your RSS feeds one click away - right in the GNOME status panel.
 
-- **Fully redesigned UI** — built from scratch for modern GNOME desktop
+- **Fully redesigned UI** - built from scratch for modern GNOME desktop
 - **Panel badge** shows a notification when you have unread articles
-- **Two layout modes** — Classic, per-feed submenus, or Minimal, a single chronological list mixing all sources
+- **Two layout modes** - Classic, per-feed submenus, or Minimal, a single chronological list mixing all sources
 - **Relative timestamps** on every article (2m, 4h, 3d) so you always know how fresh it is
-- **Mark as read** with a two-step confirmation button — no accidental clicks
+- **Mark as read** with a two-step confirmation button - no accidental clicks
 - **Native desktop notifications** for new articles, with optional lock screen delivery
-- **Full feed sources management** in preferences — add, remove, edit, and **Drag-and-drop** reordering of feed sources
-- Supports **RSS, Atom, RDF, and FeedBurner** — format is auto-detected
+- **Full feed sources management** in preferences - add, remove, edit, and **Drag-and-drop** reordering of feed sources
+- Supports **RSS, Atom, RDF, and FeedBurner** - format is auto-detected
 - Configurable **refresh intervals** and article limits
 
 *See [CHANGELOG.md](CHANGELOG.md) for the detailed version description and full history.*
