@@ -1,6 +1,5 @@
 <p align="center">
   <img width="64" height="64" src="https://github.com/user-attachments/assets/66743a26-2dfa-447a-920c-3efe6647b2a1" alt="rss-icon-card">
- 
 </p>
 
 # RSS Feed - GNOME Shell Extension
@@ -9,11 +8,7 @@
 [![shexli](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tommy-gun/87195eb23e76eae80cd14a6d80e56072/raw/shexli.json&cacheSeconds=0)](https://github.com/todevelopers/gnome-shell-extension-rss-feed/actions/workflows/ci.yml?query=branch%3Amaster)
 [![vitest](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tommy-gun/87195eb23e76eae80cd14a6d80e56072/raw/vitest.json&cacheSeconds=0)](https://github.com/todevelopers/gnome-shell-extension-rss-feed/actions/workflows/ci.yml?query=branch%3Amaster)
 
-## Preview
-
-<img width="3044" height="2633" alt="RSS Feed Banner - Copy" src="https://github.com/user-attachments/assets/11a5d97b-7717-4d69-b873-fc5be2ce400e" />
-
-https://github.com/user-attachments/assets/e5ef8e0b-430c-4573-9138-17b900cd8596
+A modern GNOME Shell extension for following your favorite feeds right from the notification bar. Featuring two layout modes, notifications, and a fully editable list of RSS, Atom, and RDF sources.
 
 ---
 
@@ -30,6 +25,12 @@ Keeps your RSS feeds one click away — right in the GNOME status panel.
 - **Full feed sources management** in preferences — add, remove, edit, and **Drag-and-drop** reordering of feed sources
 - Supports **RSS, Atom, RDF, and FeedBurner** — format is auto-detected
 - Configurable **refresh intervals** and article limits
+
+---
+
+<img width="3044" height="2633" alt="RSS Feed Banner - Copy" src="https://github.com/user-attachments/assets/11a5d97b-7717-4d69-b873-fc5be2ce400e" />
+
+https://github.com/user-attachments/assets/e5ef8e0b-430c-4573-9138-17b900cd8596
 
 ---
 
