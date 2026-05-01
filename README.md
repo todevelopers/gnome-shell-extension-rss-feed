@@ -26,17 +26,13 @@ Keeps your RSS feeds one click away — right in the GNOME status panel.
 - Supports **RSS, Atom, RDF, and FeedBurner** — format is auto-detected
 - Configurable **refresh intervals** and article limits
 
+*See [CHANGELOG.md](CHANGELOG.md) for the detailed version description and full history.*
+
 ---
 
 <img width="3044" height="2633" alt="RSS Feed Banner - Copy" src="https://github.com/user-attachments/assets/11a5d97b-7717-4d69-b873-fc5be2ce400e" />
 
 https://github.com/user-attachments/assets/e5ef8e0b-430c-4573-9138-17b900cd8596
-
----
-
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
 ---
 
