@@ -9,6 +9,7 @@ assignees: ''
 
 ## Environment
  
+|  |  |
 |---|---|
 | **GNOME version** | |
 | **Extension version** | |
