@@ -53,7 +53,7 @@ export function createRssParser(rawXml)
 	}
 	catch (e)
 	{
-		console.error('rss-feed: parser error: ' + e);
+		console.error('[rss-feed] parser error: ' + e);
 	}
 
 	return null;

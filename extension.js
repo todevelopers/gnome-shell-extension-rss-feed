@@ -722,7 +722,7 @@ const RssFeedButton = GObject.registerClass(
 
 			if (!message)
 			{
-				console.warn("rss-feed: Soup.Message.new returned null for URL '" + url + "'");
+				console.warn("[rss-feed] Soup.Message.new returned null for URL '" + url + "'");
 				return;
 			}
 
@@ -743,7 +743,7 @@ const RssFeedButton = GObject.registerClass(
 					{
 						if (e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
 							return;
-						console.error("rss-feed: HTTP GET " + sourceURL + ": " + e);
+						console.error("[rss-feed] HTTP GET " + sourceURL + ": " + e);
 						return;
 					}
 
@@ -752,7 +752,7 @@ const RssFeedButton = GObject.registerClass(
 
 					if (!(status >= 200 && status < 300))
 					{
-						console.warn("rss-feed: HTTP GET " + sourceURL + ": " + status + " " + statusPhrase);
+						console.warn("[rss-feed] HTTP GET " + sourceURL + ": " + status + " " + statusPhrase);
 						return;
 					}
 
@@ -1120,7 +1120,7 @@ export default class RssFeedExtension extends Extension
 		this._indicator = new RssFeedButton(settings, this);
 		this._indicator._pollFeeds();
 		Main.panel.addToStatusArea('rssFeedMenu', this._indicator, 0, 'right');
-		console.debug("rss-feed: Extension enabled.");
+		console.debug("[rss-feed] Extension enabled.");
 	}
 
 	disable()
@@ -1128,6 +1128,6 @@ export default class RssFeedExtension extends Extension
 		// unlock-dialog: stays active on lock screen to dispatch RSS notifications when notifications-on-lockscreen is enabled
 		this._indicator?.destroy();
 		this._indicator = null;
-		console.debug("rss-feed: Extension disabled.");
+		console.debug("[rss-feed] Extension disabled.");
 	}
 }

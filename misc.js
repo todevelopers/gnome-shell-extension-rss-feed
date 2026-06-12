@@ -37,7 +37,7 @@ export function processLinkOpen(url, cacheObj)
 	}
 	catch (err)
 	{
-		console.error('rss-feed: failed to open URL: ' + err);
+		console.error('[rss-feed] failed to open URL: ' + err);
 		return false;
 	}
 
