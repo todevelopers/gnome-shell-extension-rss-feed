@@ -11,5 +11,8 @@
 	"name": "RSS Feed",
 	"description": "RSS feed reader for GNOME Shell",
 	"url": "https://github.com/todevelopers/gnome-shell-extension-rss-feed",
+	"donations": {
+		"kofi": "tommygunx89"
+	},
 	"session-modes": ["user", "unlock-dialog"]
 }
