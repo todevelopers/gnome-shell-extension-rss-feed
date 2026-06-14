@@ -730,6 +730,7 @@ const RssFeedButton = GObject.registerClass(
 				return;
 			}
 
+			// some feeds reject libsoup's default User-Agent; identify the extension honestly
 			message.get_request_headers().replace("User-Agent",
 			"Mozilla/5.0 (compatible; gnome-shell-extension-rss-feed/1.0; +https://github.com/todevelopers/gnome-shell-extension-rss-feed)");
 
@@ -850,6 +851,7 @@ const RssFeedButton = GObject.registerClass(
 					if (open)
 					{
 						this._lastOpen = self;
+						// defer the scroll to idle so it runs after the submenu has been laid out
 						if (this._scrollIdleId)
 							GLib.source_remove(this._scrollIdleId);
 						this._scrollIdleId = GLib.idle_add(GLib.PRIORITY_DEFAULT, () =>
@@ -1082,6 +1084,7 @@ const RssFeedButton = GObject.registerClass(
 				St.Clipboard.get_default().set_text(St.ClipboardType.CLIPBOARD,
 					notification._itemURL);
 
+				// dismiss the banner still showing this notification so it doesn't linger after the URL is copied
 				if (Main.messageTray._banner)
 					Main.messageTray._banner.emit('done-displaying');
 			});
@@ -1131,7 +1134,7 @@ export default class RssFeedExtension extends Extension
 
 	disable()
 	{
-		// unlock-dialog: stays active on lock screen to dispatch RSS notifications when notifications-on-lockscreen is enabled
+		// unlock-dialog: stays active on the lock screen only to dispatch RSS notifications when notifications-on-lockscreen is enabled; no keyboard input is captured while locked (the panel menu cannot open in unlock-dialog)
 		this._indicator?.destroy();
 		this._indicator = null;
 		console.debug("[rss-feed] Extension disabled.");
