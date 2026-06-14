@@ -598,7 +598,7 @@ const RssFeedButton = GObject.registerClass(
 
 		_generatePopupMenuCSS(value)
 		{
-			return "min-height: 300px; max-height: " + value + "px;";
+			return "max-height: " + value + "px;";
 		}
 
 		_getSettings()
