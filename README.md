@@ -35,9 +35,7 @@ Keeps your RSS feeds one click away - right in the GNOME status panel.
 ## Gallery
 
 <p align="center">
-  <picture>
-    <img width="1600" height="900" alt="Screencast From 2026-05-04 17-55-05" src="https://github.com/user-attachments/assets/e80fd38f-5757-4dec-9d4b-90cb6a970d20" />
-  </picture>
+  <img width="1600" height="900" alt="Screencast From 2026-05-04 17-55-05" src="https://github.com/user-attachments/assets/e80fd38f-5757-4dec-9d4b-90cb6a970d20" />
 </p>
 
 <details>
@@ -87,6 +85,6 @@ Your work is what kept this project going.
 
 ## Support
 
-If you find RSS Feed useful, consider supporting it on Ko-fi.
+If you like RSS Feed reader directly in your shell, consider supporting it on Ko-fi.
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/tommygunx89)
