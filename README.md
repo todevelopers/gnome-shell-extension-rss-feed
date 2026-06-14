@@ -35,7 +35,7 @@ Keeps your RSS feeds one click away - right in the GNOME status panel.
 ## Gallery
 
 <p align="center">
-  <img width="1600" height="900" alt="Screencast From 2026-05-04 17-55-05" src="https://github.com/user-attachments/assets/e80fd38f-5757-4dec-9d4b-90cb6a970d20" />
+  <img width="1600" height="900" alt="rss-feed-v7" src="https://github.com/user-attachments/assets/d7f14b6c-f02b-4f19-b640-727f9c5e9972" />
 </p>
 
 <details>
