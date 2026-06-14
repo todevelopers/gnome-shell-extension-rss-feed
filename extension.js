@@ -507,8 +507,6 @@ const RssFeedButton = GObject.registerClass(
 
 		destroy()
 		{
-			this._isDiscarded = true;
-
 			this._httpSession.abort();
 			this._cancellable.cancel();
 
@@ -534,6 +532,12 @@ const RssFeedButton = GObject.registerClass(
 			{
 				GLib.source_remove(this._minimalRebuildId);
 				this._minimalRebuildId = 0;
+			}
+
+			if (this._scrollIdleId)
+			{
+				GLib.source_remove(this._scrollIdleId);
+				this._scrollIdleId = 0;
 			}
 
 			if (this._settings.get_boolean(GSKeys.CLEANUP_NOTIFICATIONS))
@@ -846,10 +850,12 @@ const RssFeedButton = GObject.registerClass(
 					if (open)
 					{
 						this._lastOpen = self;
-						GLib.idle_add(GLib.PRIORITY_DEFAULT, () =>
+						if (this._scrollIdleId)
+							GLib.source_remove(this._scrollIdleId);
+						this._scrollIdleId = GLib.idle_add(GLib.PRIORITY_DEFAULT, () =>
 						{
-							if (!this._isDiscarded)
-								this._scrollFeedSectionTo(subMenu);
+							this._scrollIdleId = 0;
+							this._scrollFeedSectionTo(subMenu);
 							return GLib.SOURCE_REMOVE;
 						});
 					}
