@@ -132,20 +132,17 @@ describe('Encoder.htmlDecode', () => {
 	});
 
 	describe('double-encoded entities', () => {
-		it('decodes &amp;amp; in one pass', () => {
-			expect(Encoder.htmlDecode('AT&amp;amp;T')).toBe('AT&amp;T');
+		it('fully decodes &amp;amp; in a single call', () => {
+			expect(Encoder.htmlDecode('AT&amp;amp;T')).toBe('AT&T');
 		});
 
-		it('decodes &amp;amp; in two passes (like extension.js line 944)', () => {
-			const once = Encoder.htmlDecode('AT&amp;amp;T');
-			const twice = Encoder.htmlDecode(once);
-			expect(twice).toBe('AT&T');
+		it('is idempotent — second call produces no further change', () => {
+			const result = Encoder.htmlDecode('AT&amp;amp;T');
+			expect(Encoder.htmlDecode(result)).toBe(result);
 		});
 
-		it('decodes &amp;lt; in two passes', () => {
-			const once = Encoder.htmlDecode('&amp;lt;br&amp;gt;');
-			const twice = Encoder.htmlDecode(once);
-			expect(twice).toBe('<br>');
+		it('fully decodes &amp;lt; in a single call', () => {
+			expect(Encoder.htmlDecode('&amp;lt;br&amp;gt;')).toBe('<br>');
 		});
 	});
 
@@ -163,6 +160,40 @@ describe('Encoder.htmlDecode', () => {
 		it('decodes numeric and named entities together', () => {
 			expect(Encoder.htmlDecode('caf&#233; &amp; th&#233;'))
 				.toBe('café & thé');
+		});
+	});
+
+	describe('triple-encoded entities — impossible with old encoder', () => {
+		it('fully decodes &amp;amp;amp; in one call', () => {
+			expect(Encoder.htmlDecode('AT&amp;amp;amp;T')).toBe('AT&T');
+		});
+
+		it('fully decodes triple-encoded &lt;', () => {
+			expect(Encoder.htmlDecode('&amp;amp;lt;')).toBe('<');
+		});
+	});
+
+	describe('high Unicode code points above U+FFFF — impossible with old encoder', () => {
+		it('decodes emoji via decimal entity &#128514; (😂)', () => {
+			expect(Encoder.htmlDecode('&#128514;')).toBe('😂');
+		});
+
+		it('decodes emoji via hex entity &#x1F600; (😀)', () => {
+			expect(Encoder.htmlDecode('&#x1F600;')).toBe('😀');
+		});
+
+		it('decodes emoji mixed with text', () => {
+			expect(Encoder.htmlDecode('Hello &#x1F44D; world')).toBe('Hello 👍 world');
+		});
+	});
+
+	describe('unknown named entity — graceful pass-through', () => {
+		it('leaves unknown entity unchanged', () => {
+			expect(Encoder.htmlDecode('&unknown;')).toBe('&unknown;');
+		});
+
+		it('decodes known entities around an unknown one', () => {
+			expect(Encoder.htmlDecode('&amp; &unknown; &lt;')).toBe('& &unknown; <');
 		});
 	});
 

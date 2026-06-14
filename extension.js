@@ -941,7 +941,7 @@ const RssFeedButton = GObject.registerClass(
 				if (itemCache[itemID])
 					continue;
 
-				item.Title = Encoder.htmlDecode(Encoder.htmlDecode(item.Title)).replace(/<.*?>/g, "").trim();
+				item.Title = Encoder.htmlDecode(item.Title).replace(/<.*?>/g, "").trim();
 
 				if (!item.PublishDate)
 					item.PublishDate = new Date().toISOString();
