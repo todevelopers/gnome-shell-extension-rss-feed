@@ -1,5 +1,15 @@
 ## Changelog
 
+### v7.1 (15.06.2026)
+
+*Code cleanup and bugfixes in preparation for extensions.gnome.org submission*
+
+* bugfix: Fixed widget height calculation when fewer sources are configured
+* bugfix: Fixed resource leak — scroll idle source was not removed on extension disable
+* internal: Reworked and modernized encoder.js with expanded test coverage
+
+---
+
 ### v7 (01.05.2026)
 
 *Complete rewrite for modern GNOME*
