@@ -7,6 +7,7 @@
 [![CI](https://github.com/todevelopers/gnome-shell-extension-rss-feed/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/todevelopers/gnome-shell-extension-rss-feed/actions/workflows/ci.yml)
 [![vitest](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tommy-gun/87195eb23e76eae80cd14a6d80e56072/raw/vitest.json&cacheSeconds=0)](https://github.com/todevelopers/gnome-shell-extension-rss-feed/actions/workflows/ci.yml?query=branch%3Amaster)
 [![GitHub Release](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tommy-gun/87195eb23e76eae80cd14a6d80e56072/raw/release.json&cacheSeconds=0)](https://github.com/todevelopers/gnome-shell-extension-rss-feed/releases/latest)
+[![GNOME](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tommy-gun/87195eb23e76eae80cd14a6d80e56072/raw/gnome.json&cacheSeconds=0)](https://extensions.gnome.org/extension/948/)
 [![GNOME Extensions Downloads](https://img.shields.io/gnome-extensions/dt/rss-feed@gnome-shell-extension.todevelopers.github.com)](https://extensions.gnome.org/extension/948/)
 [![ko-fi](https://img.shields.io/badge/Support%20on-Ko--fi-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/tommygunx89)
 

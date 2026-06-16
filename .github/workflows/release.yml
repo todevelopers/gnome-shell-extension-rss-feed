@@ -50,3 +50,20 @@ jobs:
           message: ${{ github.ref_name }}
           color: blue
           cacheSeconds: 0
+
+      - name: Compute supported GNOME version
+        id: gnome
+        run: echo "version=$(jq -r '.["shell-version"] | map(tonumber) | max' metadata.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GNOME badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: 87195eb23e76eae80cd14a6d80e56072
+          filename: gnome.json
+          label: GNOME
+          message: ${{ steps.gnome.outputs.version }}
+          color: 4A86CF
+          namedLogo: gnome
+          logoColor: white
+          cacheSeconds: 0
