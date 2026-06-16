@@ -39,3 +39,14 @@ jobs:
             --title "${{ github.ref_name }}" \
             --notes-file RELEASE_NOTES.md \
             rss-feed@gnome-shell-extension.todevelopers.github.com.zip
+
+      - name: Publish release badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: 87195eb23e76eae80cd14a6d80e56072
+          filename: release.json
+          label: release
+          message: ${{ github.ref_name }}
+          color: blue
+          cacheSeconds: 0
