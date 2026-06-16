@@ -54,6 +54,16 @@ Keeps your RSS feeds one click away - right in the GNOME status panel.
 
 ## Installation
 
+### From GNOME Extensions
+
+<a href="https://extensions.gnome.org/extension/948/">
+  <img src="https://extensions.gnome.org/static/images/get-the-addon.svg" width="250" alt="Get it on GNOME Extensions">
+</a>
+
+> Due to the review process, the version on GNOME Extensions may lag behind the latest release in this repository.
+
+### Manual
+
 1. Download `rss-feed@gnome-shell-extension.todevelopers.github.com.zip` from the [latest release](https://github.com/todevelopers/gnome-shell-extension-rss-feed/releases/latest)
 2. Install it with:
    ```
