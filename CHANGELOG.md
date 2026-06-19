@@ -1,5 +1,15 @@
 ## Changelog
 
+### v7.2 (19.06.2026)
+
+*Light theme compatibility*
+
+* main bugfix: Fixed extension being unusable on light GNOME themes (e.g. Yaru light) — all hardcoded white overlay colors replaced with theme-neutral alternatives ([#31](https://github.com/todevelopers/gnome-shell-extension-rss-feed/issues/31))
+* bugfix: Notification feed avatars now use the user's selected system accent color (GNOME 47+ `accent-color` setting) — fixes white-on-white SVG invisible on light notification backgrounds
+* internal: Dropped GNOME 46 support — minimum shell version is now 47
+
+---
+
 ### v7.1 (15.06.2026)
 
 *Code cleanup and bugfixes in preparation for extensions.gnome.org submission*
