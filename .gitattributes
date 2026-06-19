@@ -8,3 +8,6 @@ tests/            export-ignore
 CHANGELOG.md      export-ignore
 README.md         export-ignore
 LICENSE           export-ignore
+install.sh        export-ignore
+CLAUDE.md         export-ignore
+.claude/          export-ignore
