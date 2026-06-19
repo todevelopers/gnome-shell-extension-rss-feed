@@ -55,6 +55,9 @@ jobs:
         id: gnome
         run: echo "version=$(jq -r '.["shell-version"] | map(tonumber) | max' metadata.json)" >> "$GITHUB_OUTPUT"
 
+      - name: Wait for gist API
+        run: sleep 3
+
       - name: Publish GNOME badge
         uses: schneegans/dynamic-badges-action@v1.7.0
         with:
