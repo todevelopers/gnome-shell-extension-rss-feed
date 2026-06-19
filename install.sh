@@ -6,7 +6,7 @@ UUID="rss-feed@gnome-shell-extension.todevelopers.github.com"
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
-[ "${XDG_SESSION_TYPE:-}" = "wayland" ] || { echo "error: Wayland session required" >&2; exit 1; }
+[ "${XDG_SESSION_TYPE:-}" = "wayland" ] || [ "${XDG_SESSION_TYPE:-}" = "x11" ] || { echo "error: GNOME session required" >&2; exit 1; }
 
 echo "Fetching latest release..."
 DOWNLOAD_URL=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \

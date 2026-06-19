@@ -63,9 +63,9 @@ Keeps your RSS feeds one click away - right in the GNOME status panel.
 
 > Due to the review process, the version on GNOME Extensions may lag behind the latest release in this repository.
 
-### 2. Quick install (Wayland)
+### 2. Quick install
 
-Downloads the latest release and restarts GNOME Shell automatically:
+Downloads the latest release and **restarts** GNOME Shell automatically:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/todevelopers/gnome-shell-extension-rss-feed/master/install.sh | bash
@@ -75,11 +75,13 @@ curl -fsSL https://raw.githubusercontent.com/todevelopers/gnome-shell-extension-
 
 1. Download `rss-feed@gnome-shell-extension.todevelopers.github.com.zip` from the [latest release](https://github.com/todevelopers/gnome-shell-extension-rss-feed/releases/latest)
 2. Install it with:
+   
    ```
    gnome-extensions install rss-feed@gnome-shell-extension.todevelopers.github.com.zip
    ```
 3. Restart GNOME Shell (`Alt+F2` → `r` → `Enter`, or log out and back in)
 4. Enable the extension in GNOME Extensions app or with:
+   
    ```
    gnome-extensions enable rss-feed@gnome-shell-extension.todevelopers.github.com
    ```
