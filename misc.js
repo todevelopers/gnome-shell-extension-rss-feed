@@ -100,8 +100,6 @@ function _accentColorHex()
 	try
 	{
 		let s = new Gio.Settings({ schema_id: 'org.gnome.desktop.interface' });
-		if (!s.settings_schema.has_key('accent-color'))
-			return '#3584e4';
 		const map = {
 			blue: '#3584e4', teal: '#2190a4', green: '#3a944a',
 			yellow: '#c88800', orange: '#ed5b00', red: '#e62d42',
