@@ -31,15 +31,16 @@ export class RdfParser extends BaseParser
 
 	parse()
 	{
-		for (let i = 0; i < this._root.childElements.length; i++)
+		let elements = this._root.children.filter(c => typeof c === 'object');
+		for (let i = 0; i < elements.length; i++)
 		{
-			if (this._root.childElements[i].name == 'channel')
+			if (elements[i].tagName == 'channel')
 			{
-				this._parsePublisher(this._root.childElements[i].childElements);
+				this._parsePublisher(elements[i].children.filter(c => typeof c === 'object'));
 			}
-			else if (this._root.childElements[i].name == 'item')
+			else if (elements[i].tagName == 'item')
 			{
-				this._parseItem(this._root.childElements[i].childElements);
+				this._parseItem(elements[i].children.filter(c => typeof c === 'object'));
 			}
 		}
 	}
@@ -48,21 +49,21 @@ export class RdfParser extends BaseParser
 	{
 		for (let i = 0; i < childElements.length; i++)
 		{
-			if (childElements[i].name == 'title')
+			if (childElements[i].tagName == 'title')
 			{
-				this.Publisher.Title = childElements[i].text;
+				this.Publisher.Title = childElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (childElements[i].name == 'link')
+			else if (childElements[i].tagName == 'link')
 			{
-				this.Publisher.HttpLink = childElements[i].text;
+				this.Publisher.HttpLink = childElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (childElements[i].name == 'description')
+			else if (childElements[i].tagName == 'description')
 			{
-				this.Publisher.Description = childElements[i].text;
+				this.Publisher.Description = childElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (childElements[i].name == 'dc:date')
+			else if (childElements[i].tagName == 'dc:date')
 			{
-				this.Publisher.PublishDate = childElements[i].text;
+				this.Publisher.PublishDate = childElements[i].children.filter(c => typeof c === 'string').join('');
 			}
 		}
 	}
@@ -73,29 +74,31 @@ export class RdfParser extends BaseParser
 
 		for (let i = 0; i < itemElements.length; i++)
 		{
-			if (itemElements[i].name == 'title')
+			if (itemElements[i].tagName == 'title')
 			{
-				item.Title = itemElements[i].text;
+				item.Title = itemElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (itemElements[i].name == 'link')
+			else if (itemElements[i].tagName == 'link')
 			{
-				item.HttpLink = itemElements[i].text;
+				item.HttpLink = itemElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (itemElements[i].name == 'description')
+			else if (itemElements[i].tagName == 'description')
 			{
-				item.Description = itemElements[i].text;
+				item.Description = itemElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (itemElements[i].name == 'dc:date')
+			else if (itemElements[i].tagName == 'dc:date')
 			{
-				item.PublishDate = itemElements[i].text;
+				item.PublishDate = itemElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (itemElements[i].name == 'dc:creator')
+			else if (itemElements[i].tagName == 'dc:creator')
 			{
-				item.Author = itemElements[i].text;
+				item.Author = itemElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (itemElements[i].name == 'dc:contributor')
+			else if (itemElements[i].tagName == 'dc:contributor')
 			{
-				item.Contributor = itemElements[i].childElements[0].childElements[0].text;
+				let a = itemElements[i].children.filter(c => typeof c === 'object')[0];
+				let b = a && a.children.filter(c => typeof c === 'object')[0];
+				item.Contributor = b ? b.children.filter(c => typeof c === 'string').join('') : '';
 			}
 		}
 

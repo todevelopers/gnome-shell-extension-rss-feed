@@ -19,7 +19,7 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { REXML } from '../rexml.js';
+import { parse } from '../txml.js';
 import { FeedburnerParser } from './feedburner.js';
 import { RdfParser } from './rdf.js';
 import { AtomParser } from './atom.js';
@@ -29,27 +29,28 @@ export function createRssParser(rawXml)
 {
 	try
 	{
-		let cleanXml = rawXml.split(/\<\?\s*xml(.*?).*\?\>/).join('');
-		cleanXml = cleanXml.split(/<!--[\s\S]*?-->/g).join('');
+		let nodes = parse(rawXml, { selfClosingTags: [] });
+		let root = nodes.find(n => typeof n === 'object' && n.tagName[0] !== '?');
 
-		let xdoc = new REXML(cleanXml);
+		if (!root)
+			return null;
 
-		if (xdoc.rootElement.attribute('xmlns:feedburner') == 'http://rssnamespace.org/feedburner/ext/1.0')
-			return new FeedburnerParser(xdoc.rootElement);
+		if (root.attributes['xmlns:feedburner'] == 'http://rssnamespace.org/feedburner/ext/1.0')
+			return new FeedburnerParser(root);
 
 		let test;
 
 		test = 'rdf:RDF';
-		if (xdoc.rootElement.name.slice(0, test.length) == test)
-			return new RdfParser(xdoc.rootElement);
+		if (root.tagName.slice(0, test.length) == test)
+			return new RdfParser(root);
 
 		test = 'feed';
-		if (xdoc.rootElement.name.toLowerCase().slice(0, test.length) == test)
-			return new AtomParser(xdoc.rootElement);
+		if (root.tagName.toLowerCase().slice(0, test.length) == test)
+			return new AtomParser(root);
 
 		test = 'rss';
-		if (xdoc.rootElement.name.toLowerCase().slice(0, test.length) == test)
-			return new RssParser(xdoc.rootElement);
+		if (root.tagName.toLowerCase().slice(0, test.length) == test)
+			return new RssParser(root);
 	}
 	catch (e)
 	{

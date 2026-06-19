@@ -31,32 +31,32 @@ export class AtomParser extends BaseParser
 
 	parse()
 	{
-		this._parsePublisher(this._root.childElements);
+		this._parsePublisher(this._root.children.filter(c => typeof c === 'object'));
 	}
 
 	_parsePublisher(childElements)
 	{
 		for (let i = 0; i < childElements.length; i++)
 		{
-			if (childElements[i].name == 'title')
+			if (childElements[i].tagName == 'title')
 			{
-				this.Publisher.Title = childElements[i].text;
+				this.Publisher.Title = childElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (childElements[i].name == 'link' && childElements[i].attribute('rel') != 'self')
+			else if (childElements[i].tagName == 'link' && childElements[i].attributes['rel'] != 'self')
 			{
-				this.Publisher.HttpLink = childElements[i].attribute('href');
+				this.Publisher.HttpLink = childElements[i].attributes['href'] || '';
 			}
-			else if (childElements[i].name == 'description')
+			else if (childElements[i].tagName == 'description')
 			{
-				this.Publisher.Description = childElements[i].text;
+				this.Publisher.Description = childElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (childElements[i].name == 'updated')
+			else if (childElements[i].tagName == 'updated')
 			{
-				this.Publisher.PublishDate = childElements[i].text;
+				this.Publisher.PublishDate = childElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (childElements[i].name == 'entry')
+			else if (childElements[i].tagName == 'entry')
 			{
-				this._parseItem(childElements[i].childElements);
+				this._parseItem(childElements[i].children.filter(c => typeof c === 'object'));
 			}
 		}
 	}
@@ -67,33 +67,34 @@ export class AtomParser extends BaseParser
 
 		for (let i = 0; i < itemElements.length; i++)
 		{
-			if (itemElements[i].name == 'title')
+			if (itemElements[i].tagName == 'title')
 			{
-				item.Title = itemElements[i].text;
+				item.Title = itemElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (itemElements[i].name == 'link')
+			else if (itemElements[i].tagName == 'link')
 			{
-				item.HttpLink = itemElements[i].attribute('href');
+				item.HttpLink = itemElements[i].attributes['href'] || '';
 			}
-			else if (itemElements[i].name == 'description')
+			else if (itemElements[i].tagName == 'description')
 			{
-				item.Description = itemElements[i].text;
+				item.Description = itemElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (itemElements[i].name == 'published')
+			else if (itemElements[i].tagName == 'published')
 			{
-				item.PublishDate = itemElements[i].text;
+				item.PublishDate = itemElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (itemElements[i].name == 'updated')
+			else if (itemElements[i].tagName == 'updated')
 			{
-				item.UpdateTime = itemElements[i].text;
+				item.UpdateTime = itemElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (itemElements[i].name == 'author')
+			else if (itemElements[i].tagName == 'author')
 			{
-				item.Author = itemElements[i].childElements[0].text;
+				let nameNode = itemElements[i].children.filter(c => typeof c === 'object')[0];
+				item.Author = nameNode ? nameNode.children.filter(c => typeof c === 'string').join('') : '';
 			}
-			else if (itemElements[i].name == 'id')
+			else if (itemElements[i].tagName == 'id')
 			{
-				item.ID = itemElements[i].text;
+				item.ID = itemElements[i].children.filter(c => typeof c === 'string').join('');
 			}
 		}
 

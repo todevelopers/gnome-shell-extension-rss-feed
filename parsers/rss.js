@@ -31,32 +31,33 @@ export class RssParser extends BaseParser
 
 	parse()
 	{
-		this._parsePublisher(this._root.childElements[0].childElements);
+		let channel = this._root.children.filter(c => typeof c === 'object')[0];
+		this._parsePublisher(channel.children.filter(c => typeof c === 'object'));
 	}
 
 	_parsePublisher(childElements)
 	{
 		for (let i = 0; i < childElements.length; i++)
 		{
-			if (childElements[i].name == 'title')
+			if (childElements[i].tagName == 'title')
 			{
-				this.Publisher.Title = childElements[i].text;
+				this.Publisher.Title = childElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (childElements[i].name == 'link')
+			else if (childElements[i].tagName == 'link')
 			{
-				this.Publisher.HttpLink = childElements[i].text;
+				this.Publisher.HttpLink = childElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (childElements[i].name == 'description')
+			else if (childElements[i].tagName == 'description')
 			{
-				this.Publisher.Description = childElements[i].text;
+				this.Publisher.Description = childElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (childElements[i].name == 'pubDate')
+			else if (childElements[i].tagName == 'pubDate')
 			{
-				this.Publisher.PublishDate = childElements[i].text;
+				this.Publisher.PublishDate = childElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (childElements[i].name == 'item')
+			else if (childElements[i].tagName == 'item')
 			{
-				this._parseItem(childElements[i].childElements);
+				this._parseItem(childElements[i].children.filter(c => typeof c === 'object'));
 			}
 		}
 	}
@@ -67,29 +68,29 @@ export class RssParser extends BaseParser
 
 		for (let i = 0; i < itemElements.length; i++)
 		{
-			if (itemElements[i].name == 'title')
+			if (itemElements[i].tagName == 'title')
 			{
-				item.Title = itemElements[i].text;
+				item.Title = itemElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (itemElements[i].name == 'link')
+			else if (itemElements[i].tagName == 'link')
 			{
-				item.HttpLink = itemElements[i].text;
+				item.HttpLink = itemElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (itemElements[i].name == 'description')
+			else if (itemElements[i].tagName == 'description')
 			{
-				item.Description = itemElements[i].text;
+				item.Description = itemElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (itemElements[i].name == 'pubDate')
+			else if (itemElements[i].tagName == 'pubDate')
 			{
-				item.PublishDate = itemElements[i].text;
+				item.PublishDate = itemElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (itemElements[i].name == 'author')
+			else if (itemElements[i].tagName == 'author')
 			{
-				item.Author = itemElements[i].text;
+				item.Author = itemElements[i].children.filter(c => typeof c === 'string').join('');
 			}
-			else if (itemElements[i].name == 'guid')
+			else if (itemElements[i].tagName == 'guid')
 			{
-				item.ID = itemElements[i].text;
+				item.ID = itemElements[i].children.filter(c => typeof c === 'string').join('');
 			}
 		}
 
