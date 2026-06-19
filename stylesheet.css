@@ -1,5 +1,5 @@
 .rss-icon-label {
-	background-color: rgba(255, 255, 255, 1.0);
+	background-color: -st-accent-color;
 	width: 8px;
 	height: 8px;
 	border-radius: 4px;
@@ -20,7 +20,7 @@
 	width: 32px;
 	height: 32px;
 	border-radius: 8px;
-	background-color: rgba(255, 255, 255, 0.10);
+	background-color: rgba(127, 127, 127, 0.15);
 }
 
 .rss-header-title {
@@ -49,19 +49,18 @@
 }
 
 .rss-icon-btn:hover {
-	background-color: rgba(255, 255, 255, 0.10);
+	background-color: rgba(127, 127, 127, 0.15);
 }
 
 .rss-icon-btn:active {
-	background-color: rgba(255, 255, 255, 0.15);
+	background-color: rgba(127, 127, 127, 0.25);
 }
 
 .rss-feed-avatar {
 	width: 32px;
 	height: 32px;
 	border-radius: 16px;
-	background-color: rgba(255, 255, 255, 0.10);
-	color: rgba(255, 255, 255, 0.55);
+	background-color: rgba(127, 127, 127, 0.15);
 	font-size: 10px;
 	font-weight: bold;
 }
@@ -89,19 +88,13 @@
 	icon-size: 14px;
 }
 
-.rss-unread-badge:hover,
-.rss-feed-count:hover {
-	background-color: rgba(74, 144, 226, 1.0);
-}
-
 .rss-article-unread {
 	font-weight: bold;
-	color: rgba(255, 255, 255, 1.0);
 }
 
 .rss-article-read {
 	font-weight: 300;
-	color: rgba(255, 255, 255, 0.32);
+	opacity: 0.45;
 }
 
 .rss-menu .popup-menu-item {
@@ -117,29 +110,28 @@
 
 .rss-article-time {
 	font-size: 11px;
-	color: rgba(255, 255, 255, 0.42);
+	opacity: 0.6;
 }
 
 .rss-minimal-section-label {
 	font-size: 10px;
 	font-weight: bold;
 	letter-spacing: 0.07em;
-	color: rgba(255, 255, 255, 0.45);
+	opacity: 0.65;
 }
 
 .rss-minimal-section-header {
 	margin-top: 4px;
 	border-bottom-width: 1px;
 	border-bottom-style: solid;
-	border-bottom-color: rgba(255, 255, 255, 0.10);
+	border-bottom-color: rgba(127, 127, 127, 0.2);
 }
 
 .rss-source-tag {
 	font-size: 10px;
 	border-radius: 4px;
 	padding: 1px 5px;
-	background-color: rgba(255, 255, 255, 0.10);
-	color: rgba(255, 255, 255, 0.55);
+	background-color: rgba(127, 127, 127, 0.12);
 }
 
 .rss-action-button {
@@ -148,9 +140,9 @@
 }
 
 .rss-action-button:hover {
-	background-color: rgba(255, 255, 255, 0.10);
+	background-color: rgba(127, 127, 127, 0.15);
 }
 
 .rss-action-button:active {
-	background-color: rgba(255, 255, 255, 0.20);
+	background-color: rgba(127, 127, 127, 0.25);
 }
