@@ -6,7 +6,7 @@
 
 * main bugfix: Fixed extension being unusable on light GNOME themes (e.g. Yaru light) — all hardcoded white overlay colors replaced with theme-neutral alternatives ([#31](https://github.com/todevelopers/gnome-shell-extension-rss-feed/issues/31))
 * bugfix: Notification feed avatars now use the user's selected system accent color (GNOME 47+ `accent-color` setting) — fixes white-on-white SVG invisible on light notification backgrounds
-* internal: Dropped GNOME 46 support — minimum shell version is now 47
+* internal: Notification accent color adapts via GSettings on GNOME 47+, falls back to default blue on GNOME 46
 
 ---
 
