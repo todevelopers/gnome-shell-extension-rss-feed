@@ -39,11 +39,11 @@ class FeedSource extends GObject.Object
 		super._init();
 
 		this.url = url;
-		this.title = config.title || url;
 		this.customTitle = config.customTitle || '';
 		this.customAvatar = config.customAvatar || '';
 		this.mute = !!config.mute;
 		this.disableUpdates = !!config.disableUpdates;
+		this.publisherTitle = '';
 
 		this.items = [];
 		this.unreadCount = 0;
@@ -52,9 +52,17 @@ class FeedSource extends GObject.Object
 		this._persistedUnread = new Set(config.persistedUnread || []);
 	}
 
+	get title()
+	{
+		return this.customTitle || this.publisherTitle || this.url;
+	}
+
 	merge(parsed, opts)
 	{
-		let incoming = parsed.map(p => ({
+		if (parsed.Publisher && parsed.Publisher.Title)
+			this.publisherTitle = parsed.Publisher.Title;
+
+		let incoming = parsed.Items.map(p => ({
 			id: p.ID,
 			title: p.Title,
 			link: p.HttpLink,
