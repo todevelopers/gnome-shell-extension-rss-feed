@@ -28,21 +28,34 @@ function stripTags(s)
 	return Encoder.htmlDecode(s).replace(/<.*?>/g, "").trim();
 }
 
+function buildDesc(s)
+{
+	let desc = stripTags((s || "").replace("<![CDATA[", "").replace("]]>", ""));
+	if (desc.length > 290)
+		desc = desc.substr(0, 290) + "...";
+	return desc;
+}
+
 // A single feed entry: normalized fields and a read flag that FeedSource owns.
 export class FeedItem
 {
 	constructor(data)
 	{
 		this.id = data.id;
+		this.read = true;
 		this.link = data.link;
 		this.title = stripTags(data.title);
 		this.publishDate = data.publishDate || new Date().toISOString();
 		this.updateTime = data.updateTime || '';
-		this.read = true;
+		this.desc = buildDesc(data.desc);
+	}
 
-		let desc = stripTags((data.desc || "").replace("<![CDATA[", "").replace("]]>", ""));
-		if (desc.length > 290)
-			desc = desc.substr(0, 290) + "...";
-		this.desc = desc;
+	update(data)
+	{
+		this.link = data.link;
+		this.title = stripTags(data.title);
+		this.publishDate = data.publishDate || this.publishDate;
+		this.updateTime = data.updateTime || '';
+		this.desc = buildDesc(data.desc);
 	}
 }
