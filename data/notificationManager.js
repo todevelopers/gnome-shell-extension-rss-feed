@@ -127,8 +127,8 @@ export class NotificationManager
 
 		notification.addAction('Open', () =>
 		{
-			Misc.processLinkOpen(spec.url, null);
-			this._store.markRead(source, item);
+			if (Misc.processLinkOpen(spec.url))
+				this._store.markRead(source, item);
 		});
 
 		notification.addAction('Copy URL', () =>
@@ -146,8 +146,8 @@ export class NotificationManager
 
 		notification.connect('activated', () =>
 		{
-			Misc.processLinkOpen(spec.url, null);
-			this._store.markRead(source, item);
+			if (Misc.processLinkOpen(spec.url))
+				this._store.markRead(source, item);
 		});
 
 		notification.connect('destroy', () =>

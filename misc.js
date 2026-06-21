@@ -22,9 +22,8 @@
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-export function processLinkOpen(url, cacheObj)
+export function processLinkOpen(url)
 {
 	if (isScreenLocked())
 		return false;
@@ -41,41 +40,7 @@ export function processLinkOpen(url, cacheObj)
 		return false;
 	}
 
-	markRead(cacheObj);
-
 	return true;
-}
-
-export function markRead(cacheObj)
-{
-	if (!cacheObj || !cacheObj.Unread)
-		return;
-
-	cacheObj.Unread = null;
-
-	if (cacheObj.Menu)
-		cacheObj.Menu.setOrnament(PopupMenu.Ornament.NONE);
-
-	let feedCacheObj = cacheObj.parent;
-	if (!feedCacheObj)
-		return;
-
-	feedCacheObj.UnreadCount--;
-	feedCacheObj.pUnreadCount = feedCacheObj.UnreadCount;
-
-	if (feedCacheObj.Menu)
-	{
-		feedCacheObj.Menu.setUnreadCount(feedCacheObj.UnreadCount);
-		if (!feedCacheObj.UnreadCount)
-			feedCacheObj.Menu.setOrnament(PopupMenu.Ornament.NONE);
-	}
-
-	let parentClass = feedCacheObj.parentClass;
-	if (parentClass)
-	{
-		parentClass._totalUnreadCount--;
-		parentClass._updateUnreadCountLabel(parentClass._totalUnreadCount);
-	}
 }
 
 export function feedInitials(title)

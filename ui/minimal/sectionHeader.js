@@ -24,8 +24,8 @@ import GObject from 'gi://GObject';
 import St from 'gi://St';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-export const RssMinimalSectionHeader = GObject.registerClass(
-class RssMinimalSectionHeader extends PopupMenu.PopupBaseMenuItem
+export const MinimalSectionHeader = GObject.registerClass(
+class MinimalSectionHeader extends PopupMenu.PopupBaseMenuItem
 {
 	_init(text, initialCollapsed, onToggle)
 	{

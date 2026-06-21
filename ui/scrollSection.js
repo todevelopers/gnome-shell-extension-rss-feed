@@ -22,7 +22,7 @@
 import St from 'gi://St';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-export class RssPopupMenuSection extends PopupMenu.PopupMenuSection
+export class ScrollSection extends PopupMenu.PopupMenuSection
 {
 	constructor(sv_style)
 	{

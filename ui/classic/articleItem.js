@@ -23,14 +23,14 @@ import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import * as Misc from '../misc.js';
+import * as Misc from '../../misc.js';
 
-export const RssPopupMenuItem = GObject.registerClass(
-class RssPopupMenuItem extends PopupMenu.PopupMenuItem
+export const ClassicArticleItem = GObject.registerClass(
+class ClassicArticleItem extends PopupMenu.PopupMenuItem
 {
-	_init(item)
+	_init(item, source, store)
 	{
-		let title = item.Title;
+		let title = item.title;
 		if (title.length > 100)
 			title = title.substr(0, 100) + "...";
 
@@ -41,32 +41,29 @@ class RssPopupMenuItem extends PopupMenu.PopupMenuItem
 
 		this._timeLabel = new St.Label(
 		{
-			text: Misc.relativeTime(item.PublishDate),
+			text: Misc.relativeTime(item.publishDate),
 			style_class: 'rss-article-time',
 			y_align: Clutter.ActorAlign.CENTER,
 			x_align: Clutter.ActorAlign.END,
 		});
 		this.add_child(this._timeLabel);
 
-		this._link = item.HttpLink;
+		this._item = item;
+		this._source = source;
+		this._store = store;
+
+		this.setOrnament(item.read ? PopupMenu.Ornament.NONE : PopupMenu.Ornament.DOT);
 
 		this.connect('activate', (self, event) =>
 		{
 			if (event.type() == Clutter.EventType.BUTTON_RELEASE
 				&& event.get_button() == Clutter.BUTTON_SECONDARY)
 			{
-				St.Clipboard.get_default().set_text(St.ClipboardType.CLIPBOARD, this._link);
+				St.Clipboard.get_default().set_text(St.ClipboardType.CLIPBOARD, this._item.link);
 			}
-			else
+			else if (Misc.processLinkOpen(this._item.link))
 			{
-				if (Misc.processLinkOpen(this._link, this._cacheObj))
-				{
-					if (this._cacheObj.Notification)
-					{
-						this._cacheObj.Notification.destroy();
-						this._cacheObj.Notification = undefined;
-					}
-				}
+				this._store.markRead(this._source, this._item);
 			}
 		});
 	}

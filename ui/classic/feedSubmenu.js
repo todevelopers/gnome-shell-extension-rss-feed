@@ -22,7 +22,7 @@
 import Clutter from 'gi://Clutter';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-export class RssPopupSubMenu extends PopupMenu.PopupSubMenu
+export class ClassicFeedSubmenu extends PopupMenu.PopupSubMenu
 {
 	constructor(sourceActor, sourceArrow)
 	{

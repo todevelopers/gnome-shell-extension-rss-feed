@@ -48,23 +48,48 @@ export class FeedRepository
 		this._aSettings.load();
 
 		for (let url of urls)
-		{
-			let gsData = this._aSettings._gsData[url];
-			let config = {};
-
-			if (gsData)
-			{
-				config.customTitle = gsData['t'];
-				config.customAvatar = gsData['v'];
-				config.mute = gsData['n'];
-				config.disableUpdates = gsData['u'];
-				config.persistedUnread = Array.isArray(gsData['i']) ? gsData['i'] : [];
-			}
-
-			store.addSource(new FeedSource(url, config));
-		}
+			store.addSource(new FeedSource(url, this._configFor(url)));
 
 		this._changedId = store.connect('changed', () => this.scheduleUnreadFlush());
+	}
+
+	sync(store)
+	{
+		let urls = this._settings.get_strv(GSKeys.RSS_FEEDS_LIST);
+		this._aSettings.load();
+
+		let wanted = new Set(urls);
+		for (let source of store.getSources())
+			if (!wanted.has(source.url))
+				store.removeSource(source.url);
+
+		for (let url of urls)
+		{
+			let source = store.getSource(url);
+			if (source)
+				source.applyConfig(this._configFor(url));
+			else
+				store.addSource(new FeedSource(url, this._configFor(url)));
+		}
+
+		store.reorder(urls);
+	}
+
+	_configFor(url)
+	{
+		let gsData = this._aSettings._gsData[url];
+		let config = {};
+
+		if (gsData)
+		{
+			config.customTitle = gsData['t'];
+			config.customAvatar = gsData['v'];
+			config.mute = gsData['n'];
+			config.disableUpdates = gsData['u'];
+			config.persistedUnread = Array.isArray(gsData['i']) ? gsData['i'] : [];
+		}
+
+		return config;
 	}
 
 	flushUnread()

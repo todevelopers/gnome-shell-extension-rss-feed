@@ -29,6 +29,7 @@ export const FeedSource = GObject.registerClass(
 	Signals: {
 		'items-changed': {},
 		'unread-changed': {},
+		'meta-changed': {},
 		'items-added': { param_types: [GObject.TYPE_JSOBJECT] },
 	},
 },
@@ -55,6 +56,20 @@ class FeedSource extends GObject.Object
 	get title()
 	{
 		return this.customTitle || this.publisherTitle || this.url;
+	}
+
+	applyConfig(config)
+	{
+		let title = this.title;
+		let avatar = this.customAvatar;
+
+		this.customTitle = config.customTitle || '';
+		this.customAvatar = config.customAvatar || '';
+		this.mute = !!config.mute;
+		this.disableUpdates = !!config.disableUpdates;
+
+		if (this.title !== title || this.customAvatar !== avatar)
+			this.emit('meta-changed');
 	}
 
 	merge(parsed, opts)

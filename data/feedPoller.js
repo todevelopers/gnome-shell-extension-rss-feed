@@ -51,6 +51,11 @@ export class FeedPoller
 		this._poll();
 	}
 
+	refresh()
+	{
+		this._poll();
+	}
+
 	destroy()
 	{
 		if (this._timeout)
@@ -128,6 +133,9 @@ export class FeedPoller
 
 	_complete()
 	{
+		if (this._pending <= 0)
+			return;
+
 		if (--this._pending > 0)
 			return;
 

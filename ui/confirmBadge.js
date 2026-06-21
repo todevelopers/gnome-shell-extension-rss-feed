@@ -23,8 +23,8 @@ import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 
-export const RssBadgeButton = GObject.registerClass(
-class RssBadgeButton extends St.Button
+export const ConfirmBadge = GObject.registerClass(
+class ConfirmBadge extends St.Button
 {
 	_init(styleClass, defaultChild)
 	{

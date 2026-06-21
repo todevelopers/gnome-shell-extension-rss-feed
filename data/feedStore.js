@@ -27,6 +27,7 @@ export const FeedStore = GObject.registerClass(
 	Signals: {
 		'source-added': { param_types: [GObject.TYPE_JSOBJECT] },
 		'source-removed': { param_types: [GObject.TYPE_JSOBJECT] },
+		'reordered': {},
 		'changed': {},
 		'item-read': { param_types: [GObject.TYPE_JSOBJECT] },
 	},
@@ -74,6 +75,26 @@ class FeedStore extends GObject.Object
 	getSources()
 	{
 		return [...this._sources.values()];
+	}
+
+	reorder(urls)
+	{
+		let current = [...this._sources.keys()];
+		let next = urls.filter(url => this._sources.has(url));
+
+		for (let url of current)
+			if (!next.includes(url))
+				next.push(url);
+
+		if (next.length === current.length && next.every((url, i) => url === current[i]))
+			return;
+
+		let reordered = new Map();
+		for (let url of next)
+			reordered.set(url, this._sources.get(url));
+
+		this._sources = reordered;
+		this.emit('reordered');
 	}
 
 	markRead(source, item)
