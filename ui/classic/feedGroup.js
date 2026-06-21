@@ -104,10 +104,12 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		});
 	}
 
-	buildRowsIfDirty()
+	activate(event)
 	{
 		if (this._dirty)
 			this._buildRows();
+
+		super.activate(event);
 	}
 
 	_buildRows()

@@ -251,7 +251,6 @@ class RssIndicator extends PanelMenu.Button
 		{
 			if (open)
 			{
-				group.buildRowsIfDirty();
 				this._lastOpen = self;
 				if (this._scrollIdleId)
 					GLib.source_remove(this._scrollIdleId);
