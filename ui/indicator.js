@@ -271,7 +271,7 @@ class RssIndicator extends PanelMenu.Button
 		}, this);
 
 		source.connectObject(
-			'items-changed', () => this._onSourceItemsChanged(),
+			'items-changed', () => this._markMinimalDirty(),
 			'unread-changed', () => this._markMinimalDirty(),
 			'meta-changed', () => this._markMinimalDirty(),
 			this
@@ -301,12 +301,10 @@ class RssIndicator extends PanelMenu.Button
 		this._markMinimalDirty();
 	}
 
-	_onSourceItemsChanged()
+	markUpdated()
 	{
 		if (this._headerSubtitle)
 			this._headerSubtitle.set_text('Updated at ' + new Date().toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' }));
-
-		this._markMinimalDirty();
 	}
 
 	_reorderClassicSection()

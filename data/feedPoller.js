@@ -44,6 +44,7 @@ export class FeedPoller
 		this._timeout = 0;
 		this._interval = 0;
 		this._pending = 0;
+		this.onComplete = null;
 	}
 
 	start()
@@ -139,8 +140,13 @@ export class FeedPoller
 		if (--this._pending > 0)
 			return;
 
-		if (!this._cancellable.is_cancelled())
-			this._repository.flushUnread();
+		if (this._cancellable.is_cancelled())
+			return;
+
+		this._repository.flushUnread();
+
+		if (this.onComplete)
+			this.onComplete();
 	}
 
 	_requestUrl(sourceURL)

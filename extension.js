@@ -45,6 +45,7 @@ export default class RssFeedExtension extends Extension
 
 		this._indicator = new RssIndicator(settings, this, this._store);
 		this._indicator.onReload = () => this._poller.refresh();
+		this._poller.onComplete = () => this._indicator?.markUpdated();
 		Main.panel.addToStatusArea('rssFeedMenu', this._indicator, 0, 'right');
 
 		this._listChangedId = settings.connect('changed::' + GSKeys.RSS_FEEDS_LIST, () =>
