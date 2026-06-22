@@ -363,6 +363,12 @@ class RssIndicator extends PanelMenu.Button
 
 	_rebuildMinimalSection()
 	{
+		if (this._minimalChunkId)
+		{
+			GLib.source_remove(this._minimalChunkId);
+			this._minimalChunkId = 0;
+		}
+
 		this._minimalSection.removeAll();
 
 		let items = this._computeMinimalList();
@@ -378,20 +384,14 @@ class RssIndicator extends PanelMenu.Button
 		let readLimit = this._readShowAll ? readTotal : MINIMAL_READ_INITIAL_LIMIT;
 		let readRendered = 0;
 		let lastSection = null;
-		let currentHeader = null;
-		let readHeader = null;
+
+		let plan = [];
 		for (let entry of items)
 		{
 			let { item, source, feedTitle, section } = entry;
 			if (section !== lastSection)
 			{
-				let sec = section;
-				currentHeader = new MinimalSectionHeader(
-					section.toUpperCase(),
-					collapsedState[sec],
-					(collapsed) => { collapsedState[sec] = collapsed; });
-				this._minimalSection.addMenuItem(currentHeader);
-				if (sec === 'read') readHeader = currentHeader;
+				plan.push({ type: 'header', section });
 				lastSection = section;
 			}
 			if (section === 'read')
@@ -400,34 +400,75 @@ class RssIndicator extends PanelMenu.Button
 					continue;
 				readRendered++;
 			}
-			let mi = new MinimalArticleItem(item, source, this._store, feedTitle);
-			this._minimalSection.addMenuItem(mi);
-			if (currentHeader)
-				currentHeader.addItem(mi);
+			plan.push({ type: 'item', item, source, feedTitle, section });
 		}
 
 		let hidden = readTotal - readRendered;
 		if (hidden > 0)
+			plan.push({ type: 'showAll', hidden });
+
+		if (plan.length === 0)
+			return;
+
+		let headers = {};
+		let idx = 0;
+
+		this._minimalChunkId = GLib.idle_add(GLib.PRIORITY_LOW, () =>
 		{
-			let showAll = new PopupMenu.PopupBaseMenuItem(
-				{ style_class: 'popup-menu-item rss-minimal-section-header' });
-			let showAllLabel = new St.Label(
+			let end = Math.min(idx + 10, plan.length);
+			for (let i = idx; i < end; i++)
 			{
-				text: "Show all (" + hidden + " more)",
-				x_expand: true,
-				y_align: Clutter.ActorAlign.CENTER,
-				style_class: 'rss-minimal-section-label',
-			});
-			showAll.add_child(showAllLabel);
-			showAll.activate = () =>
+				let step = plan[i];
+				if (step.type === 'header')
+				{
+					let sec = step.section;
+					let h = new MinimalSectionHeader(
+						sec.toUpperCase(),
+						collapsedState[sec],
+						(collapsed) => { collapsedState[sec] = collapsed; });
+					this._minimalSection.addMenuItem(h);
+					headers[sec] = h;
+				}
+				else if (step.type === 'item')
+				{
+					let mi = new MinimalArticleItem(step.item, step.source, this._store, step.feedTitle);
+					this._minimalSection.addMenuItem(mi);
+					let h = headers[step.section];
+					if (h)
+						h.addItem(mi);
+				}
+				else if (step.type === 'showAll')
+				{
+					let showAll = new PopupMenu.PopupBaseMenuItem(
+						{ style_class: 'popup-menu-item rss-minimal-section-header' });
+					let showAllLabel = new St.Label(
+					{
+						text: "Show all (" + step.hidden + " more)",
+						x_expand: true,
+						y_align: Clutter.ActorAlign.CENTER,
+						style_class: 'rss-minimal-section-label',
+					});
+					showAll.add_child(showAllLabel);
+					showAll.activate = () =>
+					{
+						this._readShowAll = true;
+						this._markMinimalDirty();
+					};
+					this._minimalSection.addMenuItem(showAll);
+					let rh = headers['read'];
+					if (rh)
+						rh.addItem(showAll);
+				}
+			}
+			idx = end;
+
+			if (idx >= plan.length)
 			{
-				this._readShowAll = true;
-				this._markMinimalDirty();
-			};
-			this._minimalSection.addMenuItem(showAll);
-			if (readHeader)
-				readHeader.addItem(showAll);
-		}
+				this._minimalChunkId = 0;
+				return GLib.SOURCE_REMOVE;
+			}
+			return GLib.SOURCE_CONTINUE;
+		});
 	}
 
 	_markMinimalDirty()
@@ -527,6 +568,12 @@ class RssIndicator extends PanelMenu.Button
 		{
 			GLib.source_remove(this._minimalRebuildId);
 			this._minimalRebuildId = 0;
+		}
+
+		if (this._minimalChunkId)
+		{
+			GLib.source_remove(this._minimalChunkId);
+			this._minimalChunkId = 0;
 		}
 
 		if (this._scrollIdleId)

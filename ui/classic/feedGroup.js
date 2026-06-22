@@ -20,6 +20,7 @@
  */
 
 import Clutter from 'gi://Clutter';
+import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
@@ -46,6 +47,7 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		this._store = store;
 		this._dirty = true;
 		this._rowByItem = new Map();
+		this._chunkBuildId = 0;
 		this._olabeltext = title;
 		this.onActivateConfirm = null;
 
@@ -89,7 +91,7 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 			{
 				this._dirty = true;
 				if (this.menu.isOpen)
-					this._buildRows();
+					this._startChunkedBuild();
 			},
 			'unread-changed', () => this._syncUnread(),
 			'meta-changed', () => this._syncMeta(),
@@ -98,12 +100,20 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 
 		this.setUnreadCount(source.unreadCount);
 
-		this.connect('destroy', () => { this._rowByItem = null; });
+		this.connect('destroy', () =>
+		{
+			if (this._chunkBuildId)
+			{
+				GLib.source_remove(this._chunkBuildId);
+				this._chunkBuildId = 0;
+			}
+			this._rowByItem = null;
+		});
 	}
 
 	activate(event)
 	{
-		if (this._dirty)
+		if (this._dirty && !this.menu.isOpen)
 			this._buildRows();
 
 		super.activate(event);
@@ -111,6 +121,12 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 
 	_buildRows()
 	{
+		if (this._chunkBuildId)
+		{
+			GLib.source_remove(this._chunkBuildId);
+			this._chunkBuildId = 0;
+		}
+
 		this.menu.removeAll();
 		this._rowByItem = new Map();
 
@@ -122,6 +138,47 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		}
 
 		this._dirty = false;
+	}
+
+	_startChunkedBuild()
+	{
+		if (this._chunkBuildId)
+		{
+			GLib.source_remove(this._chunkBuildId);
+			this._chunkBuildId = 0;
+		}
+
+		this.menu.removeAll();
+		this._rowByItem = new Map();
+
+		let items = [...this._source.items];
+		let idx = 0;
+
+		this._chunkBuildId = GLib.idle_add(GLib.PRIORITY_LOW, () =>
+		{
+			if (!this._rowByItem)
+			{
+				this._chunkBuildId = 0;
+				return GLib.SOURCE_REMOVE;
+			}
+
+			let end = Math.min(idx + 10, items.length);
+			for (let i = idx; i < end; i++)
+			{
+				let row = new ClassicArticleItem(items[i], this._source, this._store);
+				this.menu.addMenuItem(row);
+				this._rowByItem.set(items[i], row);
+			}
+			idx = end;
+
+			if (idx >= items.length)
+			{
+				this._chunkBuildId = 0;
+				this._dirty = false;
+				return GLib.SOURCE_REMOVE;
+			}
+			return GLib.SOURCE_CONTINUE;
+		});
 	}
 
 	_syncUnread()
