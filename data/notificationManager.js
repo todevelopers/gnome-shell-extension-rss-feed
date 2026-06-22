@@ -41,11 +41,14 @@ export class NotificationManager
 		this._settings = settings;
 
 		this._notifications = new Map();
-		this._sourceHandlers = new Map();
+		this._watchedSources = new Set();
 		this._source = null;
 
-		this._addedId = store.connect('source-added', (_store, source) => this._watch(source));
-		this._removedId = store.connect('source-removed', (_store, source) => this._unwatch(source));
+		store.connectObject(
+			'source-added', (_store, source) => this._watch(source),
+			'source-removed', (_store, source) => this._unwatch(source),
+			this
+		);
 
 		for (let source of store.getSources())
 			this._watch(source);
@@ -53,22 +56,18 @@ export class NotificationManager
 
 	_watch(source)
 	{
-		let ids = [
-			source.connect('items-added', (_source, payload) => this._onItemsAdded(source, payload)),
-			source.connect('unread-changed', () => this._onUnreadChanged(source)),
-		];
-		this._sourceHandlers.set(source, ids);
+		source.connectObject(
+			'items-added', (_source, payload) => this._onItemsAdded(source, payload),
+			'unread-changed', () => this._onUnreadChanged(source),
+			this
+		);
+		this._watchedSources.add(source);
 	}
 
 	_unwatch(source)
 	{
-		let ids = this._sourceHandlers.get(source);
-		if (!ids)
-			return;
-
-		for (let id of ids)
-			source.disconnect(id);
-		this._sourceHandlers.delete(source);
+		source.disconnectObject(this);
+		this._watchedSources.delete(source);
 	}
 
 	_onItemsAdded(source, payload)
@@ -188,15 +187,11 @@ export class NotificationManager
 
 	destroy()
 	{
-		this._store.disconnect(this._addedId);
-		this._store.disconnect(this._removedId);
+		this._store.disconnectObject(this);
 
-		for (let source of this._sourceHandlers.keys())
-		{
-			for (let id of this._sourceHandlers.get(source))
-				source.disconnect(id);
-		}
-		this._sourceHandlers.clear();
+		for (let source of this._watchedSources)
+			source.disconnectObject(this);
+		this._watchedSources.clear();
 
 		if (this._settings.get_boolean(GSKeys.CLEANUP_NOTIFICATIONS))
 		{

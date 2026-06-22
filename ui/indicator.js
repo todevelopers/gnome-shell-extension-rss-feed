@@ -81,7 +81,7 @@ class RssIndicator extends PanelMenu.Button
 
 		this.menu.actor.add_style_class_name('rss-menu');
 
-		this._menuOpenId = this.menu.connect('open-state-changed', (self, open) =>
+		this.menu.connectObject('open-state-changed', (self, open) =>
 		{
 			this._menuIsOpen = open;
 
@@ -98,10 +98,10 @@ class RssIndicator extends PanelMenu.Button
 				this._activeConfirm.exitConfirm();
 				this._activeConfirm = null;
 			}
-		});
+		}, this);
 
 		this._activeConfirm = null;
-		this._menuCapturedId = this.menu.actor.connect('captured-event', (_actor, event) =>
+		this.menu.actor.connectObject('captured-event', (_actor, event) =>
 		{
 			if (!this._activeConfirm)
 				return Clutter.EVENT_PROPAGATE;
@@ -129,7 +129,7 @@ class RssIndicator extends PanelMenu.Button
 			}
 
 			return Clutter.EVENT_PROPAGATE;
-		});
+		}, this);
 
 		this._createHeader();
 
@@ -142,25 +142,30 @@ class RssIndicator extends PanelMenu.Button
 		this._layoutMode = settings.get_string(GSKeys.LAYOUT_MODE);
 		this._applyLayoutMode();
 
-		this._lcid = settings.connect('changed::' + GSKeys.LAYOUT_MODE, () =>
-		{
-			this._layoutMode = settings.get_string(GSKeys.LAYOUT_MODE);
-			this._applyLayoutMode();
-			if (this._layoutMode === 'minimal')
-				this._markMinimalDirty();
-		});
+		settings.connectObject(
+			'changed::' + GSKeys.LAYOUT_MODE, () =>
+			{
+				this._layoutMode = settings.get_string(GSKeys.LAYOUT_MODE);
+				this._applyLayoutMode();
+				if (this._layoutMode === 'minimal')
+					this._markMinimalDirty();
+			},
+			'changed::' + GSKeys.MAX_HEIGHT, () =>
+			{
+				let h = settings.get_int(GSKeys.MAX_HEIGHT);
+				this._feedsSection.actor.set_style(this._generatePopupMenuCSS(h));
+				this._minimalSection.actor.set_style(this._generatePopupMenuCSS(h));
+			},
+			this
+		);
 
-		this._mhid = settings.connect('changed::' + GSKeys.MAX_HEIGHT, () =>
-		{
-			let h = settings.get_int(GSKeys.MAX_HEIGHT);
-			this._feedsSection.actor.set_style(this._generatePopupMenuCSS(h));
-			this._minimalSection.actor.set_style(this._generatePopupMenuCSS(h));
-		});
-
-		this._storeAddedId = store.connect('source-added', (_store, source) => this._addGroup(source));
-		this._storeRemovedId = store.connect('source-removed', (_store, source) => this._removeGroup(source));
-		this._storeChangedId = store.connect('changed', () => this._updateUnreadCountLabel(this._store.totalUnread));
-		this._storeReorderedId = store.connect('reordered', () => this._reorderClassicSection());
+		store.connectObject(
+			'source-added', (_store, source) => this._addGroup(source),
+			'source-removed', (_store, source) => this._removeGroup(source),
+			'changed', () => this._updateUnreadCountLabel(this._store.totalUnread),
+			'reordered', () => this._reorderClassicSection(),
+			this
+		);
 
 		for (let source of store.getSources())
 			this._addGroup(source);
@@ -247,7 +252,7 @@ class RssIndicator extends PanelMenu.Button
 		this._feedsSection.addMenuItem(group);
 		this._groups.set(source.url, group);
 
-		let openId = group.menu.connect('open-state-changed', (self, open) =>
+		group.menu.connectObject('open-state-changed', (self, open) =>
 		{
 			if (open)
 			{
@@ -263,19 +268,16 @@ class RssIndicator extends PanelMenu.Button
 			}
 			else if (this.menu.isOpen && this._lastOpen === self)
 				this._lastOpen = undefined;
-		});
+		}, this);
 
-		let destroyId = group.menu.connect('destroy', (self) =>
-		{
-			if (this._lastOpen === self)
-				this._lastOpen = undefined;
-		});
+		source.connectObject(
+			'items-changed', () => this._onSourceItemsChanged(),
+			'unread-changed', () => this._markMinimalDirty(),
+			'meta-changed', () => this._markMinimalDirty(),
+			this
+		);
 
-		let icId = source.connect('items-changed', () => this._onSourceItemsChanged());
-		let ucId = source.connect('unread-changed', () => this._markMinimalDirty());
-		let mcId = source.connect('meta-changed', () => this._markMinimalDirty());
-
-		this._sourceBindings.set(source, { group, openId, destroyId, icId, ucId, mcId });
+		this._sourceBindings.set(source, { group });
 
 		this._reorderClassicSection();
 		this._markMinimalDirty();
@@ -287,9 +289,7 @@ class RssIndicator extends PanelMenu.Button
 		if (!binding)
 			return;
 
-		source.disconnect(binding.icId);
-		source.disconnect(binding.ucId);
-		source.disconnect(binding.mcId);
+		source.disconnectObject(this);
 
 		if (this._lastOpen === binding.group.menu)
 			this._lastOpen = undefined;
@@ -514,36 +514,13 @@ class RssIndicator extends PanelMenu.Button
 
 	destroy()
 	{
-		if (this._menuOpenId)
-			this.menu.disconnect(this._menuOpenId);
+		this.menu.disconnectObject(this);
+		this.menu.actor.disconnectObject(this);
+		this._settings.disconnectObject(this);
+		this._store.disconnectObject(this);
 
-		if (this._menuCapturedId)
-			this.menu.actor.disconnect(this._menuCapturedId);
-
-		if (this._lcid)
-			this._settings.disconnect(this._lcid);
-
-		if (this._mhid)
-			this._settings.disconnect(this._mhid);
-
-		if (this._storeAddedId)
-			this._store.disconnect(this._storeAddedId);
-
-		if (this._storeRemovedId)
-			this._store.disconnect(this._storeRemovedId);
-
-		if (this._storeChangedId)
-			this._store.disconnect(this._storeChangedId);
-
-		if (this._storeReorderedId)
-			this._store.disconnect(this._storeReorderedId);
-
-		for (let [source, binding] of this._sourceBindings)
-		{
-			source.disconnect(binding.icId);
-			source.disconnect(binding.ucId);
-			source.disconnect(binding.mcId);
-		}
+		for (let [source] of this._sourceBindings)
+			source.disconnectObject(this);
 		this._sourceBindings.clear();
 
 		if (this._minimalRebuildId)

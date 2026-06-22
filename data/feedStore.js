@@ -39,15 +39,13 @@ class FeedStore extends GObject.Object
 		super._init();
 
 		this._sources = new Map();
-		this._handlers = new Map();
 		this.totalUnread = 0;
 	}
 
 	addSource(source)
 	{
 		this._sources.set(source.url, source);
-		let id = source.connect('unread-changed', () => this._recomputeUnread());
-		this._handlers.set(source, id);
+		source.connectObject('unread-changed', () => this._recomputeUnread(), this);
 
 		this.emit('source-added', source);
 		this._recomputeUnread();
@@ -59,8 +57,7 @@ class FeedStore extends GObject.Object
 		if (!source)
 			return;
 
-		source.disconnect(this._handlers.get(source));
-		this._handlers.delete(source);
+		source.disconnectObject(this);
 		this._sources.delete(url);
 
 		this._recomputeUnread();

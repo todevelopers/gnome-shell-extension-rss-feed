@@ -81,27 +81,24 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 
 		this.menu.destroy();
 		this.menu = new ClassicFeedSubmenu(this, this._triangle);
-		this.menu.connect('open-state-changed',
-			this._subMenuOpenStateChanged.bind(this));
+		this.menu.connectObject('open-state-changed',
+			this._subMenuOpenStateChanged.bind(this), this);
 
-		this._icId = source.connect('items-changed', () =>
-		{
-			this._dirty = true;
-			if (this.menu.isOpen)
-				this._buildRows();
-		});
-		this._ucId = source.connect('unread-changed', () => this._syncUnread());
-		this._mcId = source.connect('meta-changed', () => this._syncMeta());
+		source.connectObject(
+			'items-changed', () =>
+			{
+				this._dirty = true;
+				if (this.menu.isOpen)
+					this._buildRows();
+			},
+			'unread-changed', () => this._syncUnread(),
+			'meta-changed', () => this._syncMeta(),
+			this
+		);
 
 		this.setUnreadCount(source.unreadCount);
 
-		this.connect('destroy', () =>
-		{
-			this._source.disconnect(this._icId);
-			this._source.disconnect(this._ucId);
-			this._source.disconnect(this._mcId);
-			this._rowByItem = null;
-		});
+		this.connect('destroy', () => { this._rowByItem = null; });
 	}
 
 	activate(event)
