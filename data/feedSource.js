@@ -74,8 +74,13 @@ class FeedSource extends GObject.Object
 
 	merge(parsed, opts)
 	{
-		if (parsed.Publisher && parsed.Publisher.Title)
+		if (parsed.Publisher && parsed.Publisher.Title
+			&& parsed.Publisher.Title !== this.publisherTitle)
+		{
 			this.publisherTitle = parsed.Publisher.Title;
+			if (!this.customTitle)
+				this.emit('meta-changed');
+		}
 
 		let incoming = parsed.Items.map(p => ({
 			id: p.ID,
