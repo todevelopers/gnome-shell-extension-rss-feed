@@ -22,17 +22,17 @@
 // Diffs a freshly parsed feed against the cached items: what was added, removed or updated.
 export function computeFeedDiff(existing, parsed, opts)
 {
-	let visible = parsed.slice(0, opts.itemsVisible);
+	let retained = parsed.slice(0, opts.itemsRetained);
 
 	let added = [];
 	let removed = [];
 	let updated = [];
 
-	if (!visible.length)
+	if (!retained.length)
 		return { added, removed, updated };
 
 	let incoming = new Map();
-	for (let item of visible)
+	for (let item of retained)
 	{
 		if (!incoming.has(item.id))
 			incoming.set(item.id, item);

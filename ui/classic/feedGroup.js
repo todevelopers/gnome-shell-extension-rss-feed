@@ -24,6 +24,7 @@ import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import * as GSKeys from '../../gskeys.js';
 import { getInstance } from '../../encoder.js';
 import { feedInitials } from '../../misc.js';
 import { ClassicFeedSubmenu } from './feedSubmenu.js';
@@ -35,7 +36,7 @@ const Encoder = getInstance();
 export const ClassicFeedGroup = GObject.registerClass(
 class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 {
-	_init(source, store)
+	_init(source, store, settings)
 	{
 		let title = Encoder.htmlDecode(source.title);
 		if (title.length > 128)
@@ -45,9 +46,13 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 
 		this._source = source;
 		this._store = store;
+		this._settings = settings;
 		this._dirty = true;
 		this._rowByItem = new Map();
 		this._chunkBuildId = 0;
+		this._showMoreRow = null;
+		this._items = [];
+		this._renderLimit = 0;
 		this._olabeltext = title;
 		this.onActivateConfirm = null;
 
@@ -108,6 +113,8 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 				this._chunkBuildId = 0;
 			}
 			this._rowByItem = null;
+			this._showMoreRow = null;
+			this._items = null;
 		});
 	}
 
@@ -121,17 +128,22 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 
 	_startChunkedBuild()
 	{
-		if (this._chunkBuildId)
-		{
-			GLib.source_remove(this._chunkBuildId);
-			this._chunkBuildId = 0;
-		}
-
+		this._cancelChunk();
 		this.menu.removeAll();
 		this._rowByItem = new Map();
+		this._showMoreRow = null;
 
-		let items = [...this._source.items];
-		let idx = 0;
+		this._items = [...this._source.items];
+		this._renderLimit = Math.min(this._displayLimit(), this._items.length);
+		this._renderRows(0);
+	}
+
+	_renderRows(startIdx)
+	{
+		this._cancelChunk();
+
+		let idx = startIdx;
+		let started = false;
 
 		this._chunkBuildId = GLib.idle_add(GLib.PRIORITY_LOW, () =>
 		{
@@ -141,23 +153,82 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 				return GLib.SOURCE_REMOVE;
 			}
 
-			let end = Math.min(idx + 10, items.length);
+			if (!started)
+			{
+				this._removeShowMore();
+				started = true;
+			}
+
+			let end = Math.min(idx + 10, this._renderLimit);
 			for (let i = idx; i < end; i++)
 			{
-				let row = new ClassicArticleItem(items[i], this._source, this._store);
+				let row = new ClassicArticleItem(this._items[i], this._source, this._store);
 				this.menu.addMenuItem(row);
-				this._rowByItem.set(items[i], row);
+				this._rowByItem.set(this._items[i], row);
 			}
 			idx = end;
 
-			if (idx >= items.length)
+			if (idx >= this._renderLimit)
 			{
 				this._chunkBuildId = 0;
 				this._dirty = false;
+				this._addShowMoreIfNeeded();
 				return GLib.SOURCE_REMOVE;
 			}
 			return GLib.SOURCE_CONTINUE;
 		});
+	}
+
+	_appendMore()
+	{
+		if (this._chunkBuildId)
+			return;
+
+		let from = this._renderLimit;
+		this._renderLimit = Math.min(this._renderLimit + this._displayLimit(), this._items.length);
+		this._renderRows(from);
+	}
+
+	_addShowMoreIfNeeded()
+	{
+		if (!this._rowByItem || this._renderLimit >= this._items.length)
+			return;
+
+		let row = new PopupMenu.PopupBaseMenuItem();
+		row.add_child(new St.Label(
+		{
+			text: "Show more (" + this._renderLimit + " of " + this._items.length + ")",
+			x_expand: true,
+			x_align: Clutter.ActorAlign.CENTER,
+			y_align: Clutter.ActorAlign.CENTER,
+		}));
+		row.activate = () => this._appendMore();
+		this.menu.addMenuItem(row);
+		this._showMoreRow = row;
+	}
+
+	_removeShowMore()
+	{
+		if (this._showMoreRow)
+		{
+			this._showMoreRow.destroy();
+			this._showMoreRow = null;
+		}
+	}
+
+	_cancelChunk()
+	{
+		if (this._chunkBuildId)
+		{
+			GLib.source_remove(this._chunkBuildId);
+			this._chunkBuildId = 0;
+		}
+	}
+
+	_displayLimit()
+	{
+		let n = this._settings.get_int(GSKeys.ITEMS_VISIBLE);
+		return n > 0 ? n : this._items.length;
 	}
 
 	_syncUnread()

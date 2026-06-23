@@ -72,14 +72,14 @@ export class FeedPoller
 	_poll()
 	{
 		this._interval = this._settings.get_int(GSKeys.UPDATE_INTERVAL);
-		let itemsVisible = this._settings.get_int(GSKeys.ITEMS_VISIBLE);
+		let itemsRetained = this._settings.get_int(GSKeys.ITEMS_RETAINED);
 		let markInitialAsNew = this._settings.get_boolean(GSKeys.MARK_INITIAL_AS_NEW);
 
 		let sources = this._store.getSources();
 		this._pending = sources.length;
 
 		for (let source of sources)
-			this._fetch(source, itemsVisible, markInitialAsNew);
+			this._fetch(source, itemsRetained, markInitialAsNew);
 
 		this._scheduleNext();
 	}
@@ -101,7 +101,7 @@ export class FeedPoller
 		}
 	}
 
-	_fetch(source, itemsVisible, markInitialAsNew)
+	_fetch(source, itemsRetained, markInitialAsNew)
 	{
 		let message = Soup.Message.new('GET', this._requestUrl(source.url));
 
@@ -124,7 +124,7 @@ export class FeedPoller
 					if (parser)
 					{
 						parser.parse();
-						source.merge(parser, { itemsVisible, markInitialAsNew });
+						source.merge(parser, { itemsRetained, markInitialAsNew });
 					}
 				}
 

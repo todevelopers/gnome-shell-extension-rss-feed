@@ -93,7 +93,7 @@ class FeedSource extends GObject.Object
 
 		let diff = computeFeedDiff(this.items, incoming, {
 			disableUpdates: this.disableUpdates,
-			itemsVisible: opts.itemsVisible,
+			itemsRetained: opts.itemsRetained,
 		});
 
 		if (!diff.added.length && !diff.removed.length && !diff.updated.length)

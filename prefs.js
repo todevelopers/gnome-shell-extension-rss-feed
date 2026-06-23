@@ -149,9 +149,14 @@ export default class RssFeedPreferences extends ExtensionPreferences
 		maxHeightRow.subtitle = "Menu scrolls when content exceeds this height.";
 		displayGroup.add(maxHeightRow);
 
-		const itemsPerSourceRow = this._makeSpinRow(settings, GSKeys.ITEMS_VISIBLE, "Articles per source", 1, MAX_SOURCES_LIMIT);
-		itemsPerSourceRow.subtitle = "Maximum number of articles fetched and shown per feed.";
+		const itemsPerSourceRow = this._makeSpinRow(settings, GSKeys.ITEMS_VISIBLE, "Visible articles per feed", 1, MAX_SOURCES_LIMIT);
+		itemsPerSourceRow.subtitle = "How many articles each feed shows before 'Show more'. Classic layout only.";
 		displayGroup.add(itemsPerSourceRow);
+
+		const syncItemsVisibleSensitive = () =>
+			itemsPerSourceRow.sensitive = settings.get_string(GSKeys.LAYOUT_MODE) === 'classic';
+		syncItemsVisibleSensitive();
+		settings.connect('changed::' + GSKeys.LAYOUT_MODE, syncItemsVisibleSensitive);
 
 		const pollingGroup = new Adw.PreferencesGroup({ title : "Polling" });
 		generalPage.add(pollingGroup);
@@ -651,6 +656,11 @@ export default class RssFeedPreferences extends ExtensionPreferences
 
 		const sourcesOptionsGroup = new Adw.PreferencesGroup();
 		sourcesPage.add(sourcesOptionsGroup);
+
+		const itemsRetainedRow = this._makeSpinRow(settings, GSKeys.ITEMS_RETAINED, "Articles kept per feed", 1, MAX_SOURCES_LIMIT);
+		itemsRetainedRow.subtitle = "How many articles are stored per feed.";
+		sourcesOptionsGroup.add(itemsRetainedRow);
+
 		const initialUnreadRow = this._makeSwitchRow(settings, GSKeys.MARK_INITIAL_AS_NEW, "Initial unread");
 		initialUnreadRow.subtitle = "Marks all articles as unread on first load after the extension starts.";
 		sourcesOptionsGroup.add(initialUnreadRow);

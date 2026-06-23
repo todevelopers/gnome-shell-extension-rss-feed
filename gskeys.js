@@ -1,6 +1,7 @@
 export const RSS_FEEDS_LIST = 'rss-feeds-list';
 export const UPDATE_INTERVAL = 'update-interval';
 export const ITEMS_VISIBLE = 'items-visible';
+export const ITEMS_RETAINED = 'items-retained';
 export const ENABLE_NOTIFICATIONS = 'enable-notifications';
 export const MAX_HEIGHT = 'max-height';
 export const MAX_NOTIFICATIONS = 'notification-limit';

@@ -247,7 +247,7 @@ class RssIndicator extends PanelMenu.Button
 
 	_addGroup(source)
 	{
-		let group = new ClassicFeedGroup(source, this._store);
+		let group = new ClassicFeedGroup(source, this._store, this._settings);
 		group.onActivateConfirm = (b) => this._activateConfirm(b);
 		this._feedsSection.addMenuItem(group);
 		this._groups.set(source.url, group);

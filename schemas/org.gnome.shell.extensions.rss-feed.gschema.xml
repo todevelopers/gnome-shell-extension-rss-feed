@@ -9,8 +9,13 @@
 		</key>
 		<key type="i" name="items-visible">
 		    <default>100</default>
-		    <summary>Max items per source</summary>
-		    <description>Number of items visible per source.</description>
+		    <summary>Visible articles per feed (Classic)</summary>
+		    <description>How many articles each feed shows before 'Show more'. Classic layout only.</description>
+		</key>
+		<key type="i" name="items-retained">
+		    <default>500</default>
+		    <summary>Articles kept per source</summary>
+		    <description>How many articles are stored per feed.</description>
 		</key>
 		<key type="i" name="max-height">
 		    <default>8192</default>

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { computeFeedDiff } from '../../data/feedMerge.js';
 
 const item = (id, publishDate = '', updateTime = '') => ({ id, publishDate, updateTime, title: 't-' + id });
-const opts = (over = {}) => ({ disableUpdates: false, itemsVisible: 100, ...over });
+const opts = (over = {}) => ({ disableUpdates: false, itemsRetained: 100, ...over });
 const ids = list => list.map(x => x.id);
 
 describe('computeFeedDiff', () => {
@@ -38,8 +38,8 @@ describe('computeFeedDiff', () => {
 			expect(r.added).toEqual([]);
 		});
 
-		it('reports a cached item pushed out of the itemsVisible window', () => {
-			const r = computeFeedDiff([item('c')], [item('a'), item('b'), item('c')], opts({ itemsVisible: 2 }));
+		it('reports a cached item pushed out of the itemsRetained window', () => {
+			const r = computeFeedDiff([item('c')], [item('a'), item('b'), item('c')], opts({ itemsRetained: 2 }));
 			expect(ids(r.removed)).toEqual(['c']);
 			expect(ids(r.added)).toEqual(['a', 'b']);
 		});
@@ -114,9 +114,9 @@ describe('computeFeedDiff', () => {
 		});
 	});
 
-	describe('itemsVisible capping', () => {
-		it('classifies only the first itemsVisible parsed items as added', () => {
-			const r = computeFeedDiff([], [item('a'), item('b'), item('c')], opts({ itemsVisible: 2 }));
+	describe('itemsRetained capping', () => {
+		it('classifies only the first itemsRetained parsed items as added', () => {
+			const r = computeFeedDiff([], [item('a'), item('b'), item('c')], opts({ itemsRetained: 2 }));
 			expect(ids(r.added)).toEqual(['a', 'b']);
 		});
 	});
@@ -129,8 +129,8 @@ describe('computeFeedDiff', () => {
 			expect(r.updated).toEqual([]);
 		});
 
-		it('does nothing when itemsVisible is zero', () => {
-			const r = computeFeedDiff([item('a')], [item('b')], opts({ itemsVisible: 0 }));
+		it('does nothing when itemsRetained is zero', () => {
+			const r = computeFeedDiff([item('a')], [item('b')], opts({ itemsRetained: 0 }));
 			expect(r.removed).toEqual([]);
 			expect(r.added).toEqual([]);
 			expect(r.updated).toEqual([]);
