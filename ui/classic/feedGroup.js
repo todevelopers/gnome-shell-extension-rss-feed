@@ -114,30 +114,9 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 	activate(event)
 	{
 		if (this._dirty && !this.menu.isOpen)
-			this._buildRows();
+			this._startChunkedBuild();
 
 		super.activate(event);
-	}
-
-	_buildRows()
-	{
-		if (this._chunkBuildId)
-		{
-			GLib.source_remove(this._chunkBuildId);
-			this._chunkBuildId = 0;
-		}
-
-		this.menu.removeAll();
-		this._rowByItem = new Map();
-
-		for (let item of this._source.items)
-		{
-			let row = new ClassicArticleItem(item, this._source, this._store);
-			this.menu.addMenuItem(row);
-			this._rowByItem.set(item, row);
-		}
-
-		this._dirty = false;
 	}
 
 	_startChunkedBuild()
