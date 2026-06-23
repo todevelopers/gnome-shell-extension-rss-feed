@@ -141,9 +141,15 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 	_renderRows(startIdx)
 	{
 		this._cancelChunk();
+		this._removeShowMore();
 
-		let idx = startIdx;
-		let started = false;
+		let idx = this._renderChunk(startIdx);
+		if (idx >= this._renderLimit)
+		{
+			this._dirty = false;
+			this._addShowMoreIfNeeded();
+			return;
+		}
 
 		this._chunkBuildId = GLib.idle_add(GLib.PRIORITY_LOW, () =>
 		{
@@ -153,21 +159,7 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 				return GLib.SOURCE_REMOVE;
 			}
 
-			if (!started)
-			{
-				this._removeShowMore();
-				started = true;
-			}
-
-			let end = Math.min(idx + 10, this._renderLimit);
-			for (let i = idx; i < end; i++)
-			{
-				let row = new ClassicArticleItem(this._items[i], this._source, this._store);
-				this.menu.addMenuItem(row);
-				this._rowByItem.set(this._items[i], row);
-			}
-			idx = end;
-
+			idx = this._renderChunk(idx);
 			if (idx >= this._renderLimit)
 			{
 				this._chunkBuildId = 0;
@@ -177,6 +169,18 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 			}
 			return GLib.SOURCE_CONTINUE;
 		});
+	}
+
+	_renderChunk(startIdx)
+	{
+		let end = Math.min(startIdx + 10, this._renderLimit);
+		for (let i = startIdx; i < end; i++)
+		{
+			let row = new ClassicArticleItem(this._items[i], this._source, this._store);
+			this.menu.addMenuItem(row);
+			this._rowByItem.set(this._items[i], row);
+		}
+		return end;
 	}
 
 	_appendMore()
