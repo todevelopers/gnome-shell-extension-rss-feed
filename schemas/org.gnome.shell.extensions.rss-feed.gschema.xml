@@ -9,8 +9,8 @@
 		</key>
 		<key type="i" name="items-visible">
 		    <default>100</default>
-		    <summary>Visible articles per feed (Classic)</summary>
-		    <description>How many articles each feed shows before 'Show more'. Classic layout only.</description>
+		    <summary>Visible articles before 'Show more'</summary>
+		    <description>How many articles each feed (Classic) or section (Minimal) shows before 'Show more'.</description>
 		</key>
 		<key type="i" name="items-retained">
 		    <default>500</default>

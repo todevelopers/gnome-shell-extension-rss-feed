@@ -149,14 +149,9 @@ export default class RssFeedPreferences extends ExtensionPreferences
 		maxHeightRow.subtitle = "Menu scrolls when content exceeds this height.";
 		displayGroup.add(maxHeightRow);
 
-		const itemsPerSourceRow = this._makeSpinRow(settings, GSKeys.ITEMS_VISIBLE, "Visible articles per feed", 1, MAX_SOURCES_LIMIT);
-		itemsPerSourceRow.subtitle = "How many articles each feed shows before 'Show more'. Classic layout only.";
+		const itemsPerSourceRow = this._makeSpinRow(settings, GSKeys.ITEMS_VISIBLE, "Visible articles before 'Show more'", 1, MAX_SOURCES_LIMIT);
+		itemsPerSourceRow.subtitle = "How many articles each feed (Classic) or section (Minimal) shows.";
 		displayGroup.add(itemsPerSourceRow);
-
-		const syncItemsVisibleSensitive = () =>
-			itemsPerSourceRow.sensitive = settings.get_string(GSKeys.LAYOUT_MODE) === 'classic';
-		syncItemsVisibleSensitive();
-		settings.connect('changed::' + GSKeys.LAYOUT_MODE, syncItemsVisibleSensitive);
 
 		const pollingGroup = new Adw.PreferencesGroup({ title : "Polling" });
 		generalPage.add(pollingGroup);

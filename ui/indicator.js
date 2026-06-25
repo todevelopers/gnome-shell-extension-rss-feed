@@ -35,10 +35,9 @@ import { ConfirmBadge } from './confirmBadge.js';
 import { ClassicFeedGroup } from './classic/feedGroup.js';
 import { MinimalArticleItem } from './minimal/articleItem.js';
 import { MinimalSectionHeader } from './minimal/sectionHeader.js';
+import { ShowMoreRow } from './showMoreRow.js';
 
 const Encoder = getInstance();
-const MINIMAL_INITIAL_RENDER = 50;
-const MINIMAL_RENDER_PAGE = 25;
 
 export const RssIndicator = GObject.registerClass(
 class RssIndicator extends PanelMenu.Button
@@ -54,6 +53,7 @@ class RssIndicator extends PanelMenu.Button
 		this._groups = new Map();
 		this._sourceBindings = new Map();
 		this._minimalPlan = null;
+		this._minimalSectionState = null;
 		this.onReload = null;
 
 		let button = new St.BoxLayout(
@@ -140,10 +140,6 @@ class RssIndicator extends PanelMenu.Button
 		this.menu.addMenuItem(this._feedsSection);
 		this.menu.addMenuItem(this._minimalSection);
 
-		let minimalAdj = this._minimalSection.actor.vadjustment;
-		if (minimalAdj)
-			minimalAdj.connectObject('notify::value', () => this._maybeLoadMoreMinimal(), this);
-
 		this._layoutMode = settings.get_string(GSKeys.LAYOUT_MODE);
 		this._applyLayoutMode();
 
@@ -161,6 +157,7 @@ class RssIndicator extends PanelMenu.Button
 				this._feedsSection.actor.set_style(this._generatePopupMenuCSS(h));
 				this._minimalSection.actor.set_style(this._generatePopupMenuCSS(h));
 			},
+			'changed::' + GSKeys.ITEMS_VISIBLE, () => this._markMinimalDirty(),
 			this
 		);
 
@@ -373,22 +370,31 @@ class RssIndicator extends PanelMenu.Button
 		if (!this._minimalCollapsed)
 			this._minimalCollapsed = {};
 
-		let plan = [];
-		let lastSection = null;
+		this._minimalSectionState = {
+			unread: { entries: [], header: null, showMore: null, rendered: 0 },
+			read: { entries: [], header: null, showMore: null, rendered: 0 },
+		};
 		for (let entry of items)
+			this._minimalSectionState[entry.section].entries.push(entry);
+
+		let cap = this._minimalDisplayLimit();
+		let plan = [];
+		for (let section of ['unread', 'read'])
 		{
-			if (entry.section !== lastSection)
-			{
-				plan.push({ type: 'header', section: entry.section });
-				lastSection = entry.section;
-			}
-			plan.push({ type: 'item', item: entry.item, source: entry.source, feedTitle: entry.feedTitle, section: entry.section });
+			let state = this._minimalSectionState[section];
+			if (state.entries.length === 0)
+				continue;
+
+			plan.push({ type: 'header', section });
+			let limit = cap > 0 ? Math.min(cap, state.entries.length) : state.entries.length;
+			for (let i = 0; i < limit; i++)
+				plan.push({ type: 'item', section, entry: state.entries[i] });
+			state.rendered = limit;
+			if (limit < state.entries.length)
+				plan.push({ type: 'showmore', section });
 		}
 
 		this._minimalPlan = plan;
-		this._minimalHeaders = {};
-		this._minimalRenderLimit = Math.min(MINIMAL_INITIAL_RENDER, plan.length);
-
 		this._minimalSection.removeAll();
 
 		if (plan.length === 0)
@@ -410,10 +416,11 @@ class RssIndicator extends PanelMenu.Button
 				return GLib.SOURCE_REMOVE;
 			}
 
-			let end = Math.min(idx + 10, this._minimalRenderLimit);
+			let end = Math.min(idx + 10, this._minimalPlan.length);
 			for (let i = idx; i < end; i++)
 			{
 				let step = this._minimalPlan[i];
+				let state = this._minimalSectionState[step.section];
 				if (step.type === 'header')
 				{
 					let sec = step.section;
@@ -422,20 +429,28 @@ class RssIndicator extends PanelMenu.Button
 						this._minimalCollapsed[sec],
 						(collapsed) => { this._minimalCollapsed[sec] = collapsed; });
 					this._minimalSection.addMenuItem(h);
-					this._minimalHeaders[sec] = h;
+					state.header = h;
+				}
+				else if (step.type === 'item')
+				{
+					let mi = new MinimalArticleItem(step.entry.item, step.entry.source, this._store, step.entry.feedTitle);
+					this._minimalSection.addMenuItem(mi);
+					if (state.header)
+						state.header.addItem(mi);
 				}
 				else
 				{
-					let mi = new MinimalArticleItem(step.item, step.source, this._store, step.feedTitle);
-					this._minimalSection.addMenuItem(mi);
-					let h = this._minimalHeaders[step.section];
-					if (h)
-						h.addItem(mi);
+					let row = new ShowMoreRow(() => this._appendMinimalSection(step.section));
+					row.setCounts(state.rendered, state.entries.length);
+					this._minimalSection.addMenuItem(row);
+					if (state.header)
+						state.header.addItem(row);
+					state.showMore = row;
 				}
 			}
 			idx = end;
 
-			if (idx >= this._minimalRenderLimit)
+			if (idx >= this._minimalPlan.length)
 			{
 				this._minimalChunkId = 0;
 				return GLib.SOURCE_REMOVE;
@@ -444,31 +459,44 @@ class RssIndicator extends PanelMenu.Button
 		});
 	}
 
-	_appendMinimalMore()
+	_appendMinimalSection(section)
 	{
-		if (this._minimalChunkId || !this._minimalPlan)
-			return;
-		if (this._minimalRenderLimit >= this._minimalPlan.length)
+		let state = this._minimalSectionState ? this._minimalSectionState[section] : null;
+		if (!state || !state.showMore)
 			return;
 
-		let from = this._minimalRenderLimit;
-		this._minimalRenderLimit = Math.min(this._minimalRenderLimit + MINIMAL_RENDER_PAGE, this._minimalPlan.length);
-		this._renderMinimalRange(from);
+		let cap = this._minimalDisplayLimit();
+		let from = state.rendered;
+		let to = cap > 0 ? Math.min(from + cap, state.entries.length) : state.entries.length;
+
+		let items = this._minimalSection._getMenuItems();
+		let base = items.indexOf(state.showMore);
+		if (base < 0)
+			base = items.length;
+
+		for (let i = from; i < to; i++)
+		{
+			let entry = state.entries[i];
+			let mi = new MinimalArticleItem(entry.item, entry.source, this._store, entry.feedTitle);
+			this._minimalSection.addMenuItem(mi, base + (i - from));
+			if (state.header)
+				state.header.addItem(mi);
+		}
+
+		state.rendered = to;
+
+		if (to >= state.entries.length)
+		{
+			state.showMore.destroy();
+			state.showMore = null;
+		}
+		else
+			state.showMore.setCounts(to, state.entries.length);
 	}
 
-	_maybeLoadMoreMinimal()
+	_minimalDisplayLimit()
 	{
-		if (this._minimalChunkId || !this._minimalPlan)
-			return;
-		if (this._minimalRenderLimit >= this._minimalPlan.length)
-			return;
-
-		let adj = this._minimalSection.actor.vadjustment;
-		if (!adj)
-			return;
-
-		if (adj.value + adj.page_size >= adj.upper - adj.page_size)
-			this._appendMinimalMore();
+		return this._settings.get_int(GSKeys.ITEMS_VISIBLE);
 	}
 
 	_cancelMinimalChunk()
@@ -586,6 +614,7 @@ class RssIndicator extends PanelMenu.Button
 		}
 
 		this._minimalPlan = null;
+		this._minimalSectionState = null;
 
 		if (this._scrollIdleId)
 		{

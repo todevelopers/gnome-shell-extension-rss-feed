@@ -30,6 +30,7 @@ import { feedInitials } from '../../misc.js';
 import { ClassicFeedSubmenu } from './feedSubmenu.js';
 import { ClassicArticleItem } from './articleItem.js';
 import { ConfirmBadge } from '../confirmBadge.js';
+import { ShowMoreRow } from '../showMoreRow.js';
 
 const Encoder = getInstance();
 
@@ -240,15 +241,8 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		if (!this._rowByItem || this._renderLimit >= this._items.length)
 			return;
 
-		let row = new PopupMenu.PopupBaseMenuItem();
-		row.add_child(new St.Label(
-		{
-			text: "Show more (" + this._renderLimit + " of " + this._items.length + ")",
-			x_expand: true,
-			x_align: Clutter.ActorAlign.CENTER,
-			y_align: Clutter.ActorAlign.CENTER,
-		}));
-		row.activate = () => this._appendMore();
+		let row = new ShowMoreRow(() => this._appendMore());
+		row.setCounts(this._renderLimit, this._items.length);
 		this.menu.addMenuItem(row);
 		this._showMoreRow = row;
 	}
