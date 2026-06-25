@@ -96,7 +96,7 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 			{
 				this._dirty = true;
 				if (this.menu.isOpen)
-					this._startChunkedBuild();
+					this._reconcile();
 			},
 			'unread-changed', () => this._syncUnread(),
 			'meta-changed', () => this._syncMeta(),
@@ -191,6 +191,48 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		let from = this._renderLimit;
 		this._renderLimit = Math.min(this._renderLimit + this._displayLimit(), this._items.length);
 		this._renderRows(from);
+	}
+
+	_reconcile()
+	{
+		if (!this._rowByItem)
+			return;
+
+		if (this._chunkBuildId)
+		{
+			this._startChunkedBuild();
+			return;
+		}
+
+		this._removeShowMore();
+
+		this._items = [...this._source.items];
+		this._renderLimit = Math.min(this._renderLimit || this._displayLimit(), this._items.length);
+
+		let desired = this._items.slice(0, this._renderLimit);
+		let wanted = new Set(desired);
+
+		for (let [item, row] of this._rowByItem)
+		{
+			if (!wanted.has(item))
+			{
+				row.destroy();
+				this._rowByItem.delete(item);
+			}
+		}
+
+		for (let i = 0; i < desired.length; i++)
+		{
+			let item = desired[i];
+			if (this._rowByItem.has(item))
+				continue;
+			let row = new ClassicArticleItem(item, this._source, this._store);
+			this._rowByItem.set(item, row);
+			this.menu.addMenuItem(row, i);
+		}
+
+		this._dirty = false;
+		this._addShowMoreIfNeeded();
 	}
 
 	_addShowMoreIfNeeded()
