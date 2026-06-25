@@ -37,7 +37,8 @@ import { MinimalArticleItem } from './minimal/articleItem.js';
 import { MinimalSectionHeader } from './minimal/sectionHeader.js';
 
 const Encoder = getInstance();
-const MINIMAL_READ_INITIAL_LIMIT = 15;
+const MINIMAL_INITIAL_RENDER = 50;
+const MINIMAL_RENDER_PAGE = 25;
 
 export const RssIndicator = GObject.registerClass(
 class RssIndicator extends PanelMenu.Button
@@ -52,7 +53,7 @@ class RssIndicator extends PanelMenu.Button
 
 		this._groups = new Map();
 		this._sourceBindings = new Map();
-		this._readShowAll = false;
+		this._minimalPlan = null;
 		this.onReload = null;
 
 		let button = new St.BoxLayout(
@@ -138,6 +139,10 @@ class RssIndicator extends PanelMenu.Button
 		this._minimalSection = new ScrollSection(this._generatePopupMenuCSS(maxHeight));
 		this.menu.addMenuItem(this._feedsSection);
 		this.menu.addMenuItem(this._minimalSection);
+
+		let minimalAdj = this._minimalSection.actor.vadjustment;
+		if (minimalAdj)
+			minimalAdj.connectObject('notify::value', () => this._maybeLoadMoreMinimal(), this);
 
 		this._layoutMode = settings.get_string(GSKeys.LAYOUT_MODE);
 		this._applyLayoutMode();
@@ -361,112 +366,118 @@ class RssIndicator extends PanelMenu.Button
 
 	_rebuildMinimalSection()
 	{
-		if (this._minimalChunkId)
-		{
-			GLib.source_remove(this._minimalChunkId);
-			this._minimalChunkId = 0;
-		}
-
-		this._minimalSection.removeAll();
+		this._cancelMinimalChunk();
 
 		let items = this._computeMinimalList();
 
 		if (!this._minimalCollapsed)
 			this._minimalCollapsed = {};
-		let collapsedState = this._minimalCollapsed;
-
-		let readTotal = 0;
-		for (let i = 0; i < items.length; i++)
-			if (items[i].section === 'read') readTotal++;
-
-		let readLimit = this._readShowAll ? readTotal : MINIMAL_READ_INITIAL_LIMIT;
-		let readRendered = 0;
-		let lastSection = null;
 
 		let plan = [];
+		let lastSection = null;
 		for (let entry of items)
 		{
-			let { item, source, feedTitle, section } = entry;
-			if (section !== lastSection)
+			if (entry.section !== lastSection)
 			{
-				plan.push({ type: 'header', section });
-				lastSection = section;
+				plan.push({ type: 'header', section: entry.section });
+				lastSection = entry.section;
 			}
-			if (section === 'read')
-			{
-				if (readRendered >= readLimit)
-					continue;
-				readRendered++;
-			}
-			plan.push({ type: 'item', item, source, feedTitle, section });
+			plan.push({ type: 'item', item: entry.item, source: entry.source, feedTitle: entry.feedTitle, section: entry.section });
 		}
 
-		let hidden = readTotal - readRendered;
-		if (hidden > 0)
-			plan.push({ type: 'showAll', hidden });
+		this._minimalPlan = plan;
+		this._minimalHeaders = {};
+		this._minimalRenderLimit = Math.min(MINIMAL_INITIAL_RENDER, plan.length);
+
+		this._minimalSection.removeAll();
 
 		if (plan.length === 0)
 			return;
 
-		let headers = {};
-		let idx = 0;
+		this._renderMinimalRange(0);
+	}
 
+	_renderMinimalRange(from)
+	{
+		this._cancelMinimalChunk();
+
+		let idx = from;
 		this._minimalChunkId = GLib.idle_add(GLib.PRIORITY_LOW, () =>
 		{
-			let end = Math.min(idx + 10, plan.length);
+			if (!this._minimalPlan)
+			{
+				this._minimalChunkId = 0;
+				return GLib.SOURCE_REMOVE;
+			}
+
+			let end = Math.min(idx + 10, this._minimalRenderLimit);
 			for (let i = idx; i < end; i++)
 			{
-				let step = plan[i];
+				let step = this._minimalPlan[i];
 				if (step.type === 'header')
 				{
 					let sec = step.section;
 					let h = new MinimalSectionHeader(
 						sec.toUpperCase(),
-						collapsedState[sec],
-						(collapsed) => { collapsedState[sec] = collapsed; });
+						this._minimalCollapsed[sec],
+						(collapsed) => { this._minimalCollapsed[sec] = collapsed; });
 					this._minimalSection.addMenuItem(h);
-					headers[sec] = h;
+					this._minimalHeaders[sec] = h;
 				}
-				else if (step.type === 'item')
+				else
 				{
 					let mi = new MinimalArticleItem(step.item, step.source, this._store, step.feedTitle);
 					this._minimalSection.addMenuItem(mi);
-					let h = headers[step.section];
+					let h = this._minimalHeaders[step.section];
 					if (h)
 						h.addItem(mi);
-				}
-				else if (step.type === 'showAll')
-				{
-					let showAll = new PopupMenu.PopupBaseMenuItem(
-						{ style_class: 'popup-menu-item rss-minimal-section-header' });
-					let showAllLabel = new St.Label(
-					{
-						text: "Show all (" + step.hidden + " more)",
-						x_expand: true,
-						y_align: Clutter.ActorAlign.CENTER,
-						style_class: 'rss-minimal-section-label',
-					});
-					showAll.add_child(showAllLabel);
-					showAll.activate = () =>
-					{
-						this._readShowAll = true;
-						this._markMinimalDirty();
-					};
-					this._minimalSection.addMenuItem(showAll);
-					let rh = headers['read'];
-					if (rh)
-						rh.addItem(showAll);
 				}
 			}
 			idx = end;
 
-			if (idx >= plan.length)
+			if (idx >= this._minimalRenderLimit)
 			{
 				this._minimalChunkId = 0;
 				return GLib.SOURCE_REMOVE;
 			}
 			return GLib.SOURCE_CONTINUE;
 		});
+	}
+
+	_appendMinimalMore()
+	{
+		if (this._minimalChunkId || !this._minimalPlan)
+			return;
+		if (this._minimalRenderLimit >= this._minimalPlan.length)
+			return;
+
+		let from = this._minimalRenderLimit;
+		this._minimalRenderLimit = Math.min(this._minimalRenderLimit + MINIMAL_RENDER_PAGE, this._minimalPlan.length);
+		this._renderMinimalRange(from);
+	}
+
+	_maybeLoadMoreMinimal()
+	{
+		if (this._minimalChunkId || !this._minimalPlan)
+			return;
+		if (this._minimalRenderLimit >= this._minimalPlan.length)
+			return;
+
+		let adj = this._minimalSection.actor.vadjustment;
+		if (!adj)
+			return;
+
+		if (adj.value + adj.page_size >= adj.upper - adj.page_size)
+			this._appendMinimalMore();
+	}
+
+	_cancelMinimalChunk()
+	{
+		if (this._minimalChunkId)
+		{
+			GLib.source_remove(this._minimalChunkId);
+			this._minimalChunkId = 0;
+		}
 	}
 
 	_markMinimalDirty()
@@ -573,6 +584,8 @@ class RssIndicator extends PanelMenu.Button
 			GLib.source_remove(this._minimalChunkId);
 			this._minimalChunkId = 0;
 		}
+
+		this._minimalPlan = null;
 
 		if (this._scrollIdleId)
 		{
