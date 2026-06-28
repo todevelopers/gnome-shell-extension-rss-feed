@@ -241,7 +241,7 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		if (!this._rowByItem || this._renderLimit >= this._items.length)
 			return;
 
-		let row = new ShowMoreRow(() => this._appendMore());
+		let row = new ShowMoreRow(() => this._appendMore(), true);
 		row.setCounts(this._renderLimit, this._items.length);
 		this.menu.addMenuItem(row);
 		this._showMoreRow = row;

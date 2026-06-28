@@ -27,10 +27,13 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 export const ShowMoreRow = GObject.registerClass(
 class ShowMoreRow extends PopupMenu.PopupBaseMenuItem
 {
-	_init(onActivate)
+	_init(onActivate, reserveOrnament)
 	{
 		super._init();
 		this._onActivate = onActivate;
+
+		if (reserveOrnament)
+			this.setOrnament(PopupMenu.Ornament.NONE);
 
 		this._label = new St.Label(
 		{
