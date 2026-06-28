@@ -35,7 +35,6 @@ class ShowMoreRow extends PopupMenu.PopupBaseMenuItem
 		this._label = new St.Label(
 		{
 			x_expand: true,
-			x_align: Clutter.ActorAlign.CENTER,
 			y_align: Clutter.ActorAlign.CENTER,
 			style_class: 'rss-show-more',
 		});
