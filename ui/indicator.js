@@ -157,7 +157,12 @@ class RssIndicator extends PanelMenu.Button
 				this._feedsSection.actor.set_style(this._generatePopupMenuCSS(h));
 				this._minimalSection.actor.set_style(this._generatePopupMenuCSS(h));
 			},
-			'changed::' + GSKeys.ITEMS_VISIBLE, () => this._markMinimalDirty(),
+			'changed::' + GSKeys.ITEMS_VISIBLE, () =>
+			{
+				this._markMinimalDirty();
+				for (let group of this._groups.values())
+					group.refreshVisibleLimit();
+			},
 			this
 		);
 

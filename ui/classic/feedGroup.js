@@ -271,6 +271,14 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		return n > 0 ? n : this._items.length;
 	}
 
+	refreshVisibleLimit()
+	{
+		if (this.menu.isOpen)
+			this._startChunkedBuild();
+		else
+			this._dirty = true;
+	}
+
 	_syncUnread()
 	{
 		this.setUnreadCount(this._source.unreadCount);
