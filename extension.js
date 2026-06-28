@@ -26,8 +26,8 @@ import * as GSKeys from './gskeys.js';
 import { FeedStore } from './data/feedStore.js';
 import { FeedRepository } from './data/feedRepository.js';
 import { FeedPoller } from './data/feedPoller.js';
-import { NotificationManager } from './data/notificationManager.js';
 import { RssIndicator } from './ui/indicator.js';
+import { NotificationManager } from './ui/notificationManager.js';
 
 export default class RssFeedExtension extends Extension
 {

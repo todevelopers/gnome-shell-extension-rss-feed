@@ -28,7 +28,7 @@ import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 import * as GSKeys from '../gskeys.js';
 import * as Misc from '../misc.js';
 import { getInstance } from '../encoder.js';
-import { planNotifications } from './notificationPolicy.js';
+import { planNotifications } from '../data/notificationPolicy.js';
 
 const Encoder = getInstance();
 
