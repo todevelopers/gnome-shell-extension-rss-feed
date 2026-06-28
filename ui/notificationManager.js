@@ -124,11 +124,7 @@ export class NotificationManager
 		notification._rssItem = item;
 		notification._rssSource = source;
 
-		notification.addAction('Open', () =>
-		{
-			if (Misc.processLinkOpen(spec.url))
-				this._store.markRead(source, item);
-		});
+		notification.addAction('Open', () => this._open(source, item, spec.url));
 
 		notification.addAction('Copy URL', () =>
 		{
@@ -143,11 +139,7 @@ export class NotificationManager
 			this._store.markRead(source, item);
 		});
 
-		notification.connect('activated', () =>
-		{
-			if (Misc.processLinkOpen(spec.url))
-				this._store.markRead(source, item);
-		});
+		notification.connect('activated', () => this._open(source, item, spec.url));
 
 		notification.connect('destroy', () =>
 		{
@@ -157,6 +149,15 @@ export class NotificationManager
 
 		this._notifications.set(spec.id, notification);
 		this._source.addNotification(notification);
+	}
+
+	_open(source, item, url)
+	{
+		if (Misc.processLinkOpen(url))
+		{
+			Main.panel.statusArea.dateMenu?.menu?.close();
+			this._store.markRead(source, item);
+		}
 	}
 
 	_dismiss(id)

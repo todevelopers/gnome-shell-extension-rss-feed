@@ -28,8 +28,6 @@ export function processLinkOpen(url)
 	if (isScreenLocked())
 		return false;
 
-	Main.panel.statusArea.dateMenu?.menu?.close();
-
 	try
 	{
 		Gio.app_info_launch_default_for_uri(url, null);
