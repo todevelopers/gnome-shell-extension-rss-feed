@@ -26,7 +26,7 @@ import { makeSpinRow, makeSwitchRow } from './prefsWidgets.js';
 
 const MAX_NOTIFICATIONS = 100;
 
-export function buildNotificationsPage(settings)
+export function buildNotificationsPage(window, settings)
 {
 	const notifPage = new Adw.PreferencesPage({ title : "Notifications", icon_name : 'preferences-system-notifications-symbolic' });
 
@@ -57,10 +57,11 @@ export function buildNotificationsPage(settings)
 	};
 
 	updateNotifSensitive(settings.get_boolean(GSKeys.ENABLE_NOTIFICATIONS));
-	settings.connect('changed::' + GSKeys.ENABLE_NOTIFICATIONS, () =>
+	const enableId = settings.connect('changed::' + GSKeys.ENABLE_NOTIFICATIONS, () =>
 	{
 		updateNotifSensitive(settings.get_boolean(GSKeys.ENABLE_NOTIFICATIONS));
 	});
+	window.connect('close-request', () => { settings.disconnect(enableId); });
 
 	return notifPage;
 }

@@ -19,7 +19,6 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import Gio from 'gi://Gio';
 import Soup from 'gi://Soup';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
@@ -37,16 +36,15 @@ export default class RssFeedPreferences extends ExtensionPreferences
 		const aSettings = new GSAA(settings, GSKeys.RSS_FEEDS_SETTINGS);
 
 		const httpSession = new Soup.Session({ timeout : 30 });
-		const cancellable = new Gio.Cancellable();
 
 		window.connect('close-request', () =>
 		{
-			cancellable.cancel();
+			httpSession.abort();
 			aSettings.destroy();
 		});
 
-		window.add(buildGeneralPage(settings));
-		window.add(buildNotificationsPage(settings));
-		window.add(buildSourcesPage(settings, aSettings, httpSession));
+		window.add(buildGeneralPage(window, settings));
+		window.add(buildNotificationsPage(window, settings));
+		window.add(buildSourcesPage(window, settings, aSettings, httpSession));
 	}
 }

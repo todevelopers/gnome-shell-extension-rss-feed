@@ -29,7 +29,7 @@ const MAX_UPDATE_INTERVAL = 1440;
 const MAX_SOURCES_LIMIT = 1024;
 const MAX_HEIGHT = 8192;
 
-export function buildGeneralPage(settings)
+export function buildGeneralPage(window, settings)
 {
 	const generalPage = new Adw.PreferencesPage({ title : "General", icon_name : 'preferences-system-symbolic' });
 
@@ -86,7 +86,8 @@ export function buildGeneralPage(settings)
 		}
 	};
 	syncLayoutRows();
-	settings.connect('changed::' + GSKeys.LAYOUT_MODE, syncLayoutRows);
+	const layoutModeId = settings.connect('changed::' + GSKeys.LAYOUT_MODE, syncLayoutRows);
+	window.connect('close-request', () => { settings.disconnect(layoutModeId); });
 
 	const displayGroup = new Adw.PreferencesGroup({ title : "Display" });
 	generalPage.add(displayGroup);

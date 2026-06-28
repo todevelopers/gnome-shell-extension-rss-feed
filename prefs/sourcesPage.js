@@ -36,7 +36,7 @@ import { makeSpinRow, makeSwitchRow, getInitials, urlToInitials } from './prefsW
 const Encoder = getInstance();
 const MAX_SOURCES_LIMIT = 1024;
 
-export function buildSourcesPage(settings, aSettings, httpSession)
+export function buildSourcesPage(window, settings, aSettings, httpSession)
 {
 	const sourcesPage = new Adw.PreferencesPage({ title : "Sources", icon_name : 'view-list-symbolic' });
 
@@ -93,6 +93,10 @@ export function buildSourcesPage(settings, aSettings, httpSession)
 		cssProvider,
 		Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 	);
+	window.connect('close-request', () =>
+	{
+		Gtk.StyleContext.remove_provider_for_display(Gdk.Display.get_default(), cssProvider);
+	});
 
 	const fCache = new Object();
 
