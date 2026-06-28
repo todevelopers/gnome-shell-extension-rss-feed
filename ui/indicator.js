@@ -205,16 +205,7 @@ class RssIndicator extends PanelMenu.Button
 		titleBox.add_child(this._headerSubtitle);
 		this._buttonMenu.add_child(titleBox);
 
-		this._unreadBadgeText = new St.Label(
-		{
-			text : '',
-			x_align : Clutter.ActorAlign.CENTER,
-			y_align : Clutter.ActorAlign.CENTER,
-			style_class : 'rss-badge-text',
-		});
-
-		this._unreadBadge = new ConfirmBadge('rss-unread-badge', this._unreadBadgeText);
-		this._unreadBadge.visible = false;
+		this._unreadBadge = new ConfirmBadge('rss-unread-badge');
 		this._unreadBadge.onConfirm = () => this._store.markAllSeen();
 		this._unreadBadge.onEnterConfirm = (b) => this._activateConfirm(b);
 		this._buttonMenu.add_child(this._unreadBadge);
@@ -567,18 +558,7 @@ class RssIndicator extends PanelMenu.Button
 		else
 			this._iconLabel.hide();
 
-		if (this._unreadBadge)
-		{
-			if (count > 0)
-			{
-				this._unreadBadgeText.set_text(count > 99 ? '99+' : count.toString());
-				this._unreadBadge.show();
-			}
-			else
-			{
-				this._unreadBadge.hide();
-			}
-		}
+		this._unreadBadge?.setCount(count);
 	}
 
 	_generatePopupMenuCSS(value)

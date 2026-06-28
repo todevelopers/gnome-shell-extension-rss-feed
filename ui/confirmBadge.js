@@ -26,7 +26,7 @@ import St from 'gi://St';
 export const ConfirmBadge = GObject.registerClass(
 class ConfirmBadge extends St.Button
 {
-	_init(styleClass, defaultChild)
+	_init(styleClass)
 	{
 		super._init(
 		{
@@ -34,8 +34,15 @@ class ConfirmBadge extends St.Button
 			track_hover: true,
 			can_focus: false,
 			y_align: Clutter.ActorAlign.CENTER,
+			visible: false,
 		});
-		this._defaultChild = defaultChild;
+		this._label = new St.Label(
+		{
+			text: '',
+			x_align: Clutter.ActorAlign.CENTER,
+			y_align: Clutter.ActorAlign.CENTER,
+			style_class: 'rss-badge-text',
+		});
 		this._confirmIcon = new St.Icon(
 		{
 			icon_name: 'object-select-symbolic',
@@ -44,7 +51,7 @@ class ConfirmBadge extends St.Button
 			y_align: Clutter.ActorAlign.CENTER,
 			style_class: 'rss-badge-confirm-icon',
 		});
-		this.set_child(defaultChild);
+		this.set_child(this._label);
 		this._confirmMode = false;
 		this.onConfirm = null;
 		this.onEnterConfirm = null;
@@ -81,6 +88,17 @@ class ConfirmBadge extends St.Button
 		if (!this._confirmMode)
 			return;
 		this._confirmMode = false;
-		this.set_child(this._defaultChild);
+		this.set_child(this._label);
+	}
+
+	setCount(n)
+	{
+		if (n > 0)
+		{
+			this._label.set_text(n > 99 ? '99+' : n.toString());
+			this.show();
+		}
+		else
+			this.hide();
 	}
 });

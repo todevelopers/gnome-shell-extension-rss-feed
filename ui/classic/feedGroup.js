@@ -69,16 +69,7 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		this._avatar.child = avatarLabel;
 		this.insert_child_at_index(this._avatar, 0);
 
-		this._countBadgeText = new St.Label(
-		{
-			text: '',
-			x_align: Clutter.ActorAlign.CENTER,
-			y_align: Clutter.ActorAlign.CENTER,
-			style_class: 'rss-badge-text',
-		});
-
-		this._countBadge = new ConfirmBadge('rss-feed-count', this._countBadgeText);
-		this._countBadge.visible = false;
+		this._countBadge = new ConfirmBadge('rss-feed-count');
 		this._countBadge.onConfirm = () => this._source.markAllSeen();
 		this._countBadge.onEnterConfirm = (b) =>
 		{
@@ -310,14 +301,6 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 
 	setUnreadCount(n)
 	{
-		if (n > 0)
-		{
-			this._countBadgeText.set_text(n > 99 ? '99+' : n.toString());
-			this._countBadge.show();
-		}
-		else
-		{
-			this._countBadge.hide();
-		}
+		this._countBadge.setCount(n);
 	}
 });
