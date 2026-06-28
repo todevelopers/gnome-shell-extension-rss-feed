@@ -139,6 +139,9 @@ export class FeedRepository
 
 	destroy()
 	{
+		if (this._flushId)
+			this.flushUnread();
+
 		this._cancelScheduledFlush();
 
 		if (this._store && this._changedId)

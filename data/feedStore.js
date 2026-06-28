@@ -29,7 +29,6 @@ export const FeedStore = GObject.registerClass(
 		'source-removed': { param_types: [GObject.TYPE_JSOBJECT] },
 		'reordered': {},
 		'changed': {},
-		'item-read': { param_types: [GObject.TYPE_JSOBJECT] },
 	},
 },
 class FeedStore extends GObject.Object
@@ -100,7 +99,6 @@ class FeedStore extends GObject.Object
 			return;
 
 		source.markRead(item);
-		this.emit('item-read', item);
 	}
 
 	markAllSeen()
