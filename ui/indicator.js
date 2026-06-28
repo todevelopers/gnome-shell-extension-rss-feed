@@ -25,13 +25,12 @@ import St from 'gi://St';
 import Clutter from 'gi://Clutter';
 
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
-import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import * as GSKeys from '../gskeys.js';
 import * as Misc from '../misc.js';
 import { getInstance } from '../encoder.js';
 import { ScrollSection } from './scrollSection.js';
-import { ConfirmBadge } from './confirmBadge.js';
+import { RssHeader } from './header.js';
 import { ClassicFeedGroup } from './classic/feedGroup.js';
 import { MinimalArticleItem } from './minimal/articleItem.js';
 import { MinimalSectionHeader } from './minimal/sectionHeader.js';
@@ -132,7 +131,14 @@ class RssIndicator extends PanelMenu.Button
 			return Clutter.EVENT_PROPAGATE;
 		}, this);
 
-		this._createHeader();
+		this._header = new RssHeader({
+			onReload : () => this.onReload?.(),
+			onMarkAllSeen : () => this._store.markAllSeen(),
+			onActivateConfirm : (b) => this._activateConfirm(b),
+			onOpenSettings : () => this._onSettingsBtnClicked(),
+			onOpenLink : (url) => { this.menu.close(); Misc.processLinkOpen(url); },
+		});
+		this.menu.addMenuItem(this._header);
 
 		let maxHeight = settings.get_int(GSKeys.MAX_HEIGHT);
 		this._feedsSection = new ScrollSection(this._generatePopupMenuCSS(maxHeight));
@@ -178,62 +184,6 @@ class RssIndicator extends PanelMenu.Button
 			this._addGroup(source);
 
 		this._updateUnreadCountLabel(store.totalUnread);
-	}
-
-	_createHeader()
-	{
-		this._buttonMenu = new PopupMenu.PopupBaseMenuItem({ reactive : false, style_class : 'rss-header' });
-
-		let iconBox = new St.Button(
-		{
-			style_class : 'rss-header-icon',
-			x_align : Clutter.ActorAlign.CENTER,
-			y_align : Clutter.ActorAlign.CENTER,
-			can_focus : false,
-			child : new St.Icon({ icon_name : 'application-rss+xml-symbolic', icon_size : 20 }),
-		});
-		iconBox.connect('clicked', () =>
-		{
-			this.menu.close();
-			Misc.processLinkOpen('https://github.com/todevelopers/gnome-shell-extension-rss-feed');
-		});
-		this._buttonMenu.add_child(iconBox);
-
-		let titleBox = new St.BoxLayout({ vertical : true, x_expand : true });
-		titleBox.add_child(new St.Label({ text : 'RSS Feed', style_class : 'rss-header-title' }));
-		this._headerSubtitle = new St.Label({ text : '', style_class : 'rss-header-subtitle' });
-		titleBox.add_child(this._headerSubtitle);
-		this._buttonMenu.add_child(titleBox);
-
-		this._unreadBadge = new ConfirmBadge('rss-unread-badge');
-		this._unreadBadge.onConfirm = () => this._store.markAllSeen();
-		this._unreadBadge.onEnterConfirm = (b) => this._activateConfirm(b);
-		this._buttonMenu.add_child(this._unreadBadge);
-
-		let reloadBtn = new St.Button(
-		{
-			style_class : 'rss-icon-btn',
-			can_focus : true,
-			child : new St.Icon({ icon_name : 'view-refresh-symbolic', style_class : 'popup-menu-icon' }),
-		});
-		reloadBtn.connect('clicked', () =>
-		{
-			if (this.onReload)
-				this.onReload();
-		});
-
-		let settingsBtn = new St.Button(
-		{
-			style_class : 'rss-icon-btn',
-			can_focus : true,
-			child : new St.Icon({ icon_name : 'applications-system-symbolic', style_class : 'popup-menu-icon' }),
-		});
-		settingsBtn.connect('clicked', this._onSettingsBtnClicked.bind(this));
-
-		this._buttonMenu.add_child(reloadBtn);
-		this._buttonMenu.add_child(settingsBtn);
-
-		this.menu.addMenuItem(this._buttonMenu);
 	}
 
 	_applyLayoutMode()
@@ -301,8 +251,7 @@ class RssIndicator extends PanelMenu.Button
 
 	markUpdated()
 	{
-		if (this._headerSubtitle)
-			this._headerSubtitle.set_text('Updated at ' + new Date().toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' }));
+		this._header?.markUpdated();
 	}
 
 	_reorderClassicSection()
@@ -558,7 +507,7 @@ class RssIndicator extends PanelMenu.Button
 		else
 			this._iconLabel.hide();
 
-		this._unreadBadge?.setCount(count);
+		this._header?.setUnreadCount(count);
 	}
 
 	_generatePopupMenuCSS(value)
