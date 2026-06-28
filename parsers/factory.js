@@ -19,7 +19,7 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { parse } from '../txml.js';
+import { parse } from '../lib/txml.js';
 import { FeedburnerParser } from './feedburner.js';
 import { RdfParser } from './rdf.js';
 import { AtomParser } from './atom.js';
