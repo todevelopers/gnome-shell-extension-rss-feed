@@ -41,16 +41,4 @@ export class ScrollSection extends PopupMenu.PopupMenuSection
 
 		this.actor.add_style_pseudo_class('scrolled');
 	}
-
-	_needsScrollbar(child)
-	{
-		let topMenu = this;
-		let [_topMinHeight, topNaturalHeight] = topMenu.actor.get_preferred_height(-1);
-		let [_topMinHeight2, topNaturalHeight2] = child.actor.get_preferred_height(-1);
-
-		let topThemeNode = this._parent.actor.get_theme_node();
-		let topMaxHeight = topThemeNode.get_max_height();
-
-		return topNaturalHeight + topNaturalHeight2 > topMaxHeight;
-	}
 }

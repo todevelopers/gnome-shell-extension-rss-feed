@@ -95,9 +95,6 @@ class FeedStore extends GObject.Object
 
 	markRead(source, item)
 	{
-		if (item.read)
-			return;
-
 		source.markRead(item);
 	}
 

@@ -33,7 +33,6 @@ export class FeedRepository
 	{
 		this._settings = settings;
 		this._aSettings = new GSAA(settings, GSKeys.RSS_FEEDS_SETTINGS);
-		this._aSettings.set_autoload(false);
 
 		this._store = null;
 		this._changedId = 0;

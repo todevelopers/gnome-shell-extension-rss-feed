@@ -82,7 +82,7 @@ class MinimalSectionHeader extends PopupMenu.PopupBaseMenuItem
 		this._icon.icon_name = this._collapsed ? 'pan-end-symbolic' : 'pan-down-symbolic';
 		for (let item of this._items)
 		{
-			if (item && !item._destroyed)
+			if (!item._destroyed)
 				item.visible = !this._collapsed;
 		}
 		if (this._onToggle)

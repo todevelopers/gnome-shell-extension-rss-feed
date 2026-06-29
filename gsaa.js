@@ -23,14 +23,6 @@ export class GSAA
 {
 	constructor(settings, key)
 	{
-		this.autoload = false;
-
-		if (!settings)
-			throw new Error("GSAA: missing settings");
-
-		if (!key)
-			throw new Error("GSAA: missing key");
-
 		this._settings = settings;
 		this._gsKey = key;
 		this._gsData = new Object();
@@ -47,31 +39,21 @@ export class GSAA
 	{
 		let data = this._settings.get_string(this._gsKey);
 
-		if (!data)
-			throw new Error("GSAA.load: could not read data (" + this._gsKey + ")");
-
 		this._gsData = JSON.parse(data);
-
-		return true;
 	}
 
 	dump()
 	{
 		if (!this._gsData)
-			return false;
+			return;
 
 		let data = JSON.stringify(this._gsData);
 
 		this._settings.set_string(this._gsKey, data);
-
-		return true;
 	}
 
 	get(key, subkey)
 	{
-		if (this.autoload != false)
-			this.load();
-
 		let data = this._gsData[key];
 
 		if (!data)
@@ -113,18 +95,11 @@ export class GSAA
 		let data = this._gsData[from];
 
 		if (!data)
-			return false;
+			return;
 
 		this._gsData[to] = data;
 		delete this._gsData[from];
 
 		this.dump();
-
-		return true;
-	}
-
-	set_autoload(sw)
-	{
-		this.autoload = sw;
 	}
 }

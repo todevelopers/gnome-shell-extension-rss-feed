@@ -50,17 +50,6 @@ export class BaseParser
 		};
 	}
 
-	clear()
-	{
-		while (this.Items.length > 0)
-			this.Items.pop();
-		this.Publisher.Title = '';
-		this.Publisher.HttpLink = '';
-		this.Publisher.Description = '';
-		this.Publisher.PublishDate = '';
-		this.Publisher.UpdateTime = '';
-	}
-
 	parse()
 	{
 	}
