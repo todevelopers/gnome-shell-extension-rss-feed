@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "shexli": "node scripts/shexli.js",
+    "check": "npm run lint && npm run shexli"
   },
   "devDependencies": {
     "eslint": "^8.57.0",

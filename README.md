@@ -68,7 +68,7 @@ Keeps your RSS feeds one click away - right in the GNOME status panel.
 Downloads the latest release and **restarts** GNOME Shell automatically:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/todevelopers/gnome-shell-extension-rss-feed/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/todevelopers/gnome-shell-extension-rss-feed/master/scripts/install.sh | bash
 ```
 
 ### 3. Manual
