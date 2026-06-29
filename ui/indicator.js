@@ -136,17 +136,10 @@ class RssIndicator extends PanelMenu.Button
 		this.menu.addMenuItem(this._feedsSection);
 		this.menu.addMenuItem(this._minimal.section);
 
-		this._layoutMode = settings.get_string(GSKeys.LAYOUT_MODE);
-		this._applyLayoutMode();
-		this._minimal.setActive(this._layoutMode === 'minimal');
+		this._applyLayout();
 
 		settings.connectObject(
-			'changed::' + GSKeys.LAYOUT_MODE, () =>
-			{
-				this._layoutMode = settings.get_string(GSKeys.LAYOUT_MODE);
-				this._applyLayoutMode();
-				this._minimal.setActive(this._layoutMode === 'minimal');
-			},
+			'changed::' + GSKeys.LAYOUT_MODE, () => this._applyLayout(),
 			'changed::' + GSKeys.MAX_HEIGHT, () =>
 			{
 				let h = settings.get_int(GSKeys.MAX_HEIGHT);
@@ -176,11 +169,12 @@ class RssIndicator extends PanelMenu.Button
 		this._updateUnreadCountLabel(store.totalUnread);
 	}
 
-	_applyLayoutMode()
+	_applyLayout()
 	{
-		let classic = this._layoutMode !== 'minimal';
-		this._feedsSection.actor.visible = classic;
-		this._minimal.section.actor.visible = !classic;
+		this._minimalLayout = this._settings.get_string(GSKeys.LAYOUT_MODE) === 'minimal';
+		this._feedsSection.actor.visible = !this._minimalLayout;
+		this._minimal.section.actor.visible = this._minimalLayout;
+		this._minimal.setActive(this._minimalLayout);
 	}
 
 	_addGroup(source)
