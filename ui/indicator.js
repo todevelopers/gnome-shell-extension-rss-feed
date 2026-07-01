@@ -54,11 +54,12 @@ class RssIndicator extends PanelMenu.Button
 			style_class : 'panel-status-menu-box'
 		});
 
-		this._iconLabel = new St.Widget(
+		this._iconLabel = new St.Icon(
 		{
 			visible : false,
 			y_align : Clutter.ActorAlign.CENTER,
 			style_class : 'rss-icon-label',
+			icon_name : 'message-indicator-symbolic',
 		});
 
 		let icon = new St.Icon(

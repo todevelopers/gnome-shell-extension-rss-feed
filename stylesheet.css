@@ -1,8 +1,5 @@
 .rss-icon-label {
-	background-color: -st-accent-color;
-	width: 8px;
-	height: 8px;
-	border-radius: 4px;
+	icon-size: 16px;
 	margin-right: 4px;
 }
 
