@@ -181,9 +181,10 @@ export class NotificationManager
 			return traySource;
 
 		let grouped = key !== GLOBAL_SOURCE_KEY;
-		traySource = new MessageTray.Source(grouped
-			? { title : feedTitle, icon : Misc.makeAvatarIcon(feedTitle) }
-			: { title : 'RSS Feed', icon : new Gio.ThemedIcon({ name : 'application-rss+xml' }) });
+		traySource = new MessageTray.Source({
+			title : grouped ? feedTitle : 'RSS Feed',
+			icon : new Gio.ThemedIcon({ name : 'application-rss+xml' }),
+		});
 
 		traySource.connect('destroy', () =>
 		{

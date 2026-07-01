@@ -58,36 +58,15 @@ export function feedInitials(title)
 	return (words[0][0] + words[1][0]).toUpperCase();
 }
 
-function _accentColorHex()
-{
-	try
-	{
-		let s = new Gio.Settings({ schema_id: 'org.gnome.desktop.interface' });
-		if (!s.settings_schema.has_key('accent-color'))
-			return '#3584e4';
-		const map = {
-			blue: '#3584e4', teal: '#2190a4', green: '#3a944a',
-			yellow: '#c88800', orange: '#ed5b00', red: '#e62d42',
-			pink: '#d56199', purple: '#9141ac', slate: '#6f8396',
-		};
-		return map[s.get_string('accent-color')] ?? '#3584e4';
-	}
-	catch (_)
-	{
-		return '#3584e4';
-	}
-}
-
 export function makeAvatarIcon(title)
 {
 	let initials = feedInitials(title)
 		.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-	let fill = _accentColorHex();
 
-	let svg = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">'
-		+ `<circle cx="16" cy="16" r="16" fill="${fill}"/>`
-		+ '<text x="16" y="20" text-anchor="middle" fill="rgba(255,255,255,0.95)"'
-		+ ' font-family="sans-serif" font-size="13" font-weight="700">'
+	let svg = '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">'
+		+ '<circle cx="48" cy="48" r="48" fill="#5f6368"/>'
+		+ '<text x="48" y="60" text-anchor="middle" fill="rgba(255,255,255,0.95)"'
+		+ ' font-family="sans-serif" font-size="39" font-weight="700">'
 		+ initials + '</text></svg>';
 
 	return Gio.BytesIcon.new(GLib.Bytes.new(new TextEncoder().encode(svg)));
