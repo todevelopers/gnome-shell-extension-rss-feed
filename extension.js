@@ -43,10 +43,7 @@ export default class RssFeedExtension extends Extension
 		this._poller = new FeedPoller(this._store, this._repository, settings);
 		this._notificationManager = new NotificationManager(this._store, settings);
 
-		this._indicator = new RssIndicator(settings, this, this._store);
-		this._indicator.onReload = () => this._poller.refresh();
-		this._poller.onComplete = () => this._indicator?.markUpdated();
-		Main.panel.addToStatusArea('rssFeedMenu', this._indicator, 0, 'right');
+		this._syncIndicator();
 
 		this._listChangedId = settings.connect('changed::' + GSKeys.RSS_FEEDS_LIST, () =>
 		{
@@ -59,9 +56,32 @@ export default class RssFeedExtension extends Extension
 			this._repository.sync(this._store);
 		});
 
+		this._notificationsOnlyId = settings.connect('changed::' + GSKeys.NOTIFICATIONS_ONLY, () => this._syncIndicator());
+
 		this._poller.start();
 
 		console.debug("[rss-feed] Extension enabled.");
+	}
+
+	_syncIndicator()
+	{
+		let notificationsOnly = this._settings.get_boolean(GSKeys.NOTIFICATIONS_ONLY);
+
+		if (notificationsOnly)
+		{
+			this._indicator?.destroy();
+			this._indicator = null;
+			this._poller.onComplete = null;
+			return;
+		}
+
+		if (this._indicator)
+			return;
+
+		this._indicator = new RssIndicator(this._settings, this, this._store);
+		this._indicator.onReload = () => this._poller.refresh();
+		this._poller.onComplete = () => this._indicator?.markUpdated();
+		Main.panel.addToStatusArea('rssFeedMenu', this._indicator, 0, 'right');
 	}
 
 	disable()
@@ -72,6 +92,9 @@ export default class RssFeedExtension extends Extension
 
 		if (this._settingsChangedId)
 			this._settings.disconnect(this._settingsChangedId);
+
+		if (this._notificationsOnlyId)
+			this._settings.disconnect(this._notificationsOnlyId);
 
 		this._indicator?.destroy();
 		this._poller?.destroy();
@@ -86,6 +109,7 @@ export default class RssFeedExtension extends Extension
 		this._settings = null;
 		this._listChangedId = null;
 		this._settingsChangedId = null;
+		this._notificationsOnlyId = null;
 
 		console.debug("[rss-feed] Extension disabled.");
 	}

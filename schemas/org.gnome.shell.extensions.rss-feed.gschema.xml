@@ -61,5 +61,10 @@
 		    <summary>Mark initial items as new</summary>
 		    <description>When enabled, items fetched on the first poll are marked as unread.</description>
 		</key>
+		<key type="b" name="notifications-only">
+		    <default>false</default>
+		    <summary>Notifications only</summary>
+		    <description>When enabled, the panel icon and popup menu are hidden; only notifications for new articles are shown.</description>
+		</key>
     </schema>
 </schemalist>

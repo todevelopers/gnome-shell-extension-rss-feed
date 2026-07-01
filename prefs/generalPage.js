@@ -23,7 +23,7 @@ import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
 
 import * as GSKeys from '../gskeys.js';
-import { makeSpinRow } from './prefsWidgets.js';
+import { makeSpinRow, makeSwitchRow } from './prefsWidgets.js';
 
 const MAX_UPDATE_INTERVAL = 1440;
 const MAX_SOURCES_LIMIT = 1024;
@@ -32,6 +32,13 @@ const MAX_HEIGHT = 8192;
 export function buildGeneralPage(window, settings)
 {
 	const generalPage = new Adw.PreferencesPage({ title : "General", icon_name : 'preferences-system-symbolic' });
+
+	const modeGroup = new Adw.PreferencesGroup({ title : "Mode" });
+	generalPage.add(modeGroup);
+
+	const notificationsOnlyRow = makeSwitchRow(settings, GSKeys.NOTIFICATIONS_ONLY, "Notifications only");
+	notificationsOnlyRow.subtitle = "Hide the panel icon and popup menu; only show notifications for new articles.";
+	modeGroup.add(notificationsOnlyRow);
 
 	const layoutGroup = new Adw.PreferencesGroup({ title : "Layout" });
 	generalPage.add(layoutGroup);
@@ -106,6 +113,17 @@ export function buildGeneralPage(window, settings)
 	const updateIntervalRow = makeSpinRow(settings, GSKeys.UPDATE_INTERVAL, "Update interval (min)", 1, MAX_UPDATE_INTERVAL);
 	updateIntervalRow.subtitle = "How often all feeds are downloaded in the background.";
 	pollingGroup.add(updateIntervalRow);
+
+	const updateLayoutSensitivity = () =>
+	{
+		let notificationsOnly = settings.get_boolean(GSKeys.NOTIFICATIONS_ONLY);
+		layoutGroup.sensitive = !notificationsOnly;
+		displayGroup.sensitive = !notificationsOnly;
+	};
+
+	updateLayoutSensitivity();
+	const notificationsOnlyId = settings.connect('changed::' + GSKeys.NOTIFICATIONS_ONLY, updateLayoutSensitivity);
+	window.connect('close-request', () => { settings.disconnect(notificationsOnlyId); });
 
 	return generalPage;
 }
