@@ -23,7 +23,7 @@ import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
 
 import * as GSKeys from '../gskeys.js';
-import { makeSpinRow, makeSwitchRow } from './prefsWidgets.js';
+import { makeSpinRow } from './prefsWidgets.js';
 
 const MAX_UPDATE_INTERVAL = 1440;
 const MAX_SOURCES_LIMIT = 1024;
@@ -36,9 +36,59 @@ export function buildGeneralPage(window, settings)
 	const modeGroup = new Adw.PreferencesGroup({ title : "Mode" });
 	generalPage.add(modeGroup);
 
-	const notificationsOnlyRow = makeSwitchRow(settings, GSKeys.NOTIFICATIONS_ONLY, "Notifications only");
-	notificationsOnlyRow.subtitle = "Hide the panel icon and popup menu; only show notifications for new articles.";
-	modeGroup.add(notificationsOnlyRow);
+	const displayModes = [
+		{ id: 'notifications-and-widget', title: 'Notifications and widget', subtitle: 'Show the panel icon and menu, and notify on new articles.' },
+		{ id: 'notifications-only', title: 'Notifications only', subtitle: 'Hide the panel icon and menu; only notify on new articles.' },
+		{ id: 'widget-only', title: 'Widget only', subtitle: 'Show the panel icon and menu; never show notifications.' },
+	];
+
+	let modeRadioGroup = null;
+	const modeRows = [];
+	for (const mode of displayModes)
+	{
+		const row = new Adw.ActionRow({
+			title : mode.title,
+			subtitle : mode.subtitle,
+			activatable : true,
+		});
+
+		const radio = new Gtk.CheckButton({
+			valign : Gtk.Align.CENTER,
+			group : modeRadioGroup,
+		});
+		if (modeRadioGroup === null)
+			modeRadioGroup = radio;
+
+		radio.active = settings.get_string(GSKeys.DISPLAY_MODE) === mode.id;
+		radio.connect('toggled', () =>
+		{
+			if (radio.active)
+				settings.set_string(GSKeys.DISPLAY_MODE, mode.id);
+		});
+
+		row.add_prefix(radio);
+		row.set_activatable_widget(radio);
+		modeGroup.add(row);
+		modeRows.push({ row, radio, id: mode.id });
+	}
+
+	const syncModeRows = () =>
+	{
+		let current = settings.get_string(GSKeys.DISPLAY_MODE);
+		for (const { row, radio, id } of modeRows)
+		{
+			let active = id === current;
+			if (radio.active !== active)
+				radio.active = active;
+			if (active)
+				row.add_css_class('selected');
+			else
+				row.remove_css_class('selected');
+		}
+	};
+	syncModeRows();
+	const displayModeId = settings.connect('changed::' + GSKeys.DISPLAY_MODE, syncModeRows);
+	window.connect('close-request', () => { settings.disconnect(displayModeId); });
 
 	const layoutGroup = new Adw.PreferencesGroup({ title : "Layout" });
 	generalPage.add(layoutGroup);
@@ -116,14 +166,14 @@ export function buildGeneralPage(window, settings)
 
 	const updateLayoutSensitivity = () =>
 	{
-		let notificationsOnly = settings.get_boolean(GSKeys.NOTIFICATIONS_ONLY);
+		let notificationsOnly = settings.get_string(GSKeys.DISPLAY_MODE) === 'notifications-only';
 		layoutGroup.sensitive = !notificationsOnly;
 		displayGroup.sensitive = !notificationsOnly;
 	};
 
 	updateLayoutSensitivity();
-	const notificationsOnlyId = settings.connect('changed::' + GSKeys.NOTIFICATIONS_ONLY, updateLayoutSensitivity);
-	window.connect('close-request', () => { settings.disconnect(notificationsOnlyId); });
+	const layoutSensitivityId = settings.connect('changed::' + GSKeys.DISPLAY_MODE, updateLayoutSensitivity);
+	window.connect('close-request', () => { settings.disconnect(layoutSensitivityId); });
 
 	return generalPage;
 }

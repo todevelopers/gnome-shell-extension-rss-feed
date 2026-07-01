@@ -33,10 +33,6 @@ export function buildNotificationsPage(window, settings)
 	const notifGroup = new Adw.PreferencesGroup({ title : "Notifications" });
 	notifPage.add(notifGroup);
 
-	const notifSwitch = makeSwitchRow(settings, GSKeys.ENABLE_NOTIFICATIONS, "Show notifications");
-	notifSwitch.subtitle = "Displays a system notification when new articles are found.";
-	notifGroup.add(notifSwitch);
-
 	const notifMaxRow = makeSpinRow(settings, GSKeys.MAX_NOTIFICATIONS, "Notifications limit", 1, MAX_NOTIFICATIONS);
 	notifMaxRow.subtitle = "Limits how many notifications are shown in a single batch.";
 	notifGroup.add(notifMaxRow);
@@ -49,19 +45,17 @@ export function buildNotificationsPage(window, settings)
 	notifCleanRow.subtitle = "Removes all RSS notifications from the tray when the extension is disabled.";
 	notifGroup.add(notifCleanRow);
 
-	const updateNotifSensitive = (enabled) =>
+	const updateNotifSensitive = () =>
 	{
+		let enabled = settings.get_string(GSKeys.DISPLAY_MODE) !== 'widget-only';
 		notifMaxRow.sensitive = enabled;
 		notifLockRow.sensitive = enabled;
 		notifCleanRow.sensitive = enabled;
 	};
 
-	updateNotifSensitive(settings.get_boolean(GSKeys.ENABLE_NOTIFICATIONS));
-	const enableId = settings.connect('changed::' + GSKeys.ENABLE_NOTIFICATIONS, () =>
-	{
-		updateNotifSensitive(settings.get_boolean(GSKeys.ENABLE_NOTIFICATIONS));
-	});
-	window.connect('close-request', () => { settings.disconnect(enableId); });
+	updateNotifSensitive();
+	const displayModeId = settings.connect('changed::' + GSKeys.DISPLAY_MODE, updateNotifSensitive);
+	window.connect('close-request', () => { settings.disconnect(displayModeId); });
 
 	return notifPage;
 }

@@ -73,7 +73,7 @@ export class NotificationManager
 	_onItemsAdded(source, payload)
 	{
 		let plan = planNotifications(payload, {
-			enabled : this._settings.get_boolean(GSKeys.ENABLE_NOTIFICATIONS),
+			enabled : this._settings.get_string(GSKeys.DISPLAY_MODE) !== 'widget-only',
 			mute : source.mute,
 			locked : Misc.isScreenLocked(),
 			notifOnLockScreen : this._settings.get_boolean(GSKeys.NOTIFICATIONS_ON_LOCKSCREEN),

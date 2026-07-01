@@ -27,11 +27,6 @@
 		    <summary>Notification limit</summary>
 		    <description>Maximum number of notifications shown at once</description>
 		</key>
-		<key type="b" name="enable-notifications">
-		    <default>true</default>
-		    <summary>Show notifications</summary>
-		    <description>Show notifications when new RSS items are found.</description>
-		</key>
 		<key type="b" name="enable-notifications-locked">
 		    <default>false</default>
 		    <summary>Lock screen notifications</summary>
@@ -61,10 +56,10 @@
 		    <summary>Mark initial items as new</summary>
 		    <description>When enabled, items fetched on the first poll are marked as unread.</description>
 		</key>
-		<key type="b" name="notifications-only">
-		    <default>false</default>
-		    <summary>Notifications only</summary>
-		    <description>When enabled, the panel icon and popup menu are hidden; only notifications for new articles are shown.</description>
+		<key type="s" name="display-mode">
+		    <default>'notifications-and-widget'</default>
+		    <summary>Display mode</summary>
+		    <description>Controls whether the panel icon/menu, notifications, or both are shown. One of: 'notifications-and-widget', 'notifications-only', 'widget-only'.</description>
 		</key>
     </schema>
 </schemalist>
