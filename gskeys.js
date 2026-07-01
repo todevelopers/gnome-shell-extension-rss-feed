@@ -10,3 +10,4 @@ export const RSS_FEEDS_SETTINGS = 'rss-feeds-settings';
 export const LAYOUT_MODE = 'layout-mode';
 export const MARK_INITIAL_AS_NEW = 'mark-initial-as-new';
 export const DISPLAY_MODE = 'display-mode';
+export const GROUP_NOTIFICATIONS_BY_SOURCE = 'group-notifications-by-source';

@@ -37,6 +37,10 @@ export function buildNotificationsPage(window, settings)
 	notifMaxRow.subtitle = "Limits how many notifications are shown in a single batch.";
 	notifGroup.add(notifMaxRow);
 
+	const notifGroupRow = makeSwitchRow(settings, GSKeys.GROUP_NOTIFICATIONS_BY_SOURCE, "Group by RSS Source");
+	notifGroupRow.subtitle = "Show each feed's notifications as its own group instead of one shared 'RSS Feed' source.";
+	notifGroup.add(notifGroupRow);
+
 	const notifLockRow = makeSwitchRow(settings, GSKeys.NOTIFICATIONS_ON_LOCKSCREEN, "Show on lock screen");
 	notifLockRow.subtitle = "Allow notifications to appear when the screen is locked.";
 	notifGroup.add(notifLockRow);
@@ -49,6 +53,7 @@ export function buildNotificationsPage(window, settings)
 	{
 		let enabled = settings.get_string(GSKeys.DISPLAY_MODE) !== 'widget-only';
 		notifMaxRow.sensitive = enabled;
+		notifGroupRow.sensitive = enabled;
 		notifLockRow.sensitive = enabled;
 		notifCleanRow.sensitive = enabled;
 	};

@@ -61,5 +61,10 @@
 		    <summary>Display mode</summary>
 		    <description>Controls whether the panel icon/menu, notifications, or both are shown. One of: 'notifications-and-widget', 'notifications-only', 'widget-only'.</description>
 		</key>
+		<key type="b" name="group-notifications-by-source">
+		    <default>false</default>
+		    <summary>Group by RSS Source</summary>
+		    <description>Show a separate notification group per feed instead of pooling all notifications under one shared source.</description>
+		</key>
     </schema>
 </schemalist>

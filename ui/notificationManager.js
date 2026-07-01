@@ -31,8 +31,9 @@ import { getInstance } from '../encoder.js';
 import { planNotifications } from '../data/notificationPolicy.js';
 
 const Encoder = getInstance();
+const GLOBAL_SOURCE_KEY = Symbol('global');
 
-// Mirrors the model into MessageTray notifications under one source; the dispatch decisions live in notificationPolicy.
+// Mirrors the model into MessageTray notifications under one shared source or one per feed; the dispatch decisions live in notificationPolicy.
 export class NotificationManager
 {
 	constructor(store, settings)
@@ -42,7 +43,7 @@ export class NotificationManager
 
 		this._notifications = new Map();
 		this._watchedSources = new Set();
-		this._source = null;
+		this._traySources = new Map();
 
 		store.connectObject(
 			'source-added', (_store, source) => this._watch(source),
@@ -68,6 +69,10 @@ export class NotificationManager
 	{
 		source.disconnectObject(this);
 		this._watchedSources.delete(source);
+
+		let traySource = this._traySources.get(source.url);
+		if (traySource)
+			traySource.destroy();
 	}
 
 	_onItemsAdded(source, payload)
@@ -109,10 +114,11 @@ export class NotificationManager
 
 	_show(spec, item, source, feedTitle)
 	{
-		this._ensureSource();
+		let key = this._settings.get_boolean(GSKeys.GROUP_NOTIFICATIONS_BY_SOURCE) ? source.url : GLOBAL_SOURCE_KEY;
+		let traySource = this._traySourceFor(key, feedTitle);
 
 		let notification = new MessageTray.Notification({
-			source : this._source,
+			source : traySource,
 			title : spec.title,
 			body : spec.body,
 			gicon : Misc.makeAvatarIcon(feedTitle),
@@ -123,6 +129,7 @@ export class NotificationManager
 
 		notification._rssItem = item;
 		notification._rssSource = source;
+		notification._traySourceKey = key;
 
 		notification.addAction('Open', () => this._open(source, item, spec.url));
 
@@ -148,7 +155,7 @@ export class NotificationManager
 		});
 
 		this._notifications.set(spec.id, notification);
-		this._source.addNotification(notification);
+		traySource.addNotification(notification);
 	}
 
 	_open(source, item, url)
@@ -167,23 +174,31 @@ export class NotificationManager
 			notification.destroy();
 	}
 
-	_ensureSource()
+	_traySourceFor(key, feedTitle)
 	{
-		if (this._source)
-			return;
+		let traySource = this._traySources.get(key);
+		if (traySource)
+			return traySource;
 
-		this._source = new MessageTray.Source({
-			title : 'RSS Feed',
-			icon : new Gio.ThemedIcon({ name : 'application-rss+xml' }),
-		});
+		let grouped = key !== GLOBAL_SOURCE_KEY;
+		traySource = new MessageTray.Source(grouped
+			? { title : feedTitle, icon : Misc.makeAvatarIcon(feedTitle) }
+			: { title : 'RSS Feed', icon : new Gio.ThemedIcon({ name : 'application-rss+xml' }) });
 
-		this._source.connect('destroy', () =>
+		traySource.connect('destroy', () =>
 		{
-			this._source = null;
-			this._notifications.clear();
+			this._traySources.delete(key);
+			for (let [id, notification] of this._notifications)
+			{
+				if (notification._traySourceKey === key)
+					this._notifications.delete(id);
+			}
 		});
 
-		Main.messageTray.add(this._source);
+		Main.messageTray.add(traySource);
+		this._traySources.set(key, traySource);
+
+		return traySource;
 	}
 
 	destroy()
@@ -199,10 +214,11 @@ export class NotificationManager
 			for (let notification of [...this._notifications.values()])
 				notification.destroy();
 
-			if (this._source)
-				this._source.destroy();
+			for (let traySource of [...this._traySources.values()])
+				traySource.destroy();
 		}
 
 		this._notifications.clear();
+		this._traySources.clear();
 	}
 }
