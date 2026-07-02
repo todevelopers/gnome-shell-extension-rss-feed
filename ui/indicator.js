@@ -20,6 +20,7 @@
  */
 
 import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 import Clutter from 'gi://Clutter';
@@ -59,7 +60,7 @@ class RssIndicator extends PanelMenu.Button
 			visible : false,
 			y_align : Clutter.ActorAlign.CENTER,
 			style_class : 'rss-icon-label',
-			icon_name : 'message-indicator-symbolic',
+			gicon : Gio.icon_new_for_string(extension.path + '/icons/rss-unread-symbolic.svg'),
 		});
 
 		let icon = new St.Icon(

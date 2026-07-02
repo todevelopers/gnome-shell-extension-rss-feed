@@ -1,5 +1,5 @@
 .rss-icon-label {
-	icon-size: 16px;
+	icon-size: 8px;
 	margin-right: 4px;
 }
 
@@ -33,7 +33,7 @@
 	min-width: 30px;
 	height: 30px;
 	border-radius: 15px;
-	background-color: rgba(53, 132, 228, 1.0);
+	background-color: #5f6368;
 	background-color: -st-accent-color;
 	padding: 0;
 }
@@ -66,7 +66,7 @@
 	min-width: 30px;
 	height: 30px;
 	border-radius: 15px;
-	background-color: rgba(53, 132, 228, 1.0);
+	background-color: #5f6368;
 	background-color: -st-accent-color;
 	padding: 0;
 }
