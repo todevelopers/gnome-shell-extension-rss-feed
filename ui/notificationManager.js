@@ -143,7 +143,7 @@ export class NotificationManager
 
 		notification.addAction('Mark as read', () =>
 		{
-			this._store.markRead(source, item);
+			this._store?.markRead(source, item);
 		});
 
 		notification.connect('activated', () => this._open(source, item, spec.url));
@@ -163,7 +163,7 @@ export class NotificationManager
 		if (Misc.processLinkOpen(url))
 		{
 			Main.panel.statusArea.dateMenu?.menu?.close();
-			this._store.markRead(source, item);
+			this._store?.markRead(source, item);
 		}
 	}
 
@@ -221,5 +221,7 @@ export class NotificationManager
 
 		this._notifications.clear();
 		this._traySources.clear();
+
+		this._store = null;
 	}
 }
