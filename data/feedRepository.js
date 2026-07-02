@@ -35,7 +35,6 @@ export class FeedRepository
 		this._aSettings = new GSAA(settings, GSKeys.RSS_FEEDS_SETTINGS);
 
 		this._store = null;
-		this._changedId = 0;
 		this._flushId = 0;
 	}
 
@@ -49,7 +48,7 @@ export class FeedRepository
 		for (let url of urls)
 			store.addSource(new FeedSource(url, this._configFor(url)));
 
-		this._changedId = store.connect('changed', () => this.scheduleUnreadFlush());
+		store.connectObject('changed', () => this.scheduleUnreadFlush(), this);
 	}
 
 	sync(store)
@@ -143,10 +142,8 @@ export class FeedRepository
 
 		this._cancelScheduledFlush();
 
-		if (this._store && this._changedId)
-			this._store.disconnect(this._changedId);
+		this._store?.disconnectObject(this);
 
-		this._changedId = 0;
 		this._store = null;
 		this._aSettings.destroy();
 	}
