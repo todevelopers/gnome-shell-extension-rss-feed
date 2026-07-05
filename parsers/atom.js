@@ -75,7 +75,11 @@ export class AtomParser extends BaseParser
 			{
 				item.HttpLink = itemElements[i].attributes['href'] || '';
 			}
-			else if (itemElements[i].tagName == 'description')
+			else if (itemElements[i].tagName == 'description' || itemElements[i].tagName == 'summary')
+			{
+				item.Description = itemElements[i].children.filter(c => typeof c === 'string').join('');
+			}
+			else if (itemElements[i].tagName == 'content' && !item.Description)
 			{
 				item.Description = itemElements[i].children.filter(c => typeof c === 'string').join('');
 			}
