@@ -119,10 +119,6 @@ class FeedSource extends GObject.Object
 			if (!item)
 				continue;
 			item.update(data);
-			if (item.read)
-				this.unreadCount++;
-			item.read = false;
-			notify.push({ item, update: true });
 		}
 
 		let added = [];
