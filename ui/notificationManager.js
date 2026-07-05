@@ -59,6 +59,7 @@ export class NotificationManager
 	{
 		source.connectObject(
 			'items-added', (_source, payload) => this._onItemsAdded(source, payload),
+			'items-removed', (_source, payload) => this._onItemsRemoved(source, payload),
 			'unread-changed', () => this._onUnreadChanged(source),
 			this
 		);
@@ -110,6 +111,16 @@ export class NotificationManager
 
 		for (let id of stale)
 			this._dismiss(id);
+	}
+
+	_onItemsRemoved(source, payload)
+	{
+		for (let item of payload.items)
+		{
+			let notification = this._notifications.get(item.id);
+			if (notification && notification._rssSource === source)
+				notification.destroy();
+		}
 	}
 
 	_show(spec, item, source, feedTitle)

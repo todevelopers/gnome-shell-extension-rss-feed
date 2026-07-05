@@ -31,6 +31,7 @@ export const FeedSource = GObject.registerClass(
 		'unread-changed': {},
 		'meta-changed': {},
 		'items-added': { param_types: [GObject.TYPE_JSOBJECT] },
+		'items-removed': { param_types: [GObject.TYPE_JSOBJECT] },
 	},
 },
 class FeedSource extends GObject.Object
@@ -141,6 +142,8 @@ class FeedSource extends GObject.Object
 		this._initialDone = true;
 
 		this.emit('items-changed');
+		if (diff.removed.length)
+			this.emit('items-removed', { items: diff.removed });
 		if (this.unreadCount !== prevUnread)
 			this.emit('unread-changed');
 		if (notify.length)
