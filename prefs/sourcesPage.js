@@ -78,7 +78,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 			min-height: 30px;
 			padding: 0;
 		}
-		.source-action-btn:checked {
+		.source-action-btn:checked:not(:hover) {
 			background-color: transparent;
 		}
 		.source-delete-btn {
