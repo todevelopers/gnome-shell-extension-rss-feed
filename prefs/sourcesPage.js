@@ -121,7 +121,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 
 		// some feeds reject libsoup's default User-Agent; identify the extension honestly
 		msg.get_request_headers().replace("User-Agent",
-		"Mozilla/5.0 (compatible; gnome-shell-extension-rss-feed/1.0; +https://github.com/todevelopers/gnome-shell-extension-rss-feed)");
+		"gnome-shell-extension-rss-feed/1.0 (+https://github.com/todevelopers/gnome-shell-extension-rss-feed)");
 
 		if (fCache[url])
 			fCache[url].cancel();

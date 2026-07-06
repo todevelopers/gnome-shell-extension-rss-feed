@@ -27,7 +27,7 @@ import * as GSKeys from '../gskeys.js';
 import * as HTTP from '../http.js';
 import { createRssParser } from '../parsers/factory.js';
 
-const USER_AGENT = 'Mozilla/5.0 (compatible; gnome-shell-extension-rss-feed/1.0; +https://github.com/todevelopers/gnome-shell-extension-rss-feed)';
+const USER_AGENT = 'gnome-shell-extension-rss-feed/1.0 (+https://github.com/todevelopers/gnome-shell-extension-rss-feed)';
 
 // Drives the polling: fetches each source over Soup, parses it and merges into the model. Never builds widgets.
 export class FeedPoller
