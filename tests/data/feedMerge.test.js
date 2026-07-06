@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { computeFeedDiff } from '../../data/feedMerge.js';
 
 const item = (id, publishDate = '', updateTime = '') => ({ id, publishDate, updateTime, title: 't-' + id });
-const opts = (over = {}) => ({ disableUpdates: false, itemsRetained: 100, ...over });
+const opts = (over = {}) => ({ itemsRetained: 100, ...over });
 const ids = list => list.map(x => x.id);
 
 describe('computeFeedDiff', () => {
@@ -60,13 +60,6 @@ describe('computeFeedDiff', () => {
 				opts());
 			expect(r.updated).toEqual([]);
 			expect(r.added).toEqual([]);
-		});
-
-		it('ignores a changed date when updates are disabled', () => {
-			const r = computeFeedDiff([item('a', '2024-01-01')], [item('a', '2024-06-01')], opts({ disableUpdates: true }));
-			expect(r.updated).toEqual([]);
-			expect(r.added).toEqual([]);
-			expect(r.removed).toEqual([]);
 		});
 	});
 

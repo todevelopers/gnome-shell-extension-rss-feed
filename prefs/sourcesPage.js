@@ -284,21 +284,6 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 		row._statusLabel = statusLabel;
 		row._avatarLabel = avatarLabel;
 
-		const noUpdBtn = new Gtk.ToggleButton({
-			icon_name : 'view-refresh-symbolic',
-			tooltip_text : 'Updates detection',
-			valign : Gtk.Align.CENTER,
-		});
-		noUpdBtn.add_css_class('flat');
-		noUpdBtn.add_css_class('source-action-btn');
-		noUpdBtn.active = !!aSettings.get(url, 'u');
-		noUpdBtn.opacity = noUpdBtn.active ? 0.4 : 1.0;
-		noUpdBtn.connect('toggled', () =>
-		{
-			aSettings.set(state.url, 'u', noUpdBtn.active);
-			noUpdBtn.opacity = noUpdBtn.active ? 0.4 : 1.0;
-		});
-
 		const isMuted = !!aSettings.get(url, 'n');
 		const noNotifBtn = new Gtk.ToggleButton({
 			icon_name : isMuted ? 'notifications-disabled-symbolic' : 'preferences-system-notifications-symbolic',
@@ -336,7 +321,6 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 
 		row.add_suffix(delBtn);
 		row.add_suffix(noNotifBtn);
-		row.add_suffix(noUpdBtn);
 		row.add_suffix(statusLabel);
 
 		const avatarEntry = new Adw.EntryRow({ title : 'Avatar' });
@@ -447,7 +431,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 			return Gdk.DragAction.MOVE;
 		});
 		dropTarget.connect('leave', () => row.remove_css_class('dnd-over'));
-		dropTarget.connect('drop', (target, value) =>
+		dropTarget.connect('drop', (_target, value) =>
 		{
 			row.remove_css_class('dnd-over');
 			if (value === state.url)

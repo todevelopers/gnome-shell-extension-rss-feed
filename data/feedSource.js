@@ -44,7 +44,6 @@ class FeedSource extends GObject.Object
 		this.customTitle = config.customTitle || '';
 		this.customAvatar = config.customAvatar || '';
 		this.mute = !!config.mute;
-		this.disableUpdates = !!config.disableUpdates;
 		this.publisherTitle = '';
 
 		this.items = [];
@@ -67,7 +66,6 @@ class FeedSource extends GObject.Object
 		this.customTitle = config.customTitle || '';
 		this.customAvatar = config.customAvatar || '';
 		this.mute = !!config.mute;
-		this.disableUpdates = !!config.disableUpdates;
 
 		if (this.title !== title || this.customAvatar !== avatar)
 			this.emit('meta-changed');
@@ -93,7 +91,6 @@ class FeedSource extends GObject.Object
 		}));
 
 		let diff = computeFeedDiff(this.items, incoming, {
-			disableUpdates: this.disableUpdates,
 			itemsRetained: opts.itemsRetained,
 		});
 

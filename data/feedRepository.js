@@ -83,7 +83,6 @@ export class FeedRepository
 			config.customTitle = gsData['t'];
 			config.customAvatar = gsData['v'];
 			config.mute = gsData['n'];
-			config.disableUpdates = gsData['u'];
 			config.persistedUnread = Array.isArray(gsData['i']) ? gsData['i'] : [];
 		}
 

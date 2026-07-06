@@ -48,7 +48,7 @@ export function computeFeedDiff(existing, parsed, opts)
 		let match = incoming.get(item.id);
 		if (!match)
 			removed.push(item);
-		else if (isUpdate(item, match, opts.disableUpdates))
+		else if (isUpdate(item, match))
 			updatedIds.add(item.id);
 	}
 
@@ -63,11 +63,8 @@ export function computeFeedDiff(existing, parsed, opts)
 	return { added, removed, updated };
 }
 
-function isUpdate(existing, parsed, disableUpdates)
+function isUpdate(existing, parsed)
 {
-	if (disableUpdates)
-		return false;
-
 	if (parsed.publishDate && normDate(existing.publishDate) !== normDate(parsed.publishDate))
 		return true;
 
