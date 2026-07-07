@@ -1,5 +1,25 @@
 ## Changelog
 
+### v8.0 (07.07.2026)
+
+*Performance rework and clean architecture design. The extension now handles much larger volumes of feeds and articles without freezing the Shell.*
+
+* main feature: Notifications can now be grouped by source ([#27](https://github.com/todevelopers/gnome-shell-extension-rss-feed/discussions/27))
+* feature: New "Mode" selector in preferences — choose between *Notifications and widget*, *Notifications only* (hides the panel indicator), or *Widget only* ([#28](https://github.com/todevelopers/gnome-shell-extension-rss-feed/discussions/28))
+* bugfix: Atom feeds now read `summary`/`content` as the article description — fixes empty descriptions on some feeds
+* bugfix: Articles that are only updated keep their read state and no longer re-notify or reappear as unread
+* bugfix: Notifications are dismissed when the corresponding article is removed from the feed
+* bugfix: Changed feed-request `User-Agent` so feeds behind anti-bot protection no longer fail with "Unable to parse"
+* bugfix: Panel indicator unread dot now renders reliably on GNOME 46 — no more invisible/resizing marker ([#32](https://github.com/todevelopers/gnome-shell-extension-rss-feed/issues/32))
+* bugfix: Fixed unread state being lost when the extension is disabled
+* performance: Large feeds no longer freeze the Shell — chunked menu building, pagination in the classic layout, "Show all" in the minimal layout, and a configurable item-retention limit
+* internal: Replaced the legacy REXML parser with a lightweight vendored txml parser
+* internal: Complete data/UI architecture split — `extension.js` reduced to thin wiring
+* internal: Adopted the `connectObject`/`disconnectObject` pattern for external signal handling
+* internal: Removed the obsolete update-detection button
+
+---
+
 ### v7.2 (19.06.2026)
 
 *Light theme compatibility*
@@ -20,7 +40,7 @@
 
 ---
 
-### v7 (01.05.2026)
+### v7.0 (01.05.2026)
 
 *Complete rewrite for modern GNOME*
 
