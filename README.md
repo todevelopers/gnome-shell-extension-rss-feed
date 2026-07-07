@@ -33,6 +33,18 @@ Keeps your RSS feeds one click away - right in the GNOME status panel.
 
 ---
 
+## Known limitations
+
+A couple of features depend on the GNOME Shell version, because they build on Shell capabilities that only newer versions provide:
+
+- **Accent color (GNOME 47+)** - *Unread count badges* use your chosen system accent color only on GNOME 47 and newer, where accent colors were
+  introduced. On GNOME 46 there is no system accent the extension can read, so these elements fall back to a neutral gray.
+
+- **Notification grouping (GNOME 48+)** - The *Group notifications by source* option relies on the Shell grouping notifications by app, which arrived in
+  GNOME 48. On GNOME 46 and 47 the Shell lists every notification separately, so notifications are not grouped regardless of how this option is set.
+
+---
+
 ## Gallery
 
 <p align="center">
