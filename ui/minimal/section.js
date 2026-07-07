@@ -166,53 +166,54 @@ export class MinimalSection
 		let idx = from;
 		this._chunkId = GLib.idle_add(GLib.PRIORITY_LOW, () =>
 		{
-			if (!this._plan)
-			{
-				this._chunkId = 0;
-				return GLib.SOURCE_REMOVE;
-			}
-
-			let end = Math.min(idx + 10, this._plan.length);
-			for (let i = idx; i < end; i++)
-			{
-				let step = this._plan[i];
-				let state = this._state[step.section];
-				if (step.type === 'header')
-				{
-					let sec = step.section;
-					let h = new MinimalSectionHeader(
-						sec.toUpperCase(),
-						this._collapsed[sec],
-						(collapsed) => { this._collapsed[sec] = collapsed; });
-					this.section.addMenuItem(h);
-					state.header = h;
-				}
-				else if (step.type === 'item')
-				{
-					let mi = new MinimalArticleItem(step.entry.item, step.entry.source, this._store, step.entry.feedTitle);
-					this.section.addMenuItem(mi);
-					if (state.header)
-						state.header.addItem(mi);
-				}
-				else
-				{
-					let row = new ShowMoreRow(() => this._append(step.section));
-					row.setCounts(state.rendered, state.entries.length);
-					this.section.addMenuItem(row);
-					if (state.header)
-						state.header.addItem(row);
-					state.showMore = row;
-				}
-			}
-			idx = end;
-
-			if (idx >= this._plan.length)
+			idx = this._renderChunk(idx);
+			if (idx < 0)
 			{
 				this._chunkId = 0;
 				return GLib.SOURCE_REMOVE;
 			}
 			return GLib.SOURCE_CONTINUE;
 		});
+	}
+
+	_renderChunk(from)
+	{
+		if (!this._plan)
+			return -1;
+
+		let end = Math.min(from + 10, this._plan.length);
+		for (let i = from; i < end; i++)
+		{
+			let step = this._plan[i];
+			let state = this._state[step.section];
+			if (step.type === 'header')
+			{
+				let sec = step.section;
+				let h = new MinimalSectionHeader(
+					sec.toUpperCase(),
+					this._collapsed[sec],
+					(collapsed) => { this._collapsed[sec] = collapsed; });
+				this.section.addMenuItem(h);
+				state.header = h;
+			}
+			else if (step.type === 'item')
+			{
+				let mi = new MinimalArticleItem(step.entry.item, step.entry.source, this._store, step.entry.feedTitle);
+				this.section.addMenuItem(mi);
+				if (state.header)
+					state.header.addItem(mi);
+			}
+			else
+			{
+				let row = new ShowMoreRow(() => this._append(step.section));
+				row.setCounts(state.rendered, state.entries.length);
+				this.section.addMenuItem(row);
+				if (state.header)
+					state.header.addItem(row);
+				state.showMore = row;
+			}
+		}
+		return end >= this._plan.length ? -1 : end;
 	}
 
 	_append(section)
