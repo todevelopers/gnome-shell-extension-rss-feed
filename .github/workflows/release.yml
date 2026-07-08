@@ -15,6 +15,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Verify version-name matches tag
+        run: |
+          tag="${{ github.ref_name }}"
+          expected="${tag#v}"
+          actual=$(jq -r '.["version-name"] // empty' metadata.json)
+          if [ -z "$actual" ]; then
+            echo "::error::metadata.json has no \"version-name\" — tag $tag requires version-name \"$expected\". Add it before tagging."
+            exit 1
+          fi
+          if [ "$actual" != "$expected" ]; then
+            echo "::error::version-name mismatch — metadata.json has \"$actual\" but tag $tag requires \"$expected\". Fix metadata.json (or the tag) so they match."
+            exit 1
+          fi
+          echo "version-name \"$actual\" matches tag $tag"
+
       - name: Build extension zip
         env:
           UUID: rss-feed@gnome-shell-extension.todevelopers.github.com

@@ -370,3 +370,27 @@ jobs:
         with:
           name: shexli-log
           path: shexli.log
+
+  version-consistency:
+    name: Version consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify CHANGELOG top entry matches version-name
+        run: |
+          vname=$(jq -r '.["version-name"] // empty' metadata.json)
+          if [ -z "$vname" ]; then
+            echo "::error file=metadata.json::metadata.json has no \"version-name\"."
+            exit 1
+          fi
+          heading=$(grep -m1 '^### ' CHANGELOG.md | awk '{print $2}')
+          changelog_ver="${heading#v}"
+          if [ -z "$changelog_ver" ]; then
+            echo "::error file=CHANGELOG.md::No \"### v<version>\" heading found at the top of CHANGELOG.md."
+            exit 1
+          fi
+          if [ "$changelog_ver" != "$vname" ]; then
+            echo "::error::CHANGELOG top entry \"$heading\" (version $changelog_ver) does not match metadata.json version-name \"$vname\". Update both together so they match."
+            exit 1
+          fi
+          echo "CHANGELOG top entry \"$heading\" matches version-name \"$vname\""
