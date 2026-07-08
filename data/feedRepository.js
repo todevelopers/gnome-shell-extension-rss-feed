@@ -137,9 +137,11 @@ export class FeedRepository
 	destroy()
 	{
 		if (this._flushId)
+		{
+			GLib.source_remove(this._flushId);
+			this._flushId = 0;
 			this.flushUnread();
-
-		this._cancelScheduledFlush();
+		}
 
 		this._store?.disconnectObject(this);
 
