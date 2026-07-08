@@ -28,16 +28,7 @@ export function processLinkOpen(url)
 	if (isScreenLocked())
 		return false;
 
-	try
-	{
-		Gio.app_info_launch_default_for_uri(url, null);
-	}
-	catch (err)
-	{
-		console.error('[rss-feed] failed to open URL: ' + err);
-		return false;
-	}
-
+	Gio.app_info_launch_default_for_uri(url, null);
 	return true;
 }
 
