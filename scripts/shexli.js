@@ -14,7 +14,7 @@ try
 {
 	mkdirSync(src);
 	execFileSync('git', ['archive', ref, '--format=tar', '-o', tar], { stdio: 'inherit' });
-	execFileSync('tar', ['-xf', tar, '-C', src], { stdio: 'inherit' });
+	execFileSync('tar', ['--force-local', '-xf', tar, '-C', src], { stdio: 'inherit' });
 	execFileSync('shexli', [src], { stdio: 'inherit' });
 }
 finally
