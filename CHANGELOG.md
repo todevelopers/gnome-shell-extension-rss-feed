@@ -1,5 +1,14 @@
 ## Changelog
 
+### v8.1 (08.07.2026)
+
+*Review fixes for the extensions.gnome.org resubmission*
+
+* internal: Removed an unnecessary try-catch around opening article links
+* internal: The unread-flush timer is now removed directly in `destroy()`
+
+---
+
 ### v8.0 (07.07.2026)
 
 *Performance rework and clean architecture design. The extension now handles much larger volumes of feeds and articles without freezing the Shell.*
