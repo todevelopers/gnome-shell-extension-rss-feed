@@ -11,7 +11,7 @@
 [![GNOME Extensions Downloads](https://img.shields.io/gnome-extensions/dt/rss-feed@gnome-shell-extension.todevelopers.github.com)](https://extensions.gnome.org/extension/948/)
 [![ko-fi](https://img.shields.io/badge/Support%20on-Ko--fi-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/tommygunx89)
 
-A modern GNOME Shell extension for following your favorite feeds right from the top bar. Run it as a panel widget, desktop notifications, or both — with two layout modes and a fully editable list of RSS, Atom, and RDF sources.
+A modern GNOME Shell extension for following your favorite feeds right from the top bar. Run it as a panel widget, desktop notifications, or both. It has two layout modes and a fully editable list of RSS, Atom, and RDF sources.
 
 ---
 
