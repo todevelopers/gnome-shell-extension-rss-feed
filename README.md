@@ -11,20 +11,23 @@
 [![GNOME Extensions Downloads](https://img.shields.io/gnome-extensions/dt/rss-feed@gnome-shell-extension.todevelopers.github.com)](https://extensions.gnome.org/extension/948/)
 [![ko-fi](https://img.shields.io/badge/Support%20on-Ko--fi-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/tommygunx89)
 
-A modern GNOME Shell extension for following your favorite feeds right from the notification bar. Featuring two layout modes, notifications, and a fully editable list of RSS, Atom, and RDF sources.
+A modern GNOME Shell extension for following your favorite feeds right from the top bar. Run it as a panel widget, desktop notifications, or both — with two layout modes and a fully editable list of RSS, Atom, and RDF sources.
 
 ---
 
 ## What it does
 
-Keeps your RSS feeds one click away - right in the GNOME status panel.
+Keeps your RSS feeds one click away - right in the GNOME top bar.
 
 - **Fully redesigned UI** - built from scratch for modern GNOME desktop
 - **Panel badge** shows a notification when you have unread articles
 - **Two layout modes** - Classic, per-feed submenus, or Minimal, a single chronological list mixing all sources
 - **Relative timestamps** on every article (2m, 4h, 3d) so you always know how fresh it is
 - **Mark as read** with a two-step confirmation button - no accidental clicks
-- **Native desktop notifications** for new articles, with optional lock screen delivery
+- **Native desktop notifications** for new articles, with optional grouping by source and lock screen delivery
+- **Flexible display modes** - run the panel widget and notifications together, notifications only, or widget only
+- **Handles large feeds** without freezing the Shell - chunked loading with a configurable item limit
+- **Light and dark theme ready** - adapts to your GNOME theme and accent color
 - **Full feed sources management** in preferences - add, remove, edit, and **Drag-and-drop** reordering of feed sources
 - Supports **RSS, Atom, RDF, and FeedBurner** - format is auto-detected
 - Configurable **refresh intervals** and article limits
