@@ -71,6 +71,24 @@ class FeedSource extends GObject.Object
 			this.emit('meta-changed');
 	}
 
+	restore(data)
+	{
+		if (this._initialDone)
+			return;
+
+		this.publisherTitle = data.publisherTitle || '';
+		if (this.publisherTitle && !this.customTitle)
+			this.emit('meta-changed');
+
+		this.items = data.items.map(d => FeedItem.restore(d));
+		this.unreadCount = this.items.filter(i => !i.read).length;
+		this._initialDone = true;
+
+		this.emit('items-changed');
+		if (this.unreadCount)
+			this.emit('unread-changed');
+	}
+
 	merge(parsed, opts)
 	{
 		if (parsed.Publisher && parsed.Publisher.Title

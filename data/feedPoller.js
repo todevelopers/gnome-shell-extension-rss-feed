@@ -143,7 +143,7 @@ export class FeedPoller
 		if (this._cancellable.is_cancelled())
 			return;
 
-		this._repository.flushUnread();
+		this._repository.flushItems();
 
 		if (this.onComplete)
 			this.onComplete();

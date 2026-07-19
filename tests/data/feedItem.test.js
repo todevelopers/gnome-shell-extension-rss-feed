@@ -111,4 +111,35 @@ describe('FeedItem', () => {
 			expect(i.read).toBe(false);
 		});
 	});
+
+	describe('restore', () => {
+		const persisted = (over = {}) => ({
+			id: 'id-1',
+			read: false,
+			link: 'http://x/1',
+			title: 'Title',
+			desc: 'Desc',
+			publishDate: '2024-01-01',
+			updateTime: '',
+			...over,
+		});
+
+		it('keeps persisted fields verbatim without decoding or stripping them again', () => {
+			const i = FeedItem.restore(persisted({ title: '5 < 6 and 7 > 3', desc: 'a &amp; b' }));
+			expect(i.title).toBe('5 < 6 and 7 > 3');
+			expect(i.desc).toBe('a &amp; b');
+		});
+
+		it('restores the read flag', () => {
+			expect(FeedItem.restore(persisted({ read: false })).read).toBe(false);
+			expect(FeedItem.restore(persisted({ read: true })).read).toBe(true);
+		});
+
+		it('returns a FeedItem a later feed merge can update', () => {
+			const i = FeedItem.restore(persisted());
+			expect(i).toBeInstanceOf(FeedItem);
+			i.update(data({ title: '<b>New</b>' }));
+			expect(i.title).toBe('New');
+		});
+	});
 });

@@ -37,8 +37,9 @@ export default class RssFeedExtension extends Extension
 		this._settings = settings;
 
 		this._store = new FeedStore();
-		this._repository = new FeedRepository(settings);
-		this._repository.load(this._store);
+		this._repository = new FeedRepository(settings, this.uuid);
+		// the first poll waits for the cached items so the initial merge diffs against them
+		this._repository.load(this._store).then(() => this._poller?.start());
 
 		this._poller = new FeedPoller(this._store, this._repository, settings);
 		this._notificationManager = new NotificationManager(this._store, settings);
@@ -58,8 +59,6 @@ export default class RssFeedExtension extends Extension
 			'changed::' + GSKeys.DISPLAY_MODE, () => this._syncIndicator(),
 			this
 		);
-
-		this._poller.start();
 
 		console.debug("[rss-feed] Extension enabled.");
 	}

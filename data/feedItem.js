@@ -58,4 +58,20 @@ export class FeedItem
 		this.updateTime = data.updateTime || '';
 		this.desc = buildDesc(data.desc);
 	}
+
+	// persisted fields are already normalized; the constructor would decode and strip them a second time
+	static restore(data)
+	{
+		let item = Object.create(FeedItem.prototype);
+
+		item.id = data.id;
+		item.read = !!data.read;
+		item.link = data.link;
+		item.title = data.title;
+		item.publishDate = data.publishDate;
+		item.updateTime = data.updateTime;
+		item.desc = data.desc;
+
+		return item;
+	}
 }
