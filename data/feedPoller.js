@@ -45,6 +45,15 @@ export class FeedPoller
 		this._interval = 0;
 		this._pending = 0;
 		this.onComplete = null;
+
+		this._settings.connectObject(
+			'changed::' + GSKeys.UPDATE_INTERVAL, () =>
+			{
+				this._interval = this._settings.get_int(GSKeys.UPDATE_INTERVAL);
+				this._scheduleNext();
+			},
+			this
+		);
 	}
 
 	start()
@@ -59,6 +68,8 @@ export class FeedPoller
 
 	destroy()
 	{
+		this._settings.disconnectObject(this);
+
 		if (this._timeout)
 		{
 			GLib.source_remove(this._timeout);
