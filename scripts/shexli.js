@@ -14,7 +14,8 @@ try
 {
 	mkdirSync(src);
 	execFileSync('git', ['archive', ref, '--format=tar', '-o', tar], { stdio: 'inherit' });
-	execFileSync('tar', ['--force-local', '-xf', tar, '-C', src], { stdio: 'inherit' });
+	// GNU tar reads a colon in the archive path as a remote host; run from the temp dir with relative names so extraction stays local
+	execFileSync('tar', ['-xf', 'extension.tar', '-C', 'src'], { cwd: dir, stdio: 'inherit' });
 	execFileSync('shexli', [src], { stdio: 'inherit' });
 }
 finally

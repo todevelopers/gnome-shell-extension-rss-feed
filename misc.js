@@ -21,7 +21,9 @@
 
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
+import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as AnimationUtils from 'resource:///org/gnome/shell/misc/animationUtils.js';
 
 export function processLinkOpen(url)
 {
@@ -77,4 +79,13 @@ export function relativeTime(dateStr)
 	if (diff < 1440) return Math.round(diff / 60) + 'h';
 	if (diff < 20160) return Math.round(diff / 1440) + 'd';
 	return Math.round(diff / 10080) + 'w';
+}
+
+export function ensureItemVisible(item)
+{
+	for (let parent = item.get_parent(); parent; parent = parent.get_parent())
+	{
+		if (parent instanceof St.ScrollView)
+			AnimationUtils.ensureActorVisibleInScrollView(parent, item);
+	}
 }

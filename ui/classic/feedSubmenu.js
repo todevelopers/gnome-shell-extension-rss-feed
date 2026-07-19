@@ -22,6 +22,8 @@
 import Clutter from 'gi://Clutter';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
+import * as Misc from '../../misc.js';
+
 export class ClassicFeedSubmenu extends PopupMenu.PopupSubMenu
 {
 	constructor(sourceActor, sourceArrow)
@@ -59,6 +61,12 @@ export class ClassicFeedSubmenu extends PopupMenu.PopupSubMenu
 
 			return Clutter.EVENT_STOP;
 		});
+	}
+
+	addMenuItem(menuItem, position)
+	{
+		super.addMenuItem(menuItem, position);
+		menuItem.connect('key-focus-in', () => Misc.ensureItemVisible(menuItem));
 	}
 
 	_needsScrollbar(_o)

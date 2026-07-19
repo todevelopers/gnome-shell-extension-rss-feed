@@ -118,6 +118,15 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		super.activate(event);
 	}
 
+	vfunc_key_press_event(event)
+	{
+		if (event.get_key_symbol() === Clutter.KEY_Right
+			&& this._dirty && !this.menu.isOpen)
+			this._startChunkedBuild();
+
+		return super.vfunc_key_press_event(event);
+	}
+
 	_startChunkedBuild()
 	{
 		this._cancelChunk();

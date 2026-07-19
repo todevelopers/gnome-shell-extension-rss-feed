@@ -22,6 +22,8 @@
 import St from 'gi://St';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
+import * as Misc from '../misc.js';
+
 export class ScrollSection extends PopupMenu.PopupMenuSection
 {
 	constructor(sv_style)
@@ -40,5 +42,11 @@ export class ScrollSection extends PopupMenu.PopupMenuSection
 		this.actor.clip_to_allocation = true;
 
 		this.actor.add_style_pseudo_class('scrolled');
+	}
+
+	addMenuItem(menuItem, position)
+	{
+		super.addMenuItem(menuItem, position);
+		menuItem.connect('key-focus-in', () => Misc.ensureItemVisible(menuItem));
 	}
 }
