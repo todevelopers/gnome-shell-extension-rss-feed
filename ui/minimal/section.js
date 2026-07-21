@@ -231,6 +231,7 @@ export class MinimalSection
 		if (base < 0)
 			base = items.length;
 
+		let firstNew = null;
 		for (let i = from; i < to; i++)
 		{
 			let entry = state.entries[i];
@@ -238,6 +239,8 @@ export class MinimalSection
 			this.section.addMenuItem(mi, base + (i - from));
 			if (state.header)
 				state.header.addItem(mi);
+			if (!firstNew)
+				firstNew = mi;
 		}
 
 		state.rendered = to;
@@ -249,6 +252,8 @@ export class MinimalSection
 		}
 		else
 			state.showMore.setCounts(to, state.entries.length);
+
+		firstNew?.grab_key_focus();
 	}
 
 	_displayLimit()

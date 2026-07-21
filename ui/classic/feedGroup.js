@@ -199,6 +199,8 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		let from = this._renderLimit;
 		this._renderLimit = Math.min(this._renderLimit + this._displayLimit(), this._items.length);
 		this._renderRows(from);
+
+		this._rowByItem.get(this._items[from])?.grab_key_focus();
 	}
 
 	_reconcile()
