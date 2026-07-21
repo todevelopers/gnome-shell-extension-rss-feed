@@ -66,6 +66,28 @@ class MinimalSectionHeader extends PopupMenu.PopupBaseMenuItem
 		this.toggle();
 	}
 
+	vfunc_key_press_event(event)
+	{
+		let symbol = event.get_key_symbol();
+
+		if (symbol === Clutter.KEY_Right)
+		{
+			if (this._collapsed)
+				this.toggle();
+			let first = this._items.find(it => !it._destroyed && it.visible);
+			first?.grab_key_focus();
+			return Clutter.EVENT_STOP;
+		}
+
+		if (symbol === Clutter.KEY_Left && !this._collapsed)
+		{
+			this.toggle();
+			return Clutter.EVENT_STOP;
+		}
+
+		return super.vfunc_key_press_event(event);
+	}
+
 	addItem(item)
 	{
 		if (this._destroyed)

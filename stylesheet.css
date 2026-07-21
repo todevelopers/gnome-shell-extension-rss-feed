@@ -36,6 +36,12 @@
 	background-color: #5f6368;
 	background-color: -st-accent-color;
 	padding: 0;
+	border: 2px solid transparent;
+}
+
+.rss-unread-badge:focus {
+	border-color: rgba(255, 255, 255, 0.9);
+	border-color: -st-accent-fg-color;
 }
 
 .rss-icon-btn {
@@ -43,6 +49,7 @@
 	height: 30px;
 	border-radius: 15px;
 	padding: 0;
+	border: 2px solid transparent;
 }
 
 .rss-icon-btn:hover {
@@ -51,6 +58,11 @@
 
 .rss-icon-btn:active {
 	background-color: rgba(127, 127, 127, 0.25);
+}
+
+.rss-icon-btn:focus {
+	border-color: #5f6368;
+	border-color: -st-accent-color;
 }
 
 .rss-feed-avatar {

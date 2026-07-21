@@ -56,23 +56,25 @@ class ConfirmBadge extends St.Button
 		this.onConfirm = null;
 		this.onEnterConfirm = null;
 
-		this.connect('clicked', () =>
-		{
-			if (this._confirmMode)
-			{
-				if (this.onConfirm)
-					this.onConfirm();
-				this.exitConfirm();
-			}
-			else
-			{
-				this.enterConfirm();
-				if (this.onEnterConfirm)
-					this.onEnterConfirm(this);
-			}
-		});
+		this.connect('clicked', () => this.activate());
 
 		this.connect_after('button-release-event', () => Clutter.EVENT_STOP);
+	}
+
+	activate()
+	{
+		if (this._confirmMode)
+		{
+			if (this.onConfirm)
+				this.onConfirm();
+			this.exitConfirm();
+		}
+		else
+		{
+			this.enterConfirm();
+			if (this.onEnterConfirm)
+				this.onEnterConfirm(this);
+		}
 	}
 
 	enterConfirm()

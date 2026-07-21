@@ -120,8 +120,15 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 
 	vfunc_key_press_event(event)
 	{
-		if (event.get_key_symbol() === Clutter.KEY_Right
-			&& this._dirty && !this.menu.isOpen)
+		let symbol = event.get_key_symbol();
+
+		if (symbol === Clutter.KEY_Delete && this._countBadge.visible)
+		{
+			this._countBadge.activate();
+			return Clutter.EVENT_STOP;
+		}
+
+		if (symbol === Clutter.KEY_Right && this._dirty && !this.menu.isOpen)
 			this._startChunkedBuild();
 
 		return super.vfunc_key_press_event(event);
