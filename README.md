@@ -41,10 +41,10 @@ Keeps your RSS feeds one click away - right in the GNOME top bar.
 A couple of features depend on the GNOME Shell version, because they build on Shell capabilities that only newer versions provide:
 
 - **Accent color (GNOME 47+)** - *Unread count badges* use your chosen system accent color only on GNOME 47 and newer, where accent colors were
-  introduced. On GNOME 46 there is no system accent the extension can read, so these elements fall back to a neutral gray.
+  introduced. On GNOME 46, there is no system accent the extension can read, so these elements fall back to a neutral gray.
 
 - **Notification grouping (GNOME 48+)** - The *Group notifications by source* option relies on the Shell grouping notifications by app, which arrived in
-  GNOME 48. On GNOME 46 and 47 the Shell lists every notification separately, so notifications are not grouped regardless of how this option is set.
+  GNOME 48. On GNOME 46 and 47, the Shell lists every notification separately, so notifications are not grouped regardless of how this option is set.
 
 ---
 
@@ -95,7 +95,7 @@ curl -fsSL https://raw.githubusercontent.com/todevelopers/gnome-shell-extension-
    gnome-extensions install rss-feed@gnome-shell-extension.todevelopers.github.com.zip
    ```
 3. Restart GNOME Shell (`Alt+F2` → `r` → `Enter`, or log out and back in)
-4. Enable the extension in GNOME Extensions app or with:
+4. Enable the extension in the GNOME Extensions app or with:
    
    ```
    gnome-extensions enable rss-feed@gnome-shell-extension.todevelopers.github.com
@@ -107,7 +107,7 @@ curl -fsSL https://raw.githubusercontent.com/todevelopers/gnome-shell-extension-
 
 This project has been kept alive by the contributions of many people over the years. A big thank you to everyone who submitted patches, reported bugs, and helped maintain the extension:
 
-- **[nixnodes](https://github.com/nixnodes)** — special thanks for implementing new features that significantly extended the extension's capabilities
+- **[nixnodes](https://github.com/nixnodes)** a special thanks for implementing new features that significantly extended the extension's capabilities
 - [maweki](https://github.com/maweki) (Mario Wenzel)
 - [jonnius](https://github.com/jonnius) (Jonatan Hatakeyama Zeidler)
 - [k-e-l-p](https://github.com/k-e-l-p) (koronis)
@@ -121,6 +121,6 @@ Your work is what kept this project going.
 
 ## Support
 
-If you like RSS Feed reader directly in your shell, consider supporting it on Ko-fi.
+If you like your RSS feeds directly in GNOME Shell, consider supporting it on Ko-fi.
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/tommygunx89)
