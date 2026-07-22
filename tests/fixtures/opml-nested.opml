@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+	<head>
+		<title>Subscriptions</title>
+	</head>
+	<body>
+		<outline text="Tech" title="Tech">
+			<outline text="Blogs" title="Blogs">
+				<outline text="Ars Technica" title="Ars Technica" type="rss" xmlUrl="https://arstechnica.com/feed/"/>
+			</outline>
+			<outline text="The Verge" title="The Verge" type="rss" xmlUrl="https://www.theverge.com/rss/index.xml"/>
+		</outline>
+	</body>
+</opml>

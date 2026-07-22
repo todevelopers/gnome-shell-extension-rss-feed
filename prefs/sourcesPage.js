@@ -30,6 +30,7 @@ import Soup from 'gi://Soup';
 import * as GSKeys from '../gskeys.js';
 import * as HTTP from '../http.js';
 import { getInstance } from '../encoder.js';
+import { parseOpml, buildOpml } from '../opml.js';
 import { createRssParser } from '../parsers/factory.js';
 import { makeSpinRow, makeSwitchRow, getInitials, urlToInitials } from './prefsWidgets.js';
 
@@ -476,6 +477,174 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 		rowMap.set(url, row);
 	}
 	sourcesGroup.add(addRow);
+
+	const importExportBox = new Gtk.Box({ spacing : 6 });
+
+	const importButton = new Gtk.Button({
+		icon_name : 'document-open-symbolic',
+		tooltip_text : 'Import OPML…',
+		valign : Gtk.Align.CENTER,
+	});
+	importButton.add_css_class('flat');
+
+	const exportButton = new Gtk.Button({
+		icon_name : 'document-save-symbolic',
+		tooltip_text : 'Export OPML…',
+		valign : Gtk.Align.CENTER,
+	});
+	exportButton.add_css_class('flat');
+
+	importExportBox.append(importButton);
+	importExportBox.append(exportButton);
+	sourcesGroup.set_header_suffix(importExportBox);
+
+	importButton.connect('clicked', () =>
+	{
+		const filters = new Gio.ListStore({ item_type : Gtk.FileFilter });
+		const opmlFilter = new Gtk.FileFilter({ name : 'OPML files' });
+		opmlFilter.add_pattern('*.opml');
+		opmlFilter.add_pattern('*.xml');
+		const allFilter = new Gtk.FileFilter({ name : 'All files' });
+		allFilter.add_pattern('*');
+		filters.append(opmlFilter);
+		filters.append(allFilter);
+
+		const dialog = new Gtk.FileDialog({
+			title : 'Import OPML',
+			filters : filters,
+			default_filter : opmlFilter,
+		});
+
+		dialog.open(window, null, (dlg, result) =>
+		{
+			let file;
+			try
+			{
+				file = dlg.open_finish(result);
+			}
+			catch
+			{
+				return;
+			}
+
+			file.load_contents_async(null, (f, res) =>
+			{
+				let text;
+				try
+				{
+					let [, contents] = f.load_contents_finish(res);
+					text = new TextDecoder().decode(contents);
+				}
+				catch
+				{
+					window.add_toast(new Adw.Toast({ title : "Could not read file" }));
+					return;
+				}
+
+				let parsed;
+				try
+				{
+					parsed = parseOpml(text);
+				}
+				catch
+				{
+					window.add_toast(new Adw.Toast({ title : "Could not parse OPML file" }));
+					return;
+				}
+
+				let existing = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
+				let existingSet = new Set(existing);
+				let newFeeds = [];
+				let duplicates = 0;
+				for (let feed of parsed)
+				{
+					if (existingSet.has(feed.url))
+					{
+						duplicates++;
+						continue;
+					}
+					newFeeds.push(feed);
+				}
+
+				if (!newFeeds.length)
+				{
+					window.add_toast(new Adw.Toast({ title : "No new feeds found in file" }));
+					return;
+				}
+
+				for (let feed of newFeeds)
+				{
+					if (feed.title)
+						aSettings.set(feed.url, 't', feed.title);
+					if (feed.folder)
+						aSettings.set(feed.url, 'f', feed.folder);
+				}
+
+				let newUrls = newFeeds.map(feed => feed.url);
+				settings.set_strv(GSKeys.RSS_FEEDS_LIST, existing.concat(newUrls));
+
+				sourcesGroup.remove(addRow);
+				for (let url of newUrls)
+				{
+					let row = buildSourceRow(url);
+					rowMap.set(url, row);
+					sourcesGroup.add(row);
+				}
+				sourcesGroup.add(addRow);
+
+				let message = "Imported " + newFeeds.length + (newFeeds.length === 1 ? " feed" : " feeds");
+				if (duplicates)
+					message += duplicates === 1 ? " (1 duplicate skipped)" : " (" + duplicates + " duplicates skipped)";
+				window.add_toast(new Adw.Toast({ title : message }));
+			});
+		});
+	});
+
+	exportButton.connect('clicked', () =>
+	{
+		let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST).map((url) =>
+		{
+			let domain = url.replace(/^https?:\/\//, '').split('/')[0];
+			return {
+				url,
+				title : aSettings.get(url, 't') || domain,
+				folder : aSettings.get(url, 'f') || '',
+			};
+		});
+
+		const dialog = new Gtk.FileDialog({
+			title : 'Export OPML',
+			initial_name : 'rss-feeds.opml',
+		});
+
+		dialog.save(window, null, (dlg, result) =>
+		{
+			let file;
+			try
+			{
+				file = dlg.save_finish(result);
+			}
+			catch
+			{
+				return;
+			}
+
+			let bytes = new GLib.Bytes(new TextEncoder().encode(buildOpml(feeds)));
+			file.replace_contents_bytes_async(bytes, null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null, (f, res) =>
+			{
+				try
+				{
+					f.replace_contents_finish(res);
+				}
+				catch
+				{
+					window.add_toast(new Adw.Toast({ title : "Could not save file" }));
+					return;
+				}
+				window.add_toast(new Adw.Toast({ title : "Exported " + feeds.length + (feeds.length === 1 ? " feed" : " feeds") }));
+			});
+		});
+	});
 
 	const sourcesOptionsGroup = new Adw.PreferencesGroup();
 	sourcesPage.add(sourcesOptionsGroup);
