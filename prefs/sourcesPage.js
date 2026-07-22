@@ -478,7 +478,14 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 	}
 	sourcesGroup.add(addRow);
 
-	const importExportBox = new Gtk.Box({ spacing : 6 });
+	const sourceActionsBox = new Gtk.Box({ spacing : 6 });
+
+	const refreshButton = new Gtk.Button({
+		icon_name : 'view-refresh-symbolic',
+		tooltip_text : 'Check all sources',
+		valign : Gtk.Align.CENTER,
+	});
+	refreshButton.add_css_class('flat');
 
 	const importButton = new Gtk.Button({
 		icon_name : 'document-open-symbolic',
@@ -494,9 +501,16 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 	});
 	exportButton.add_css_class('flat');
 
-	importExportBox.append(importButton);
-	importExportBox.append(exportButton);
-	sourcesGroup.set_header_suffix(importExportBox);
+	sourceActionsBox.append(refreshButton);
+	sourceActionsBox.append(importButton);
+	sourceActionsBox.append(exportButton);
+	sourcesGroup.set_header_suffix(sourceActionsBox);
+
+	refreshButton.connect('clicked', () =>
+	{
+		for (let [url, row] of rowMap)
+			validateUrl(row, url);
+	});
 
 	importButton.connect('clicked', () =>
 	{
