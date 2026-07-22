@@ -47,6 +47,7 @@ export class MinimalSection
 		this._dirty = false;
 		this._active = false;
 		this._menuOpen = false;
+		this._expanded = false;
 	}
 
 	setActive(active)
@@ -59,8 +60,13 @@ export class MinimalSection
 	setMenuOpen(open)
 	{
 		this._menuOpen = open;
-		if (open && this._active && this._dirty)
-			this._flush();
+		if (open)
+		{
+			if (this._active && this._dirty)
+				this._flush();
+		}
+		else if (this._expanded)
+			this.markDirty();
 	}
 
 	markDirty()
@@ -123,6 +129,7 @@ export class MinimalSection
 	_rebuild()
 	{
 		this._cancelChunk();
+		this._expanded = false;
 
 		let items = this._computeList();
 
@@ -244,6 +251,7 @@ export class MinimalSection
 		}
 
 		state.rendered = to;
+		this._expanded = true;
 
 		if (to >= state.entries.length)
 		{

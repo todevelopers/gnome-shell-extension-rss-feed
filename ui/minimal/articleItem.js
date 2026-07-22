@@ -21,6 +21,7 @@
 
 import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
+import Pango from 'gi://Pango';
 import St from 'gi://St';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import * as Misc from '../../misc.js';
@@ -38,12 +39,16 @@ class MinimalArticleItem extends PopupMenu.PopupBaseMenuItem
 		let contentBox = new St.BoxLayout({ vertical: true, x_expand: true });
 		this._titleLabel = new St.Label({ text: item.title });
 		this._titleLabel.add_style_class_name(item.read ? 'rss-article-read' : 'rss-article-unread');
+		this._titleLabel.clutter_text.ellipsize = Pango.EllipsizeMode.END;
 		contentBox.add_child(this._titleLabel);
 
-		let metaBox = new St.BoxLayout({ style: 'spacing: 6px;' });
-		metaBox.add_child(new St.Label({ text: feedTitle, style_class: 'rss-source-tag' }));
-		metaBox.add_child(new St.Label({ text: Misc.relativeTime(item.publishDate), style_class: 'rss-article-time' }));
-		contentBox.add_child(metaBox);
+		let time = Misc.relativeTime(item.publishDate);
+		let metaLabel = new St.Label({
+			text: time ? feedTitle + '  ·  ' + time : feedTitle,
+			style_class: 'rss-article-time',
+		});
+		metaLabel.clutter_text.ellipsize = Pango.EllipsizeMode.END;
+		contentBox.add_child(metaLabel);
 		this.add_child(contentBox);
 
 		this.connect('activate', (self, event) =>

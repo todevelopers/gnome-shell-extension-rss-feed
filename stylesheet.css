@@ -136,13 +136,6 @@
 	border-bottom-color: rgba(127, 127, 127, 0.2);
 }
 
-.rss-source-tag {
-	font-size: 10px;
-	border-radius: 4px;
-	padding: 1px 5px;
-	background-color: rgba(127, 127, 127, 0.12);
-}
-
 .rss-show-more {
 	font-size: 11px;
 	opacity: 0.6;
