@@ -30,8 +30,8 @@
 }
 
 .rss-unread-badge {
-	min-width: 30px;
-	height: 30px;
+	min-width: 26px;
+	height: 26px;
 	border-radius: 15px;
 	background-color: #5f6368;
 	background-color: -st-accent-color;
@@ -45,8 +45,8 @@
 }
 
 .rss-icon-btn {
-	width: 30px;
-	height: 30px;
+	width: 26px;
+	height: 26px;
 	border-radius: 15px;
 	padding: 0;
 	border: 2px solid transparent;
