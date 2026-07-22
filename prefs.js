@@ -43,6 +43,8 @@ export default class RssFeedPreferences extends ExtensionPreferences
 			aSettings.destroy();
 		});
 
+		window.set_default_size(720, 720);
+
 		window.add(buildGeneralPage(window, settings));
 		window.add(buildNotificationsPage(window, settings));
 		window.add(buildSourcesPage(window, settings, aSettings, httpSession));
