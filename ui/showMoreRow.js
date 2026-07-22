@@ -20,6 +20,7 @@
  */
 
 import Clutter from 'gi://Clutter';
+import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
@@ -31,6 +32,7 @@ class ShowMoreRow extends PopupMenu.PopupBaseMenuItem
 	{
 		super._init();
 		this._onActivate = onActivate;
+		this._activateId = 0;
 
 		if (reserveOrnament)
 			this.setOrnament(PopupMenu.Ornament.NONE);
@@ -47,6 +49,11 @@ class ShowMoreRow extends PopupMenu.PopupBaseMenuItem
 		{
 			this._destroyed = true;
 			this._onActivate = null;
+			if (this._activateId)
+			{
+				GLib.source_remove(this._activateId);
+				this._activateId = 0;
+			}
 		});
 	}
 
@@ -57,7 +64,15 @@ class ShowMoreRow extends PopupMenu.PopupBaseMenuItem
 
 	activate(_event)
 	{
-		if (this._onActivate)
-			this._onActivate();
+		if (!this._onActivate || this._activateId)
+			return;
+
+		this._activateId = GLib.idle_add(GLib.PRIORITY_DEFAULT, () =>
+		{
+			this._activateId = 0;
+			if (this._onActivate)
+				this._onActivate();
+			return GLib.SOURCE_REMOVE;
+		});
 	}
 });
