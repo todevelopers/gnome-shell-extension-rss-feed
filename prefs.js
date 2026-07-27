@@ -45,8 +45,17 @@ export default class RssFeedPreferences extends ExtensionPreferences
 
 		window.set_default_size(720, 720);
 
+		const sourcesPage = buildSourcesPage(window, settings, aSettings, httpSession);
+
 		window.add(buildGeneralPage(window, settings));
 		window.add(buildNotificationsPage(window, settings));
-		window.add(buildSourcesPage(window, settings, aSettings, httpSession));
+		window.add(sourcesPage);
+
+		// only a freshly built window can honour it, an already open one keeps the page the user is on
+		if (settings.get_boolean(GSKeys.PREFS_OPEN_SOURCES))
+		{
+			settings.set_boolean(GSKeys.PREFS_OPEN_SOURCES, false);
+			window.set_visible_page(sourcesPage);
+		}
 	}
 }

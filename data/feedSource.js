@@ -32,6 +32,7 @@ export const FeedSource = GObject.registerClass(
 		'meta-changed': {},
 		'items-added': { param_types: [GObject.TYPE_JSOBJECT] },
 		'items-removed': { param_types: [GObject.TYPE_JSOBJECT] },
+		'status-changed': {},
 	},
 },
 class FeedSource extends GObject.Object
@@ -48,6 +49,7 @@ class FeedSource extends GObject.Object
 
 		this.items = [];
 		this.unreadCount = 0;
+		this.lastError = null;
 
 		this._initialDone = false;
 		this._persistedUnread = new Set(config.persistedUnread || []);
@@ -159,6 +161,15 @@ class FeedSource extends GObject.Object
 			this.emit('unread-changed');
 		if (notify.length)
 			this.emit('items-added', { items: notify, initial: isFirstMerge });
+	}
+
+	setError(error)
+	{
+		if (this.lastError === error)
+			return;
+
+		this.lastError = error;
+		this.emit('status-changed');
 	}
 
 	markRead(item)

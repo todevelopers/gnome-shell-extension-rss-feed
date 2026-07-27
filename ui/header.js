@@ -49,8 +49,22 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 
 		let titleBox = new St.BoxLayout({ vertical : true, x_expand : true });
 		titleBox.add_child(new St.Label({ text : 'RSS Feed', style_class : 'rss-header-title' }));
+
+		let subtitleBox = new St.BoxLayout({ x_expand : true });
 		this._subtitle = new St.Label({ text : '', style_class : 'rss-header-subtitle' });
-		titleBox.add_child(this._subtitle);
+		subtitleBox.add_child(this._subtitle);
+
+		this._failedPill = new St.Button(
+		{
+			visible : false,
+			can_focus : true,
+			style_class : 'rss-header-warning',
+			y_align : Clutter.ActorAlign.CENTER,
+		});
+		this._failedPill.connect('clicked', () => callbacks.onOpenSources());
+		subtitleBox.add_child(this._failedPill);
+
+		titleBox.add_child(subtitleBox);
 		this.add_child(titleBox);
 
 		this._badge = new ConfirmBadge('rss-unread-badge');
@@ -81,7 +95,7 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 		this.add_child(reloadBtn);
 		this.add_child(settingsBtn);
 
-		this._navButtons = [this._badge, reloadBtn, settingsBtn];
+		this._navButtons = [this._failedPill, this._badge, reloadBtn, settingsBtn];
 		this.connect('key-press-event', (_actor, event) => this._navigate(event));
 	}
 
@@ -116,6 +130,13 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 	setUnreadCount(n)
 	{
 		this._badge.setCount(n);
+	}
+
+	setFailedCount(n)
+	{
+		this._failedPill.visible = n > 0;
+		if (n > 0)
+			this._failedPill.label = n === 1 ? '1 feed failed' : n + ' feeds failed';
 	}
 
 	markUpdated()

@@ -128,6 +128,7 @@ class RssIndicator extends PanelMenu.Button
 			onMarkAllSeen : () => this._store.markAllSeen(),
 			onActivateConfirm : (b) => this._activateConfirm(b),
 			onOpenSettings : () => this._onSettingsBtnClicked(),
+			onOpenSources : () => this._onFailedPillClicked(),
 			onOpenLink : (url) => { this.menu.close(); Misc.processLinkOpen(url); },
 		});
 		this.menu.addMenuItem(this._header);
@@ -160,7 +161,11 @@ class RssIndicator extends PanelMenu.Button
 		store.connectObject(
 			'source-added', (_store, source) => this._addGroup(source),
 			'source-removed', (_store, source) => this._removeGroup(source),
-			'changed', () => this._updateUnreadCountLabel(this._store.totalUnread),
+			'changed', () =>
+			{
+				this._updateUnreadCountLabel(this._store.totalUnread);
+				this._header?.setFailedCount(this._store.failedCount);
+			},
 			'reordered', () => this._reorderClassicSection(),
 			this
 		);
@@ -169,6 +174,7 @@ class RssIndicator extends PanelMenu.Button
 			this._addGroup(source);
 
 		this._updateUnreadCountLabel(store.totalUnread);
+		this._header.setFailedCount(store.failedCount);
 	}
 
 	_applyLayout()
@@ -302,6 +308,16 @@ class RssIndicator extends PanelMenu.Button
 		if (Misc.isScreenLocked())
 			return;
 
+		this.menu.close();
+		this._extension.openPreferences();
+	}
+
+	_onFailedPillClicked()
+	{
+		if (Misc.isScreenLocked())
+			return;
+
+		this._settings.set_boolean(GSKeys.PREFS_OPEN_SOURCES, true);
 		this.menu.close();
 		this._extension.openPreferences();
 	}

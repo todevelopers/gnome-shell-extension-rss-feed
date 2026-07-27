@@ -29,6 +29,9 @@ import { createRssParser } from '../parsers/factory.js';
 
 const USER_AGENT = 'gnome-shell-extension-rss-feed/1.0 (+https://github.com/todevelopers/gnome-shell-extension-rss-feed)';
 
+// seconds before each retry, only for failures that can still turn into a success
+const RETRY_DELAYS = [5, 20];
+
 // Drives the polling: fetches each source over Soup, parses it and merges into the model. Never builds widgets.
 export class FeedPoller
 {
@@ -44,6 +47,7 @@ export class FeedPoller
 		this._timeout = 0;
 		this._interval = 0;
 		this._pending = 0;
+		this._retries = new Set();
 		this.onComplete = null;
 
 		this._networkMonitor = Gio.NetworkMonitor.get_default();
@@ -92,6 +96,10 @@ export class FeedPoller
 			this._timeout = 0;
 		}
 
+		for (let id of this._retries)
+			GLib.source_remove(id);
+		this._retries.clear();
+
 		this._httpSession.abort();
 		this._cancellable.cancel();
 	}
@@ -99,6 +107,11 @@ export class FeedPoller
 	_poll()
 	{
 		this._interval = this._settings.get_int(GSKeys.UPDATE_INTERVAL);
+
+		// a new cycle supersedes retries still queued from the previous one
+		for (let id of this._retries)
+			GLib.source_remove(id);
+		this._retries.clear();
 
 		// fetching while offline would only produce a burst of connection errors, the reconnect polls again
 		this._online = this._networkMonitor.network_available;
@@ -137,14 +150,14 @@ export class FeedPoller
 		}
 	}
 
-	_fetch(source, itemsRetained, markInitialAsNew)
+	_fetch(source, itemsRetained, markInitialAsNew, attempt = 0)
 	{
 		let message = Soup.Message.new('GET', this._requestUrl(source.url));
 
 		if (!message)
 		{
 			console.warn("[rss-feed] Soup.Message.new returned null for URL '" + source.url + "'");
-			this._complete();
+			this._fail(source, "Invalid URL");
 			return;
 		}
 
@@ -153,19 +166,52 @@ export class FeedPoller
 		this._httpSession.send_and_read_async(message, GLib.PRIORITY_DEFAULT, this._cancellable,
 			(session, result) =>
 			{
-				let data = this._readResponse(session, result, message, source.url);
-				if (data)
+				let response = this._readResponse(session, result, message, source.url);
+
+				if (response.cancelled)
+					return;
+
+				if (response.error)
 				{
-					let parser = createRssParser(data);
-					if (parser)
-					{
-						parser.parse();
-						source.merge(parser, { itemsRetained, markInitialAsNew });
-					}
+					if (response.retryable && attempt < RETRY_DELAYS.length)
+						this._scheduleRetry(source, itemsRetained, markInitialAsNew, attempt);
+					else
+						this._fail(source, response.error);
+					return;
 				}
+
+				let parser = createRssParser(response.data);
+				if (!parser)
+				{
+					console.warn("[rss-feed] " + source.url + ": unable to parse feed");
+					this._fail(source, "Unable to parse feed");
+					return;
+				}
+
+				parser.parse();
+				source.merge(parser, { itemsRetained, markInitialAsNew });
+				source.setError(null);
 
 				this._complete();
 			});
+	}
+
+	_scheduleRetry(source, itemsRetained, markInitialAsNew, attempt)
+	{
+		let id = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, RETRY_DELAYS[attempt], () =>
+		{
+			this._retries.delete(id);
+			this._fetch(source, itemsRetained, markInitialAsNew, attempt + 1);
+			return GLib.SOURCE_REMOVE;
+		});
+
+		this._retries.add(id);
+	}
+
+	_fail(source, error)
+	{
+		source.setError(error);
+		this._complete();
 	}
 
 	_complete()
@@ -205,20 +251,22 @@ export class FeedPoller
 		catch (e)
 		{
 			if (e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
-				return null;
+				return { cancelled : true };
 			console.error("[rss-feed] HTTP GET " + sourceURL + ": " + e);
-			return null;
+			return { error : e.message || "Connection failed", retryable : true };
 		}
 
 		let status = message.get_status();
 		if (!(status >= 200 && status < 300))
 		{
 			console.warn("[rss-feed] HTTP GET " + sourceURL + ": " + status + " " + Soup.Status.get_phrase(status));
-			return null;
+			// a 4xx other than "too many requests" and "request timeout" answers the same way on every retry
+			let retryable = status >= 500 || status === 408 || status === 429;
+			return { error : status + " " + Soup.Status.get_phrase(status), retryable };
 		}
 
 		if (!bytes)
-			return null;
+			return { error : "Empty response", retryable : true };
 
 		let rawBytes = bytes.toArray();
 		let encoding = 'utf-8';
@@ -237,6 +285,6 @@ export class FeedPoller
 			if (m) encoding = m[1];
 		}
 
-		return new TextDecoder(encoding).decode(rawBytes);
+		return { data : new TextDecoder(encoding).decode(rawBytes) };
 	}
 }

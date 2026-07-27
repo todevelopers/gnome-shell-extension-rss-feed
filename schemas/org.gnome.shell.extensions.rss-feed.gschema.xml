@@ -61,6 +61,11 @@
 		    <summary>Display mode</summary>
 		    <description>Controls whether the panel icon/menu, notifications, or both are shown. One of: 'notifications-and-widget', 'notifications-only', 'widget-only'.</description>
 		</key>
+		<key type="b" name="prefs-open-sources">
+		    <default>false</default>
+		    <summary>Open preferences on the Sources page</summary>
+		    <description>Set by the panel menu so the preferences window opens directly on the Sources page. Reset once the window is built.</description>
+		</key>
 		<key type="b" name="group-notifications-by-source">
 		    <default>false</default>
 		    <summary>Group by RSS Source</summary>

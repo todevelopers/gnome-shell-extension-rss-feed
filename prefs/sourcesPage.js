@@ -160,7 +160,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 				let status = msg.get_status();
 				if (!(status >= 200 && status < 300))
 				{
-					row._statusLabel.set_label(Soup.Status.get_phrase(status));
+					row._statusLabel.set_label(status + " " + Soup.Status.get_phrase(status));
 					row._statusLabel.remove_css_class('status-ok');
 					row._statusLabel.add_css_class('status-error');
 					return;
