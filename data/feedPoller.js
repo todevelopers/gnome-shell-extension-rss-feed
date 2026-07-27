@@ -173,10 +173,18 @@ export class FeedPoller
 
 				if (response.error)
 				{
+					// the machine dropped offline mid-cycle: a retry cannot succeed and the feed is not at fault
+					if (!this._networkMonitor.network_available)
+					{
+						this._complete();
+						return;
+					}
+
 					if (response.retryable && attempt < RETRY_DELAYS.length)
 						this._scheduleRetry(source, itemsRetained, markInitialAsNew, attempt);
 					else
 						this._fail(source, response.error);
+
 					return;
 				}
 

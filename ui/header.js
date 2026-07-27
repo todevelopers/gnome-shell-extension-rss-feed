@@ -141,7 +141,7 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 	{
 		this._failedPill.visible = n > 0;
 		if (n > 0)
-			this._failedPill.label = n === 1 ? '1 feed failed' : n + ' feeds failed';
+			this._failedPill.label = n + ' failed';
 	}
 
 	markUpdated()
