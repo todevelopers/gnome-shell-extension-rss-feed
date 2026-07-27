@@ -51,7 +51,12 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 		titleBox.add_child(new St.Label({ text : 'RSS Feed', style_class : 'rss-header-title' }));
 
 		let subtitleBox = new St.BoxLayout({ x_expand : true });
-		this._subtitle = new St.Label({ text : '', style_class : 'rss-header-subtitle' });
+		this._subtitle = new St.Label(
+		{
+			text : '',
+			y_align : Clutter.ActorAlign.CENTER,
+			style_class : 'rss-header-subtitle',
+		});
 		subtitleBox.add_child(this._subtitle);
 
 		this._failedPill = new St.Button(
