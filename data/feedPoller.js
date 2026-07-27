@@ -46,6 +46,21 @@ export class FeedPoller
 		this._pending = 0;
 		this.onComplete = null;
 
+		this._networkMonitor = Gio.NetworkMonitor.get_default();
+		this._online = this._networkMonitor.network_available;
+
+		this._networkMonitor.connectObject('network-changed', (_monitor, available) =>
+		{
+			// network-changed also fires on route changes, only the offline to online edge is interesting
+			if (available === this._online)
+				return;
+
+			this._online = available;
+
+			if (available)
+				this._poll();
+		}, this);
+
 		this._settings.connectObject(
 			'changed::' + GSKeys.UPDATE_INTERVAL, () =>
 			{
@@ -69,6 +84,7 @@ export class FeedPoller
 	destroy()
 	{
 		this._settings.disconnectObject(this);
+		this._networkMonitor.disconnectObject(this);
 
 		if (this._timeout)
 		{
@@ -83,6 +99,15 @@ export class FeedPoller
 	_poll()
 	{
 		this._interval = this._settings.get_int(GSKeys.UPDATE_INTERVAL);
+
+		// fetching while offline would only produce a burst of connection errors, the reconnect polls again
+		this._online = this._networkMonitor.network_available;
+		if (!this._online)
+		{
+			this._scheduleNext();
+			return;
+		}
+
 		let itemsRetained = this._settings.get_int(GSKeys.ITEMS_RETAINED);
 		let markInitialAsNew = this._settings.get_boolean(GSKeys.MARK_INITIAL_AS_NEW);
 
