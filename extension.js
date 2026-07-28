@@ -63,6 +63,27 @@ export default class RssFeedExtension extends Extension
 		console.debug("[rss-feed] Extension enabled.");
 	}
 
+	disable()
+	{
+		// unlock-dialog: stays active on the lock screen only to dispatch RSS notifications when notifications-on-lockscreen is enabled;
+		// no keyboard input is captured while locked (the panel menu cannot open in unlock-dialog)
+		this._settings.disconnectObject(this);
+
+		this._indicator?.destroy();
+		this._poller?.destroy();
+		this._notificationManager?.destroy();
+		this._repository?.destroy();
+
+		this._indicator = null;
+		this._poller = null;
+		this._notificationManager = null;
+		this._repository = null;
+		this._store = null;
+		this._settings = null;
+
+		console.debug("[rss-feed] Extension disabled.");
+	}
+
 	_syncIndicator()
 	{
 		let notificationsOnly = this._settings.get_string(GSKeys.DISPLAY_MODE) === 'notifications-only';
@@ -84,26 +105,5 @@ export default class RssFeedExtension extends Extension
 		this._poller.onStart = () => this._indicator?.markUpdating();
 		this._poller.onComplete = () => this._indicator?.markUpdated();
 		Main.panel.addToStatusArea('rssFeedMenu', this._indicator, 0, 'right');
-	}
-
-	disable()
-	{
-		// unlock-dialog: stays active on the lock screen only to dispatch RSS notifications when notifications-on-lockscreen is enabled;
-		// no keyboard input is captured while locked (the panel menu cannot open in unlock-dialog)
-		this._settings.disconnectObject(this);
-
-		this._indicator?.destroy();
-		this._poller?.destroy();
-		this._notificationManager?.destroy();
-		this._repository?.destroy();
-
-		this._indicator = null;
-		this._poller = null;
-		this._notificationManager = null;
-		this._repository = null;
-		this._store = null;
-		this._settings = null;
-
-		console.debug("[rss-feed] Extension disabled.");
 	}
 }
