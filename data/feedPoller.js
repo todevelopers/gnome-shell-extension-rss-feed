@@ -254,6 +254,9 @@ export class FeedPoller
 
 		this._repository.flushItems();
 
+		// the Shell does not disable extensions when the session ends, so an index written only in destroy() would be lost on logout
+		this._cache.dump();
+
 		if (this.onComplete)
 			this.onComplete();
 	}
