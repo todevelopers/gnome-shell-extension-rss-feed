@@ -227,7 +227,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install shexli
+      # tree-sitter 0.26 crashes on the tree-sitter-javascript 0.25 grammar (segfault)
+      - run: pip install shexli 'tree-sitter<0.26'
       - name: Run shexli
         run: |
           set -o pipefail
