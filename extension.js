@@ -88,7 +88,8 @@ export default class RssFeedExtension extends Extension
 
 	disable()
 	{
-		// unlock-dialog: stays active on the lock screen only to dispatch RSS notifications when notifications-on-lockscreen is enabled; no keyboard input is captured while locked (the panel menu cannot open in unlock-dialog)
+		// unlock-dialog: stays active on the lock screen only to dispatch RSS notifications when notifications-on-lockscreen is enabled;
+		// no keyboard input is captured while locked (the panel menu cannot open in unlock-dialog)
 		this._settings.disconnectObject(this);
 
 		this._indicator?.destroy();

@@ -23,6 +23,15 @@
     "no-unused-vars": ["warn", { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_" }],
     "no-mixed-spaces-and-tabs": "off",
     "no-useless-escape": "off",
-    "no-redeclare": "off"
-  }
+    "no-redeclare": "off",
+    "max-len": ["error", { "code": 200, "ignoreUrls": true }]
+  },
+  "overrides": [
+    {
+      "files": ["tests/**"],
+      "rules": {
+        "max-len": "off"
+      }
+    }
+  ]
 }
