@@ -41,7 +41,7 @@ export default class RssFeedExtension extends Extension
 		// the first poll waits for the cached items so the initial merge diffs against them
 		this._repository.load(this._store).then(() => this._poller?.start());
 
-		this._poller = new FeedPoller(this._store, this._repository, settings);
+		this._poller = new FeedPoller(this._store, this._repository, settings, this.uuid);
 		this._notificationManager = new NotificationManager(this._store, settings);
 
 		this._syncIndicator();

@@ -35,7 +35,7 @@ const RETRY_DELAYS = [5, 20];
 // Drives the polling: fetches each source over Soup, parses it and merges into the model. Never builds widgets.
 export class FeedPoller
 {
-	constructor(store, repository, settings)
+	constructor(store, repository, settings, uuid)
 	{
 		this._store = store;
 		this._repository = repository;
@@ -44,9 +44,15 @@ export class FeedPoller
 		this._httpSession = new Soup.Session({ timeout : 60 });
 		this._cancellable = new Gio.Cancellable();
 
+		// feeds change far less often than they are polled, so let libsoup revalidate them instead of downloading them again
+		this._cache = Soup.Cache.new(GLib.build_filenamev([GLib.get_user_cache_dir(), uuid, 'http']), Soup.CacheType.SINGLE_USER);
+		this._cache.load();
+		this._httpSession.add_feature(this._cache);
+
 		this._timeout = 0;
 		this._interval = 0;
 		this._pending = 0;
+		this._forceRevalidate = false;
 		this._retries = new Set();
 		this.onStart = null;
 		this.onComplete = null;
@@ -83,7 +89,7 @@ export class FeedPoller
 
 	refresh()
 	{
-		this._poll();
+		this._poll(true);
 	}
 
 	destroy()
@@ -103,11 +109,15 @@ export class FeedPoller
 
 		this._httpSession.abort();
 		this._cancellable.cancel();
+
+		// without the index on disk the cached bodies are orphans and the next load() throws them away
+		this._cache.dump();
 	}
 
-	_poll()
+	_poll(force = false)
 	{
 		this._interval = this._settings.get_int(GSKeys.UPDATE_INTERVAL);
+		this._forceRevalidate = force;
 
 		// a new cycle supersedes retries still queued from the previous one
 		for (let id of this._retries)
@@ -167,6 +177,10 @@ export class FeedPoller
 		}
 
 		message.get_request_headers().replace("User-Agent", USER_AGENT);
+
+		// a manual refresh must reach the server even when the cached copy is still fresh
+		if (this._forceRevalidate)
+			message.get_request_headers().replace("Cache-Control", "no-cache");
 
 		this._httpSession.send_and_read_async(message, GLib.PRIORITY_DEFAULT, this._cancellable,
 			(session, result) =>
