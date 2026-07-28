@@ -42,13 +42,12 @@ class MinimalArticleItem extends PopupMenu.PopupBaseMenuItem
 		this._titleLabel.clutter_text.ellipsize = Pango.EllipsizeMode.END;
 		contentBox.add_child(this._titleLabel);
 
-		let time = Misc.relativeTime(item.publishDate);
-		let metaLabel = new St.Label({
-			text: time ? feedTitle + '  ·  ' + time : feedTitle,
-			style_class: 'rss-article-time',
-		});
-		metaLabel.clutter_text.ellipsize = Pango.EllipsizeMode.END;
-		contentBox.add_child(metaLabel);
+		let metaBox = new St.BoxLayout({ style: 'spacing: 6px;' });
+		this._sourceTag = new St.Label({ text: feedTitle, style_class: 'rss-source-tag' });
+		this._sourceTag.clutter_text.ellipsize = Pango.EllipsizeMode.END;
+		metaBox.add_child(this._sourceTag);
+		metaBox.add_child(new St.Label({ text: Misc.relativeTime(item.publishDate), style_class: 'rss-article-time' }));
+		contentBox.add_child(metaBox);
 		this.add_child(contentBox);
 
 		this.connect('activate', (self, event) =>
