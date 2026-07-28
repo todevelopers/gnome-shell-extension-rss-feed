@@ -48,6 +48,7 @@ export class FeedPoller
 		this._interval = 0;
 		this._pending = 0;
 		this._retries = new Set();
+		this.onStart = null;
 		this.onComplete = null;
 
 		this._networkMonitor = Gio.NetworkMonitor.get_default();
@@ -126,6 +127,10 @@ export class FeedPoller
 
 		let sources = this._store.getSources();
 		this._pending = sources.length;
+
+		// without sources nothing will ever complete the cycle, so nothing may announce its start either
+		if (this._pending && this.onStart)
+			this.onStart();
 
 		for (let source of sources)
 			this._fetch(source, itemsRetained, markInitialAsNew);

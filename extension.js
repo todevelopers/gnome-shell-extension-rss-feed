@@ -71,6 +71,7 @@ export default class RssFeedExtension extends Extension
 		{
 			this._indicator?.destroy();
 			this._indicator = null;
+			this._poller.onStart = null;
 			this._poller.onComplete = null;
 			return;
 		}
@@ -80,6 +81,7 @@ export default class RssFeedExtension extends Extension
 
 		this._indicator = new RssIndicator(this._settings, this, this._store);
 		this._indicator.onReload = () => this._poller.refresh();
+		this._poller.onStart = () => this._indicator?.markUpdating();
 		this._poller.onComplete = () => this._indicator?.markUpdated();
 		Main.panel.addToStatusArea('rssFeedMenu', this._indicator, 0, 'right');
 	}

@@ -144,6 +144,11 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 			this._failedPill.label = n + ' failed';
 	}
 
+	markUpdating()
+	{
+		this._subtitle.set_text('Updating…');
+	}
+
 	markUpdated()
 	{
 		this._subtitle.set_text('Updated at ' + new Date().toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' }));
