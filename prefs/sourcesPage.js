@@ -94,18 +94,65 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 		cssProvider,
 		Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 	);
+	const fCache = new Object();
+	const pending = [];
+	let checking = false;
+
 	window.connect('close-request', () =>
 	{
+		pending.length = 0;
 		Gtk.StyleContext.remove_provider_for_display(Gdk.Display.get_default(), cssProvider);
 	});
 
-	const fCache = new Object();
+	const pumpQueue = () =>
+	{
+		if (checking || !pending.length)
+			return;
 
+		checking = true;
+
+		let next = pending.shift();
+		startValidation(next.row, next.url);
+	};
+
+	const finishValidation = () =>
+	{
+		checking = false;
+		pumpQueue();
+	};
+
+	const cancelValidation = (url) =>
+	{
+		let queued = pending.findIndex(e => e.url === url);
+		if (queued != -1)
+			pending.splice(queued, 1);
+
+		if (fCache[url])
+		{
+			fCache[url].cancel();
+			delete fCache[url];
+		}
+	};
+
+	// one feed at a time, so a whole list does not parse in a single burst
 	const validateUrl = (row, url) =>
 	{
 		if (!url.length)
 			return;
 
+		if (pending.some(e => e.url === url))
+			return;
+
+		row._statusLabel.set_label("Checking…");
+		row._statusLabel.remove_css_class('status-ok');
+		row._statusLabel.remove_css_class('status-error');
+
+		pending.push({ row, url });
+		pumpQueue();
+	};
+
+	const startValidation = (row, url) =>
+	{
 		let jsonParams = HTTP.getParametersAsJson(url);
 		let l2o = url.indexOf('?');
 		let baseUrl = l2o != -1 ? url.substr(0, l2o) : url;
@@ -117,6 +164,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 			row._statusLabel.set_label("Invalid URL");
 			row._statusLabel.remove_css_class('status-ok');
 			row._statusLabel.add_css_class('status-error');
+			finishValidation();
 			return;
 		}
 
@@ -130,98 +178,103 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 		let rowCancellable = new Gio.Cancellable();
 		fCache[url] = rowCancellable;
 
-		row._statusLabel.set_label("Checking…");
-		row._statusLabel.remove_css_class('status-ok');
-		row._statusLabel.remove_css_class('status-error');
-
 		httpSession.send_and_read_async(msg, GLib.PRIORITY_DEFAULT, rowCancellable,
-			(session, result) =>
+			(_session, result) =>
 			{
-				delete fCache[url];
+				if (fCache[url] === rowCancellable)
+					delete fCache[url];
 
-				let bytes;
-				try
-				{
-					bytes = session.send_and_read_finish(result);
-				}
-				catch (e)
-				{
-					if (e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
-					{
-						row._statusLabel.set_label("");
-						return;
-					}
-					row._statusLabel.set_label("Error");
-					row._statusLabel.remove_css_class('status-ok');
-					row._statusLabel.add_css_class('status-error');
-					return;
-				}
-
-				let status = msg.get_status();
-				if (!(status >= 200 && status < 300))
-				{
-					row._statusLabel.set_label(status + " " + Soup.Status.get_phrase(status));
-					row._statusLabel.remove_css_class('status-ok');
-					row._statusLabel.add_css_class('status-error');
-					return;
-				}
-
-				let parser;
-				try
-				{
-					let rawBytes = bytes.toArray();
-					let encoding = 'utf-8';
-
-					let ctHeader = msg.get_response_headers().get_one('content-type');
-					if (ctHeader)
-					{
-						let m = ctHeader.match(/charset=([^\s;]+)/i);
-						if (m) encoding = m[1];
-					}
-
-					if (encoding === 'utf-8')
-					{
-						let prolog = new TextDecoder('latin1').decode(rawBytes.subarray(0, 200));
-						let m = prolog.match(/encoding=["']([^"']+)["']/i);
-						if (m) encoding = m[1];
-					}
-
-					let data = new TextDecoder(encoding).decode(rawBytes);
-					parser = createRssParser(data);
-				}
-				catch (e)
-				{
-					row._statusLabel.set_label(e.message || "Parse error");
-					row._statusLabel.remove_css_class('status-ok');
-					row._statusLabel.add_css_class('status-error');
-					return;
-				}
-
-				if (parser == null)
-				{
-					row._statusLabel.set_label("Unable to parse");
-					row._statusLabel.remove_css_class('status-ok');
-					row._statusLabel.add_css_class('status-error');
-					return;
-				}
-				parser.parse();
-				row._statusLabel.set_label("OK (" + parser._type + ")");
-				row._statusLabel.remove_css_class('status-error');
-				row._statusLabel.add_css_class('status-ok');
-				if (!aSettings.get(url, 't'))
-				{
-					let feedTitle = Encoder.htmlDecode(parser.Publisher.Title);
-					row.set_title(feedTitle);
-					aSettings.set(url, 't', feedTitle);
-					if (row._titleEntry && !row._titleEntry.get_text().trim())
-					{
-						row._titleEntry.set_text(feedTitle);
-						row._titleDirty = false;
-					}
-				}
-				if (!aSettings.get(url, 'v'))
-					row._avatarLabel.set_label(getInitials(Encoder.htmlDecode(parser.Publisher.Title)));
+				applyValidation(row, url, result, msg);
+				finishValidation();
 			});
+	};
+
+	const applyValidation = (row, url, result, msg) =>
+	{
+		let bytes;
+		try
+		{
+			bytes = httpSession.send_and_read_finish(result);
+		}
+		catch (e)
+		{
+			if (e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+			{
+				row._statusLabel.set_label("");
+				return;
+			}
+			row._statusLabel.set_label("Error");
+			row._statusLabel.remove_css_class('status-ok');
+			row._statusLabel.add_css_class('status-error');
+			return;
+		}
+
+		let status = msg.get_status();
+		if (!(status >= 200 && status < 300))
+		{
+			row._statusLabel.set_label(status + " " + Soup.Status.get_phrase(status));
+			row._statusLabel.remove_css_class('status-ok');
+			row._statusLabel.add_css_class('status-error');
+			return;
+		}
+
+		let parser;
+		try
+		{
+			let rawBytes = bytes.toArray();
+			let encoding = 'utf-8';
+
+			let ctHeader = msg.get_response_headers().get_one('content-type');
+			if (ctHeader)
+			{
+				let m = ctHeader.match(/charset=([^\s;]+)/i);
+				if (m) encoding = m[1];
+			}
+
+			if (encoding === 'utf-8')
+			{
+				let prolog = new TextDecoder('latin1').decode(rawBytes.subarray(0, 200));
+				let m = prolog.match(/encoding=["']([^"']+)["']/i);
+				if (m) encoding = m[1];
+			}
+
+			let data = new TextDecoder(encoding).decode(rawBytes);
+			parser = createRssParser(data);
+		}
+		catch (e)
+		{
+			row._statusLabel.set_label(e.message || "Parse error");
+			row._statusLabel.remove_css_class('status-ok');
+			row._statusLabel.add_css_class('status-error');
+			return;
+		}
+
+		if (parser == null)
+		{
+			row._statusLabel.set_label("Unable to parse");
+			row._statusLabel.remove_css_class('status-ok');
+			row._statusLabel.add_css_class('status-error');
+			return;
+		}
+		parser.parse();
+		row._statusLabel.set_label("OK (" + parser._type + ")");
+		row._statusLabel.remove_css_class('status-error');
+		row._statusLabel.add_css_class('status-ok');
+		if (!aSettings.get(url, 't'))
+		{
+			let feedTitle = Encoder.htmlDecode(parser.Publisher.Title);
+			row.set_title(feedTitle);
+			aSettings.set(url, 't', feedTitle);
+			if (row._titleEntry && !row._titleEntry.get_text().trim())
+			{
+				row._titleUpdating = true;
+				row._titleEntry.set_text(feedTitle);
+				row._titleUpdating = false;
+				row._titleDirty = false;
+			}
+		}
+		if (!aSettings.get(url, 'v'))
+			row._avatarLabel.set_label(getInitials(Encoder.htmlDecode(parser.Publisher.Title)));
 	};
 
 	const rowMap = new Map();
@@ -310,6 +363,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 		delBtn.add_css_class('source-delete-btn');
 		delBtn.connect('clicked', () =>
 		{
+			cancelValidation(state.url);
 			aSettings.remove(state.url);
 			let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
 			let idx = feeds.indexOf(state.url);
@@ -355,6 +409,9 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 		titleEntry.set_text(storedTitle || '');
 		titleEntry.connect('changed', () =>
 		{
+			if (row._titleUpdating)
+				return;
+
 			row._titleDirty = true;
 			let val = titleEntry.get_text().trim();
 			let domain = state.url.replace(/^https?:\/\//, '').split('/')[0];
@@ -366,6 +423,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 		});
 		row._titleEntry = titleEntry;
 		row._titleDirty = false;
+		row._titleUpdating = false;
 
 		const urlEntry = new Adw.EntryRow({ title : 'URL', show_apply_button : true });
 		urlEntry.set_text(url);
@@ -375,11 +433,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 			if (!newUrl.length || newUrl === state.url)
 				return;
 
-			if (fCache[state.url])
-			{
-				fCache[state.url].cancel();
-				delete fCache[state.url];
-			}
+			cancelValidation(state.url);
 
 			let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
 			let idx = feeds.indexOf(state.url);
