@@ -19,37 +19,17 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export function getParametersAsJson(url)
+import GLib from 'gi://GLib';
+
+// everything a query may carry unescaped, '%' included so escapes already in the url are not escaped a second time
+const QUERY_RESERVED = "!#$&'()*+,;=:@/?%";
+
+export function buildRequestUrl(url)
 {
 	let l2o = url.indexOf('?');
 
 	if (l2o == -1)
-		return "{}";
+		return url;
 
-	let urlParams = url.substr(l2o + 1);
-	let params = urlParams.split('&');
-
-	let jsonObj = "{";
-	for (let i = 0; i < params.length; i++)
-	{
-		let pair = params[i].split('=');
-		jsonObj += '"' + pair[0] + '":' + '"' + pair[1] + '"';
-		if (i != params.length - 1)
-			jsonObj += ',';
-	}
-	jsonObj += "}";
-
-	return jsonObj;
-}
-
-export function buildUrl(baseUrl, params)
-{
-	let paramObj = JSON.parse(params);
-	let keys = Object.keys(paramObj);
-
-	if (!keys.length)
-		return baseUrl;
-
-	let query = keys.map(k => encodeURIComponent(k) + '=' + encodeURIComponent(paramObj[k])).join('&');
-	return baseUrl + '?' + query;
+	return url.substr(0, l2o + 1) + GLib.Uri.escape_string(url.substr(l2o + 1), QUERY_RESERVED, false);
 }

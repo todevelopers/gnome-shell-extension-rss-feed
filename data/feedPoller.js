@@ -167,7 +167,7 @@ export class FeedPoller
 
 	_fetch(source, itemsRetained, markInitialAsNew, attempt = 0)
 	{
-		let message = Soup.Message.new('GET', this._requestUrl(source.url));
+		let message = Soup.Message.new('GET', HTTP.buildRequestUrl(source.url));
 
 		if (!message)
 		{
@@ -259,16 +259,6 @@ export class FeedPoller
 
 		if (this.onComplete)
 			this.onComplete();
-	}
-
-	_requestUrl(sourceURL)
-	{
-		let params = HTTP.getParametersAsJson(sourceURL);
-
-		let q = sourceURL.indexOf('?');
-		let base = q !== -1 ? sourceURL.substr(0, q) : sourceURL;
-
-		return HTTP.buildUrl(base, params);
 	}
 
 	_readResponse(session, result, message, sourceURL)

@@ -153,12 +153,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 
 	const startValidation = (row, url) =>
 	{
-		let jsonParams = HTTP.getParametersAsJson(url);
-		let l2o = url.indexOf('?');
-		let baseUrl = l2o != -1 ? url.substr(0, l2o) : url;
-		let finalUrl = HTTP.buildUrl(baseUrl, jsonParams);
-
-		let msg = Soup.Message.new('GET', finalUrl);
+		let msg = Soup.Message.new('GET', HTTP.buildRequestUrl(url));
 		if (!msg)
 		{
 			row._statusLabel.set_label("Invalid URL");
