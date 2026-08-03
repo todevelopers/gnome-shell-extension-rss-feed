@@ -31,7 +31,7 @@ Gio._promisify(Gio.File.prototype, 'load_contents_async');
 Gio._promisify(Gio.File.prototype, 'replace_contents_bytes_async', 'replace_contents_finish');
 Gio._promisify(Gio.File.prototype, 'delete_async');
 
-// Maps the on-disk shape (GSettings for config, per-feed JSON item files for state) to the model and persists items (debounced) — the only storage-aware layer.
+// Maps the on-disk shape (GSettings for config, per-feed JSON item files for state) to the model and persists items (debounced), the only storage-aware layer.
 export class FeedRepository
 {
 	constructor(settings, uuid)
@@ -44,6 +44,7 @@ export class FeedRepository
 
 		this._store = null;
 		this._dirty = new Set();
+		this._legacy = new Set();
 		this._flushId = 0;
 	}
 
@@ -53,6 +54,7 @@ export class FeedRepository
 
 		let urls = this._settings.get_strv(GSKeys.RSS_FEEDS_LIST);
 		this._aSettings.load();
+		this._legacy = new Set(urls.filter(url => this._aSettings._gsData[url]?.['i'] !== undefined));
 
 		store.connectObject(
 			'source-added', (_store, source) => this._watchSource(source),
@@ -62,6 +64,8 @@ export class FeedRepository
 
 		for (let url of urls)
 			store.addSource(new FeedSource(url, this._configFor(url)));
+
+		this._dropOrphanedItems(urls);
 
 		await Promise.all(store.getSources().map(source => this._restoreSource(source)));
 	}
@@ -126,25 +130,52 @@ export class FeedRepository
 		this.scheduleItemsFlush();
 	}
 
-	async _restoreSource(source)
+	// feeds removed while the extension was disabled leave their file behind
+	_dropOrphanedItems(urls)
 	{
-		let file = Gio.File.new_for_path(this._itemsPath(source.url));
+		let keep = new Set(urls.map(url => this._itemsPath(url)));
 
-		let data;
+		let dir;
 		try
 		{
-			let [contents] = await file.load_contents_async(null);
-			data = JSON.parse(new TextDecoder().decode(contents));
+			dir = GLib.Dir.open(this._dir, 0);
 		}
 		catch
 		{
 			return;
 		}
 
-		if (!this._store || !Array.isArray(data.items))
-			return;
+		let name;
+		while ((name = dir.read_name()) !== null)
+		{
+			let path = GLib.build_filenamev([this._dir, name]);
+			if (!keep.has(path))
+				Gio.File.new_for_path(path).delete_async(GLib.PRIORITY_DEFAULT, null).catch(() => {});
+		}
 
-		source.restore(data);
+		dir.close();
+	}
+
+	async _restoreSource(source)
+	{
+		let file = Gio.File.new_for_path(this._itemsPath(source.url));
+
+		// a damaged file may only cost this feed its history, a throw here would leave the poller unstarted
+		try
+		{
+			let [contents] = await file.load_contents_async(null);
+			let data = JSON.parse(new TextDecoder().decode(contents));
+
+			if (!this._store || !Array.isArray(data.items))
+				return;
+
+			source.restore(data);
+		}
+		catch
+		{
+			return;
+		}
+
 		this._dirty.delete(source.url);
 	}
 
@@ -225,7 +256,7 @@ export class FeedRepository
 	// once a source's items live in a file, its legacy unread ids in the GSettings blob are obsolete
 	_clearLegacyUnread(urls)
 	{
-		if (!urls.length)
+		if (!this._legacy.size)
 			return;
 
 		this._aSettings.load();
@@ -233,6 +264,9 @@ export class FeedRepository
 		let changed = false;
 		for (let url of urls)
 		{
+			if (!this._legacy.delete(url))
+				continue;
+
 			let data = this._aSettings._gsData[url];
 			if (data && data['i'] !== undefined)
 			{
@@ -255,7 +289,7 @@ export class FeedRepository
 
 		if (this._store)
 		{
-			// the final flush must be synchronous — an async write would not complete after disable
+			// the final flush must be synchronous, an async write would not complete after disable
 			for (let source of this._store.getSources())
 			{
 				source.disconnectObject(this);
@@ -267,6 +301,7 @@ export class FeedRepository
 		}
 
 		this._dirty.clear();
+		this._legacy.clear();
 		this._store = null;
 		this._aSettings.destroy();
 	}
