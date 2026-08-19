@@ -66,6 +66,11 @@
 		    <summary>Open preferences on the Sources page</summary>
 		    <description>Set by the panel menu so the preferences window opens directly on the Sources page. Reset once the window is built.</description>
 		</key>
+		<key type="b" name="show-failed-feeds">
+		    <default>true</default>
+		    <summary>Show failed feeds indicator</summary>
+		    <description>Show a pill in the menu header with the number of feeds that failed to update.</description>
+		</key>
 		<key type="b" name="group-notifications-by-source">
 		    <default>false</default>
 		    <summary>Group by RSS Source</summary>

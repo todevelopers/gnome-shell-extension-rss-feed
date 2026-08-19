@@ -23,7 +23,7 @@ import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
 
 import * as GSKeys from '../gskeys.js';
-import { makeSpinRow } from './prefsWidgets.js';
+import { makeSpinRow, makeSwitchRow } from './prefsWidgets.js';
 
 const MAX_UPDATE_INTERVAL = 1440;
 const MAX_SOURCES_LIMIT = 1024;
@@ -156,6 +156,10 @@ export function buildGeneralPage(window, settings)
 	const itemsPerSourceRow = makeSpinRow(settings, GSKeys.ITEMS_VISIBLE, "Visible articles before 'Show more'", 1, MAX_SOURCES_LIMIT);
 	itemsPerSourceRow.subtitle = "How many articles each feed (Classic) or section (Minimal) shows.";
 	displayGroup.add(itemsPerSourceRow);
+
+	const failedFeedsRow = makeSwitchRow(settings, GSKeys.SHOW_FAILED_FEEDS, "Show failed feeds indicator");
+	failedFeedsRow.subtitle = "Menu header shows how many feeds failed to update.";
+	displayGroup.add(failedFeedsRow);
 
 	const pollingGroup = new Adw.PreferencesGroup({ title : "Polling" });
 	generalPage.add(pollingGroup);

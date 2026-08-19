@@ -149,6 +149,7 @@ class RssIndicator extends PanelMenu.Button
 				this._feedsSection.actor.set_style(this._generatePopupMenuCSS(h));
 				this._minimal.section.actor.set_style(this._generatePopupMenuCSS(h));
 			},
+			'changed::' + GSKeys.SHOW_FAILED_FEEDS, () => this._updateFailedCount(),
 			'changed::' + GSKeys.ITEMS_VISIBLE, () =>
 			{
 				this._minimal.markDirty();
@@ -170,7 +171,7 @@ class RssIndicator extends PanelMenu.Button
 			this._addGroup(source);
 
 		this._updateUnreadCountLabel(store.totalUnread);
-		this._header.setFailedCount(store.failedCount);
+		this._updateFailedCount();
 	}
 
 	_applyLayout()
@@ -235,6 +236,7 @@ class RssIndicator extends PanelMenu.Button
 		this._sourceBindings.delete(source);
 
 		this._minimal.markDirty();
+		this._updateFailedCount();
 	}
 
 	markUpdating()
@@ -246,7 +248,7 @@ class RssIndicator extends PanelMenu.Button
 	markUpdated()
 	{
 		this._header?.markUpdated();
-		this._header?.setFailedCount(this._store.failedCount);
+		this._updateFailedCount();
 	}
 
 	_reorderClassicSection()
@@ -299,6 +301,12 @@ class RssIndicator extends PanelMenu.Button
 			this._iconLabel.hide();
 
 		this._header?.setUnreadCount(count);
+	}
+
+	_updateFailedCount()
+	{
+		let show = this._settings.get_boolean(GSKeys.SHOW_FAILED_FEEDS);
+		this._header?.setFailedCount(show ? this._store.failedCount : 0);
 	}
 
 	_generatePopupMenuCSS(value)

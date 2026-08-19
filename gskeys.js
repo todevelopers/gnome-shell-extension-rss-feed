@@ -12,3 +12,4 @@ export const MARK_INITIAL_AS_NEW = 'mark-initial-as-new';
 export const DISPLAY_MODE = 'display-mode';
 export const GROUP_NOTIFICATIONS_BY_SOURCE = 'group-notifications-by-source';
 export const PREFS_OPEN_SOURCES = 'prefs-open-sources';
+export const SHOW_FAILED_FEEDS = 'show-failed-feeds';
