@@ -91,6 +91,7 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 		let reloadBtn = new St.Button(
 		{
 			style_class : 'rss-icon-btn',
+			y_align : Clutter.ActorAlign.CENTER,
 			can_focus : true,
 			accessible_name : 'Refresh',
 			child : new St.Icon({ icon_name : 'view-refresh-symbolic', style_class : 'popup-menu-icon' }),
@@ -100,6 +101,7 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 		let settingsBtn = new St.Button(
 		{
 			style_class : 'rss-icon-btn',
+			y_align : Clutter.ActorAlign.CENTER,
 			can_focus : true,
 			accessible_name : 'Settings',
 			child : new St.Icon({ icon_name : 'applications-system-symbolic', style_class : 'popup-menu-icon' }),
