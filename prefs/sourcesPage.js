@@ -37,6 +37,9 @@ import { makeSpinRow, makeSwitchRow, getInitials, urlToInitials } from './prefsW
 const Encoder = getInstance();
 const MAX_SOURCES_LIMIT = 1024;
 
+// a raw exception message would stretch the status pill across the whole row
+const shortStatus = (text) => text.length > 40 ? text.slice(0, 40) + "…" : text;
+
 export function buildSourcesPage(window, settings, aSettings, httpSession)
 {
 	const sourcesPage = new Adw.PreferencesPage({ title : "Sources", icon_name : 'view-list-symbolic' });
@@ -186,7 +189,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 				catch (e)
 				{
 					// without this the row keeps the "Checking…" label of a check that never reached a verdict
-					row._statusLabel.set_label(e.message || "Error");
+					row._statusLabel.set_label(shortStatus(e.message || "Error"));
 					row._statusLabel.remove_css_class('status-ok');
 					row._statusLabel.add_css_class('status-error');
 				}
@@ -218,7 +221,8 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 			return;
 		}
 
-		let status = msg.get_status();
+		// get_status() returns a Status enum value and 429 has no member there, the plain property does not marshal
+		let status = msg.status_code;
 		if (!(status >= 200 && status < 300))
 		{
 			row._statusLabel.set_label(status + " " + msg.get_reason_phrase());
@@ -252,7 +256,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 		}
 		catch (e)
 		{
-			row._statusLabel.set_label(e.message || "Parse error");
+			row._statusLabel.set_label(shortStatus(e.message || "Parse error"));
 			row._statusLabel.remove_css_class('status-ok');
 			row._statusLabel.add_css_class('status-error');
 			return;

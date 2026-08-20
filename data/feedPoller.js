@@ -308,7 +308,8 @@ export class FeedPoller
 			return { error : e.message || "Connection failed", retryable : true };
 		}
 
-		let status = message.get_status();
+		// get_status() returns a Status enum value and 429 has no member there, the plain property does not marshal
+		let status = message.status_code;
 		if (!(status >= 200 && status < 300))
 		{
 			console.warn("[rss-feed] HTTP GET " + sourceURL + ": " + status + " " + message.get_reason_phrase());
