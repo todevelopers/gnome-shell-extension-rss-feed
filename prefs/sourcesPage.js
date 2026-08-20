@@ -183,9 +183,16 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 				{
 					applyValidation(row, url, result, msg);
 				}
+				catch (e)
+				{
+					// without this the row keeps the "Checking…" label of a check that never reached a verdict
+					row._statusLabel.set_label(e.message || "Error");
+					row._statusLabel.remove_css_class('status-ok');
+					row._statusLabel.add_css_class('status-error');
+				}
 				finally
 				{
-					// a feed that throws while being checked would otherwise leave the queue stuck on "Checking…"
+					// the label of a destroyed row throws in turn, and the queue must not stay stuck behind it
 					finishValidation();
 				}
 			});
