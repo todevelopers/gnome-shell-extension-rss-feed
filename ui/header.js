@@ -70,15 +70,6 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 		subtitleBox.add_child(this._failedPill);
 
 		titleBox.add_child(subtitleBox);
-
-		this._ratio = 0;
-		this._progress = new St.BoxLayout({ style_class : 'rss-progress', x_expand : true });
-		this._progressFill = new St.Widget({ style_class : 'rss-progress-fill' });
-		this._progress.add_child(this._progressFill);
-		// the fill is sized in pixels, so every width the header is given needs it recomputed
-		this._progress.connect('notify::width', () => this._applyProgress());
-		titleBox.add_child(this._progress);
-
 		this.add_child(titleBox);
 
 		this._badge = new ConfirmBadge('rss-unread-badge');
@@ -158,29 +149,15 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 	markUpdating(total)
 	{
 		this._subtitle.set_text('Updating… 0/' + total);
-		this._setProgress(0);
 	}
 
 	markProgress(done, total)
 	{
 		this._subtitle.set_text('Updating… ' + done + '/' + total);
-		this._setProgress(done / total);
 	}
 
 	markUpdated()
 	{
 		this._subtitle.set_text('Updated at ' + new Date().toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' }));
-		this._setProgress(0);
-	}
-
-	_setProgress(ratio)
-	{
-		this._ratio = ratio;
-		this._applyProgress();
-	}
-
-	_applyProgress()
-	{
-		this._progressFill.set_width(Math.round(this._progress.get_width() * this._ratio));
 	}
 });
