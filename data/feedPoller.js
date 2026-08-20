@@ -198,45 +198,54 @@ export class FeedPoller
 				if (cancellable.is_cancelled())
 					return;
 
-				let response = this._readResponse(session, result, message, source.url);
-
-				if (response.cancelled)
-					return;
-
-				if (response.error)
+				try
 				{
-					// the machine dropped offline mid-cycle: a retry cannot succeed and the feed is not at fault
-					if (!this._networkMonitor.network_available)
+					let response = this._readResponse(session, result, message, source.url);
+
+					if (response.cancelled)
+						return;
+
+					if (response.error)
 					{
-						this._settle(attempt);
+						// the machine dropped offline mid-cycle: a retry cannot succeed and the feed is not at fault
+						if (!this._networkMonitor.network_available)
+						{
+							this._settle(attempt);
+							return;
+						}
+
+						if (response.retryable && attempt < RETRY_DELAYS.length)
+						{
+							this._scheduleRetry(source, itemsRetained, markInitialAsNew, attempt);
+							// keeping the cycle open until a retry answers is what left the header updating for minutes
+							this._settle(attempt);
+						}
+						else
+							this._fail(source, response.error, attempt);
+
 						return;
 					}
 
-					if (response.retryable && attempt < RETRY_DELAYS.length)
+					let parser = createRssParser(response.data);
+					if (!parser)
 					{
-						this._scheduleRetry(source, itemsRetained, markInitialAsNew, attempt);
-						// keeping the cycle open until a retry answers is what left the header updating for minutes
-						this._settle(attempt);
+						console.warn("[rss-feed] " + source.url + ": unable to parse feed");
+						this._fail(source, "Unable to parse feed", attempt);
+						return;
 					}
-					else
-						this._fail(source, response.error, attempt);
 
-					return;
+					parser.parse();
+					source.merge(parser, { itemsRetained, markInitialAsNew });
+					source.setError(null);
+
+					this._settle(attempt);
 				}
-
-				let parser = createRssParser(response.data);
-				if (!parser)
+				catch (e)
 				{
-					console.warn("[rss-feed] " + source.url + ": unable to parse feed");
-					this._fail(source, "Unable to parse feed", attempt);
-					return;
+					// a source that throws on its way through would never be counted and the cycle would stay open forever
+					console.error("[rss-feed] " + source.url + ": " + e);
+					this._fail(source, "Unexpected error", attempt);
 				}
-
-				parser.parse();
-				source.merge(parser, { itemsRetained, markInitialAsNew });
-				source.setError(null);
-
-				this._settle(attempt);
 			});
 	}
 
