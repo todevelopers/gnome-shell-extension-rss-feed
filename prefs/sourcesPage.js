@@ -179,8 +179,15 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 				if (fCache[url] === rowCancellable)
 					delete fCache[url];
 
-				applyValidation(row, url, result, msg);
-				finishValidation();
+				try
+				{
+					applyValidation(row, url, result, msg);
+				}
+				finally
+				{
+					// a feed that throws while being checked would otherwise leave the queue stuck on "Checking…"
+					finishValidation();
+				}
 			});
 	};
 
