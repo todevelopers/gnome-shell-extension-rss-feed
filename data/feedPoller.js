@@ -302,10 +302,10 @@ export class FeedPoller
 		let status = message.get_status();
 		if (!(status >= 200 && status < 300))
 		{
-			console.warn("[rss-feed] HTTP GET " + sourceURL + ": " + status + " " + Soup.Status.get_phrase(status));
+			console.warn("[rss-feed] HTTP GET " + sourceURL + ": " + status + " " + message.get_reason_phrase());
 			// a 4xx other than "too many requests" and "request timeout" answers the same way on every retry
 			let retryable = status >= 500 || status === 408 || status === 429;
-			return { error : status + " " + Soup.Status.get_phrase(status), retryable };
+			return { error : status + " " + message.get_reason_phrase(), retryable };
 		}
 
 		if (!bytes)
