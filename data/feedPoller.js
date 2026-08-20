@@ -41,7 +41,8 @@ export class FeedPoller
 		this._repository = repository;
 		this._settings = settings;
 
-		this._httpSession = new Soup.Session({ timeout : 60 });
+		// with the default of 10 connections a long source list finishes in batches, and 60s keeps a dead host in the cycle for a minute
+		this._httpSession = new Soup.Session({ timeout : 30, max_conns : 20 });
 		this._cancellable = new Gio.Cancellable();
 
 		// feeds change far less often than they are polled, so let libsoup revalidate them instead of downloading them again
@@ -52,9 +53,11 @@ export class FeedPoller
 		this._timeout = 0;
 		this._interval = 0;
 		this._pending = 0;
+		this._total = 0;
 		this._forceRevalidate = false;
 		this._retries = new Set();
 		this.onStart = null;
+		this.onProgress = null;
 		this.onComplete = null;
 
 		this._networkMonitor = Gio.NetworkMonitor.get_default();
@@ -119,7 +122,10 @@ export class FeedPoller
 		this._interval = this._settings.get_int(GSKeys.UPDATE_INTERVAL);
 		this._forceRevalidate = force;
 
-		// a new cycle supersedes retries still queued from the previous one
+		// a new cycle supersedes the previous one, whatever it still has in flight must not report into the new counters
+		this._cancellable.cancel();
+		this._cancellable = new Gio.Cancellable();
+
 		for (let id of this._retries)
 			GLib.source_remove(id);
 		this._retries.clear();
@@ -136,11 +142,12 @@ export class FeedPoller
 		let markInitialAsNew = this._settings.get_boolean(GSKeys.MARK_INITIAL_AS_NEW);
 
 		let sources = this._store.getSources();
-		this._pending = sources.length;
+		this._total = sources.length;
+		this._pending = this._total;
 
 		// without sources nothing will ever complete the cycle, so nothing may announce its start either
 		if (this._pending && this.onStart)
-			this.onStart();
+			this.onStart(this._total);
 
 		for (let source of sources)
 			this._fetch(source, itemsRetained, markInitialAsNew);
@@ -172,7 +179,7 @@ export class FeedPoller
 		if (!message)
 		{
 			console.warn("[rss-feed] Soup.Message.new returned null for URL '" + source.url + "'");
-			this._fail(source, "Invalid URL");
+			this._fail(source, "Invalid URL", attempt);
 			return;
 		}
 
@@ -182,9 +189,15 @@ export class FeedPoller
 		if (this._forceRevalidate)
 			message.get_request_headers().replace("Cache-Control", "no-cache");
 
-		this._httpSession.send_and_read_async(message, GLib.PRIORITY_DEFAULT, this._cancellable,
+		let cancellable = this._cancellable;
+
+		this._httpSession.send_and_read_async(message, GLib.PRIORITY_DEFAULT, cancellable,
 			(session, result) =>
 			{
+				// an answer that arrives right after a refresh dropped its cycle would count towards the cycle that replaced it
+				if (cancellable.is_cancelled())
+					return;
+
 				let response = this._readResponse(session, result, message, source.url);
 
 				if (response.cancelled)
@@ -195,14 +208,18 @@ export class FeedPoller
 					// the machine dropped offline mid-cycle: a retry cannot succeed and the feed is not at fault
 					if (!this._networkMonitor.network_available)
 					{
-						this._complete();
+						this._settle(attempt);
 						return;
 					}
 
 					if (response.retryable && attempt < RETRY_DELAYS.length)
+					{
 						this._scheduleRetry(source, itemsRetained, markInitialAsNew, attempt);
+						// keeping the cycle open until a retry answers is what left the header updating for minutes
+						this._settle(attempt);
+					}
 					else
-						this._fail(source, response.error);
+						this._fail(source, response.error, attempt);
 
 					return;
 				}
@@ -211,7 +228,7 @@ export class FeedPoller
 				if (!parser)
 				{
 					console.warn("[rss-feed] " + source.url + ": unable to parse feed");
-					this._fail(source, "Unable to parse feed");
+					this._fail(source, "Unable to parse feed", attempt);
 					return;
 				}
 
@@ -219,7 +236,7 @@ export class FeedPoller
 				source.merge(parser, { itemsRetained, markInitialAsNew });
 				source.setError(null);
 
-				this._complete();
+				this._settle(attempt);
 			});
 	}
 
@@ -235,21 +252,27 @@ export class FeedPoller
 		this._retries.add(id);
 	}
 
-	_fail(source, error)
+	_fail(source, error, attempt)
 	{
 		source.setError(error);
-		this._complete();
+		this._settle(attempt);
 	}
 
-	_complete()
+	_settle(attempt)
 	{
+		// a retry runs outside the cycle, its source was counted when the first attempt finished
+		if (attempt > 0)
+			return;
+
 		if (this._pending <= 0)
 			return;
 
-		if (--this._pending > 0)
-			return;
+		this._pending--;
 
-		if (this._cancellable.is_cancelled())
+		if (this.onProgress)
+			this.onProgress(this._total - this._pending, this._total);
+
+		if (this._pending > 0)
 			return;
 
 		this._repository.flushItems();

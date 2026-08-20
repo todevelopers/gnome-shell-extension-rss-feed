@@ -162,7 +162,11 @@ class RssIndicator extends PanelMenu.Button
 		store.connectObject(
 			'source-added', (_store, source) => this._addGroup(source),
 			'source-removed', (_store, source) => this._removeGroup(source),
-			'changed', () => this._updateUnreadCountLabel(this._store.totalUnread),
+			'changed', () =>
+			{
+				this._updateUnreadCountLabel(this._store.totalUnread);
+				this._updateFailedCount();
+			},
 			'reordered', () => this._reorderClassicSection(),
 			this
 		);
@@ -239,16 +243,19 @@ class RssIndicator extends PanelMenu.Button
 		this._updateFailedCount();
 	}
 
-	markUpdating()
+	markUpdating(total)
 	{
-		this._header?.markUpdating();
+		this._header?.markUpdating(total);
 	}
 
-	// both are facts about the finished poll cycle, publishing them apart makes the header jump
+	markProgress(done, total)
+	{
+		this._header?.markProgress(done, total);
+	}
+
 	markUpdated()
 	{
 		this._header?.markUpdated();
-		this._updateFailedCount();
 	}
 
 	_reorderClassicSection()
