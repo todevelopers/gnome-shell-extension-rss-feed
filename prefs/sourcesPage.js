@@ -571,9 +571,18 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 	});
 	exportButton.add_css_class('flat');
 
+	const removeAllButton = new Gtk.Button({
+		icon_name : 'user-trash-symbolic',
+		tooltip_text : 'Remove all sources…',
+		valign : Gtk.Align.CENTER,
+	});
+	removeAllButton.add_css_class('flat');
+	removeAllButton.add_css_class('source-delete-btn');
+
 	sourceActionsBox.append(refreshButton);
 	sourceActionsBox.append(importButton);
 	sourceActionsBox.append(exportButton);
+	sourceActionsBox.append(removeAllButton);
 	sourcesGroup.set_header_suffix(sourceActionsBox);
 
 	refreshButton.connect('clicked', () =>
@@ -728,6 +737,47 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 				window.add_toast(new Adw.Toast({ title : "Exported " + feeds.length + (feeds.length === 1 ? " feed" : " feeds") }));
 			});
 		});
+	});
+
+	removeAllButton.connect('clicked', () =>
+	{
+		let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
+		if (!feeds.length)
+			return;
+
+		const dialog = new Adw.AlertDialog({
+			heading : "Remove all sources?",
+			body : "This removes " + feeds.length + (feeds.length === 1 ? " feed" : " feeds") +
+				" and the articles stored for them. Export an OPML file first if you want to keep the list.",
+		});
+		dialog.add_response('cancel', "Cancel");
+		dialog.add_response('remove', "Remove All");
+		dialog.set_response_appearance('remove', Adw.ResponseAppearance.DESTRUCTIVE);
+		dialog.set_default_response('cancel');
+		dialog.set_close_response('cancel');
+
+		dialog.connect('response', (_dialog, response) =>
+		{
+			if (response !== 'remove')
+				return;
+
+			for (let url of feeds)
+			{
+				cancelValidation(url);
+				aSettings.remove(url);
+			}
+
+			// one write of the list keeps the extension to a single sync, the per-feed settings above are already gone
+			settings.set_strv(GSKeys.RSS_FEEDS_LIST, []);
+
+			for (let [, row] of rowMap)
+				sourcesGroup.remove(row);
+			rowMap.clear();
+
+			window.add_toast(new Adw.Toast({ title : "Removed " + feeds.length + (feeds.length === 1 ? " feed" : " feeds") }));
+		});
+
+		dialog.present(window);
 	});
 
 	const sourcesOptionsGroup = new Adw.PreferencesGroup();
