@@ -37,6 +37,9 @@ import { makeSpinRow, makeSwitchRow, getInitials, urlToInitials } from './prefsW
 const Encoder = getInstance();
 const MAX_SOURCES_LIMIT = 1024;
 
+// the parse that follows each answer runs on the main loop, so only a few checks may be in flight at once
+const MAX_PARALLEL_CHECKS = 5;
+
 // a raw exception message would stretch the status pill across the whole row
 const shortStatus = (text) => text.length > 40 ? text.slice(0, 40) + "…" : text;
 
@@ -99,7 +102,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 	);
 	const fCache = new Object();
 	const pending = [];
-	let checking = false;
+	let checking = 0;
 
 	window.connect('close-request', () =>
 	{
@@ -109,18 +112,18 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 
 	const pumpQueue = () =>
 	{
-		if (checking || !pending.length)
-			return;
+		while (checking < MAX_PARALLEL_CHECKS && pending.length)
+		{
+			checking++;
 
-		checking = true;
-
-		let next = pending.shift();
-		startValidation(next.row, next.url);
+			let next = pending.shift();
+			startValidation(next.row, next.url);
+		}
 	};
 
 	const finishValidation = () =>
 	{
-		checking = false;
+		checking--;
 		pumpQueue();
 	};
 
@@ -137,7 +140,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 		}
 	};
 
-	// one feed at a time, so a whole list does not parse in a single burst
+	// a whole list must not parse in one burst, so the checks go through a bounded queue
 	const validateUrl = (row, url) =>
 	{
 		if (!url.length)
