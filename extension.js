@@ -95,6 +95,7 @@ export default class RssFeedExtension extends Extension
 			this._poller.onStart = null;
 			this._poller.onProgress = null;
 			this._poller.onComplete = null;
+			this._poller.onIdle = null;
 			return;
 		}
 
@@ -106,6 +107,7 @@ export default class RssFeedExtension extends Extension
 		this._poller.onStart = (total) => this._indicator?.markUpdating(total);
 		this._poller.onProgress = (done, total) => this._indicator?.markProgress(done, total);
 		this._poller.onComplete = () => this._indicator?.markUpdated();
+		this._poller.onIdle = () => this._indicator?.markIdle();
 		Main.panel.addToStatusArea('rssFeedMenu', this._indicator, 0, 'right');
 	}
 }

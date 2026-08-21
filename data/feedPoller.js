@@ -54,11 +54,13 @@ export class FeedPoller
 		this._interval = 0;
 		this._pending = 0;
 		this._total = 0;
+		this._announced = false;
 		this._forceRevalidate = false;
 		this._retries = new Set();
 		this.onStart = null;
 		this.onProgress = null;
 		this.onComplete = null;
+		this.onIdle = null;
 
 		this._networkMonitor = Gio.NetworkMonitor.get_default();
 		this._online = this._networkMonitor.network_available;
@@ -134,6 +136,7 @@ export class FeedPoller
 		this._online = this._networkMonitor.network_available;
 		if (!this._online)
 		{
+			this._goIdle();
 			this._scheduleNext();
 			return;
 		}
@@ -146,13 +149,32 @@ export class FeedPoller
 		this._pending = this._total;
 
 		// without sources nothing will ever complete the cycle, so nothing may announce its start either
-		if (this._pending && this.onStart)
-			this.onStart(this._total);
+		if (this._pending)
+		{
+			this._announced = true;
+
+			if (this.onStart)
+				this.onStart(this._total);
+		}
+		else
+			this._goIdle();
 
 		for (let source of sources)
 			this._fetch(source, itemsRetained, markInitialAsNew);
 
 		this._scheduleNext();
+	}
+
+	// the cycle this one superseded can no longer report its own end, so the start it announced has to be retracted
+	_goIdle()
+	{
+		if (!this._announced)
+			return;
+
+		this._announced = false;
+
+		if (this.onIdle)
+			this.onIdle();
 	}
 
 	_scheduleNext()
@@ -284,6 +306,7 @@ export class FeedPoller
 		if (this._pending > 0)
 			return;
 
+		this._announced = false;
 		this._repository.flushItems();
 
 		// the Shell does not disable extensions when the session ends, so an index written only in destroy() would be lost on logout

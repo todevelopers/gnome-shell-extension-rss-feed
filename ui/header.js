@@ -156,6 +156,11 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 		this._subtitle.set_text('Updating… ' + done + '/' + total);
 	}
 
+	markIdle()
+	{
+		this._subtitle.set_text('');
+	}
+
 	markUpdated()
 	{
 		this._subtitle.set_text('Updated at ' + new Date().toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' }));

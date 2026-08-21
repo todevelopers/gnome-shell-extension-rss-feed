@@ -258,6 +258,11 @@ class RssIndicator extends PanelMenu.Button
 		this._header?.markUpdated();
 	}
 
+	markIdle()
+	{
+		this._header?.markIdle();
+	}
+
 	_reorderClassicSection()
 	{
 		let pos = 0;
