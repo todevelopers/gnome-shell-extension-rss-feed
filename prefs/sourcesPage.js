@@ -124,6 +124,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 	const finishValidation = () =>
 	{
 		checking--;
+		updateStats();
 		pumpQueue();
 	};
 
@@ -295,6 +296,22 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 
 	const rowMap = new Map();
 
+	const statsIcon = new Gtk.Image({
+		icon_name : 'dialog-information-symbolic',
+		valign : Gtk.Align.CENTER,
+	});
+
+	// the error class is already the verdict of every check, so the counts need no bookkeeping of their own
+	const updateStats = () =>
+	{
+		let failed = 0;
+		for (let [, row] of rowMap)
+			if (row._statusLabel.has_css_class('status-error'))
+				failed++;
+
+		statsIcon.tooltip_text = rowMap.size + (rowMap.size === 1 ? " source, " : " sources, ") + failed + " failed";
+	};
+
 	const reorderFeeds = (draggedUrl, targetUrl) =>
 	{
 		let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
@@ -388,6 +405,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 			settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
 			sourcesGroup.remove(row);
 			rowMap.delete(state.url);
+			updateStats();
 		});
 
 		row.add_suffix(delBtn);
@@ -579,11 +597,13 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 	removeAllButton.add_css_class('flat');
 	removeAllButton.add_css_class('source-delete-btn');
 
+	sourceActionsBox.append(statsIcon);
 	sourceActionsBox.append(refreshButton);
 	sourceActionsBox.append(importButton);
 	sourceActionsBox.append(exportButton);
 	sourceActionsBox.append(removeAllButton);
 	sourcesGroup.set_header_suffix(sourceActionsBox);
+	updateStats();
 
 	refreshButton.connect('clicked', () =>
 	{
@@ -773,6 +793,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 			for (let [, row] of rowMap)
 				sourcesGroup.remove(row);
 			rowMap.clear();
+			updateStats();
 
 			window.add_toast(new Adw.Toast({ title : "Removed " + feeds.length + (feeds.length === 1 ? " feed" : " feeds") }));
 		});
