@@ -31,7 +31,7 @@ import * as GSKeys from '../gskeys.js';
 import * as HTTP from '../http.js';
 import { getInstance } from '../encoder.js';
 import { parseOpml, buildOpml } from '../opml.js';
-import { createRssParser } from '../parsers/factory.js';
+import { createRssParser, describeParseFailure } from '../parsers/factory.js';
 import { makeSpinRow, makeSwitchRow, getInitials, urlToInitials } from './prefsWidgets.js';
 
 const Encoder = getInstance();
@@ -227,6 +227,16 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 
 		// get_status() returns a Status enum value and 429 has no member there, the plain property does not marshal
 		let status = msg.status_code;
+
+		// a 304 carries no body to validate and does not mean the feed is broken
+		if (status === 304)
+		{
+			row._statusLabel.set_label("Not modified");
+			row._statusLabel.remove_css_class('status-error');
+			row._statusLabel.add_css_class('status-ok');
+			return;
+		}
+
 		if (!(status >= 200 && status < 300))
 		{
 			row._statusLabel.set_label(status + " " + msg.get_reason_phrase());
@@ -236,6 +246,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 		}
 
 		let parser;
+		let data;
 		try
 		{
 			let rawBytes = bytes.toArray();
@@ -255,8 +266,8 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 				if (m) encoding = m[1];
 			}
 
-			let data = new TextDecoder(encoding).decode(rawBytes);
-			parser = createRssParser(data);
+			data = new TextDecoder(encoding).decode(rawBytes);
+			parser = createRssParser(data, url);
 		}
 		catch (e)
 		{
@@ -268,7 +279,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 
 		if (parser == null)
 		{
-			row._statusLabel.set_label("Unable to parse");
+			row._statusLabel.set_label(describeParseFailure(data));
 			row._statusLabel.remove_css_class('status-ok');
 			row._statusLabel.add_css_class('status-error');
 			return;

@@ -25,7 +25,7 @@ import Soup from 'gi://Soup';
 
 import * as GSKeys from '../gskeys.js';
 import * as HTTP from '../http.js';
-import { createRssParser } from '../parsers/factory.js';
+import { createRssParser, describeParseFailure } from '../parsers/factory.js';
 
 const USER_AGENT = 'gnome-shell-extension-rss-feed/1.0 (+https://github.com/todevelopers/gnome-shell-extension-rss-feed)';
 
@@ -227,6 +227,13 @@ export class FeedPoller
 					if (response.cancelled)
 						return;
 
+					if (response.notModified)
+					{
+						source.setError(null);
+						this._settle(attempt);
+						return;
+					}
+
 					if (response.error)
 					{
 						// the machine dropped offline mid-cycle: a retry cannot succeed and the feed is not at fault
@@ -248,11 +255,12 @@ export class FeedPoller
 						return;
 					}
 
-					let parser = createRssParser(response.data);
+					let parser = createRssParser(response.data, source.url);
 					if (!parser)
 					{
-						console.warn("[rss-feed] " + source.url + ": unable to parse feed");
-						this._fail(source, "Unable to parse feed", attempt);
+						let reason = describeParseFailure(response.data);
+						console.warn("[rss-feed] " + source.url + ": " + reason);
+						this._fail(source, reason, attempt);
 						return;
 					}
 
@@ -333,6 +341,11 @@ export class FeedPoller
 
 		// get_status() returns a Status enum value and 429 has no member there, the plain property does not marshal
 		let status = message.status_code;
+
+		// a 304 says the feed has nothing new, it is not a failed fetch
+		if (status === 304)
+			return { notModified : true };
+
 		if (!(status >= 200 && status < 300))
 		{
 			console.warn("[rss-feed] HTTP GET " + sourceURL + ": " + status + " " + message.get_reason_phrase());

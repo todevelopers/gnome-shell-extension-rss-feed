@@ -25,7 +25,7 @@ import { RdfParser } from './rdf.js';
 import { AtomParser } from './atom.js';
 import { RssParser } from './rss.js';
 
-export function createRssParser(rawXml)
+export function createRssParser(rawXml, sourceURL)
 {
 	try
 	{
@@ -54,8 +54,32 @@ export function createRssParser(rawXml)
 	}
 	catch (e)
 	{
-		console.error('[rss-feed] parser error: ' + e);
+		console.warn('[rss-feed] ' + sourceURL + ': ' + String(e.message).replace(/\s+/g, ' '));
 	}
 
 	return null;
+}
+
+// a url that no longer serves a feed and a feed we cannot read need different fixes, so the status has to tell them apart
+export function describeParseFailure(rawXml)
+{
+	let text = rawXml.trim();
+
+	if (!text)
+		return 'Empty response';
+
+	// a moved or retired feed usually answers with the site's own page
+	if (/^(<!doctype html|<html)/i.test(text))
+		return 'Not a feed';
+
+	try
+	{
+		parse(text, { selfClosingTags: [] });
+	}
+	catch
+	{
+		return 'Malformed XML';
+	}
+
+	return 'Not a feed';
 }
