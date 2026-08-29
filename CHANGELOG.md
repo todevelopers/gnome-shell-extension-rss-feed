@@ -1,5 +1,33 @@
 ## Changelog
 
+### v9.0 (29.08.2026)
+
+*Failed feed management, OPML import/export, and a new article storage backend*
+
+* main feature: OPML import and export from the Sources preferences page, with folders preserved on import
+* main feature: Feeds that fail to update are now retried automatically and reported in the menu header as a "N failed" pill that opens the Sources page
+* feature: Menu header shows update progress ("Updating... 12/40") while feeds are being fetched, and "Idle" when no sources are configured
+* feature: New "Show failed feeds indicator" preference to hide the failed pill
+* feature: Sources page gained "Check all sources" and "Remove all sources" buttons, plus a counter showing how many sources are configured and how many of them failed
+* feature: Panel menu is fully keyboard operable, with the view scrolling to follow the focused item
+* feature: Added GNOME Shell 51 to the supported versions
+* bugfix: HTTP 429 responses no longer break the update with "429 is not a valid value for enumeration Status"
+* bugfix: A source that throws no longer stalls the whole update cycle, nor the validation queue in preferences
+* bugfix: Fixed double-escaped query strings in feed request URLs
+* bugfix: Changing the fetch interval now takes effect immediately instead of after the next poll
+* bugfix: Fixed "object has been already disposed" when expanding "Show more"
+* bugfix: The failed feeds pill no longer stays stale after the failing source is removed
+* bugfix: Fixed focus being lost after clicking "Show more"
+* bugfix: Fixed the mark as read button size and the unread marker in the minimal layout
+* performance: Feeds are validated in batches of five on the Sources page, so large lists no longer block the preferences window
+* internal: Article state moved out of GSettings into per-feed JSON files, with migration of existing data
+* internal: Added an HTTP cache (SoupCache) so unchanged feeds are not re-downloaded, flushed periodically to survive logout
+* internal: Polling pauses while the machine is offline (Gio.NetworkMonitor) instead of failing every feed
+* internal: Parse failures now report why the feed could not be read
+* internal: Reworked the Sources preferences page
+
+---
+
 ### v8.1 (08.07.2026)
 
 *Review fixes for the extensions.gnome.org resubmission*

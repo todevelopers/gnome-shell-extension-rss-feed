@@ -29,6 +29,9 @@ Keeps your RSS feeds one click away - right in the GNOME top bar.
 - **Handles large feeds** without freezing the Shell - chunked loading with a configurable item limit
 - **Light and dark theme ready** - adapts to your GNOME theme and accent color
 - **Full feed sources management** in preferences - add, remove, edit, and **Drag-and-drop** reordering of feed sources
+- **OPML import and export** - move your subscriptions in or out in one click, folder structure included
+- **Failed feeds are retried automatically** - a "N failed" pill in the menu header takes you straight to the broken sources
+- **Keyboard accessible** - the whole panel menu can be operated without a mouse
 - Supports **RSS, Atom, RDF, and FeedBurner** - format is auto-detected
 - Configurable **refresh intervals** and article limits
 
