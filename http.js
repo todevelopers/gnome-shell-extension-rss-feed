@@ -33,3 +33,41 @@ export function buildRequestUrl(url)
 
 	return url.substr(0, l2o + 1) + GLib.Uri.escape_string(url.substr(l2o + 1), QUERY_RESERVED, false);
 }
+
+// blocks loopback, link-local and the private ranges used by internal services and cloud metadata endpoints
+const UNSAFE_HOST_PATTERNS = [
+	/^localhost$/i,
+	/^127\./,
+	/^0\./,
+	/^10\./,
+	/^172\.(1[6-9]|2\d|3[01])\./,
+	/^192\.168\./,
+	/^169\.254\./,
+	/^\[?::1?\]?$/i,
+	/^\[?fe80:/i,
+	/^\[?f[cd][0-9a-f]{2}:/i,
+];
+
+// a feed source URL is attacker-controllable (imported OPML, shared config), so it must not be able to reach internal hosts
+export function isSafeRequestUrl(url)
+{
+	let uri;
+	try
+	{
+		uri = GLib.Uri.parse(url, GLib.UriFlags.NONE);
+	}
+	catch (e)
+	{
+		return false;
+	}
+
+	let scheme = uri.get_scheme();
+	if (scheme !== 'http' && scheme !== 'https')
+		return false;
+
+	let host = uri.get_host();
+	if (!host)
+		return false;
+
+	return !UNSAFE_HOST_PATTERNS.some(pattern => pattern.test(host));
+}

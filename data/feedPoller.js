@@ -196,6 +196,13 @@ export class FeedPoller
 
 	_fetch(source, itemsRetained, markInitialAsNew, attempt = 0)
 	{
+		if (!HTTP.isSafeRequestUrl(source.url))
+		{
+			console.warn("[rss-feed] Refusing to fetch unsafe URL '" + source.url + "'");
+			this._fail(source, "Invalid URL", attempt);
+			return;
+		}
+
 		let message = Soup.Message.new('GET', HTTP.buildRequestUrl(source.url));
 
 		if (!message)
