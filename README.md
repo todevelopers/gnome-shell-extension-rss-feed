@@ -54,7 +54,7 @@ A couple of features depend on the GNOME Shell version, because they build on Sh
 ## Gallery
 
 <p align="center">
-  <img width="1600" height="900" alt="rss-feed-v7_1HQ_compres" src="https://github.com/user-attachments/assets/6c07e0f0-a9a6-4a89-bcab-c6141637e326" />
+  <img width="1280" height="720" alt="RSS Feed extension demo" src="promo/media/rss-feed-promo.webp" />
 </p>
 
 <details>

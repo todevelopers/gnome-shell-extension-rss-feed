@@ -42,6 +42,13 @@ async (stdin) =>
 
 await browser.close();
 
-await run(['-y', '-i', 'rss-feed-promo.mp4', '-vf',
-	'fps=12,scale=880:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=160:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle',
-	'rss-feed-promo.gif']);
+function webp(width, fps, quality, preset, output)
+{
+	return run(['-y', '-i', 'rss-feed-promo.mp4', '-vf', 'fps=' + fps + ',scale=' + width + ':-1:flags=lanczos',
+		'-c:v', 'libwebp_anim', '-lossless', '0', '-quality', String(quality), '-preset', preset,
+		'-compression_level', '6', '-loop', '0', '-an', output]);
+}
+
+await webp(1280, 20, 92, 'picture', 'media/rss-feed-promo.webp');
+// extensions.gnome.org rejects images over 2 MiB, a lower frame rate keeps the dark wallpaper free of blocks
+await webp(800, 10, 88, 'photo', 'rss-feed-promo-ego.webp');
