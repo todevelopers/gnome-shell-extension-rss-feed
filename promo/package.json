@@ -1,0 +1,11 @@
+{
+	"name": "rss-feed-promo",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"record": "node record.js"
+	},
+	"devDependencies": {
+		"playwright-core": "^1.63.0"
+	}
+}

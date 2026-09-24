@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RSS Feed Promo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=block" rel="stylesheet">
+<style>
+:root {
+	--accent: #3584e4;
+	--fg: #f6f6f7;
+	--window-bg: #222226;
+	--card-bg: #333337;
+	--success: #8ff0a4;
+	--error: #ff938c;
+	--menu-bg: #2e2e32;
+	--menu-fg: #f6f6f7;
+	--ov: 255, 255, 255;
+	--shade: 4, 6, 12;
+	--cap-fg: #ffffff;
+	--cap-p: rgba(255, 255, 255, 0.78);
+	--kick: #ffbe6f;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #000; overflow: hidden; }
+body { width: 1280px; height: 720px; font-family: 'Inter', 'Adwaita Sans', 'Cantarell', sans-serif; color: var(--fg); -webkit-font-smoothing: antialiased; }
+svg { display: block; }
+#screen { position: relative; width: 1280px; height: 720px; overflow: hidden; background: #000; }
+#cam { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; transform-origin: 0 0; }
+#desk { position: relative; width: 1280px; height: 720px; overflow: hidden; }
+
+.wall { position: absolute; inset: 0; }
+.wall svg { position: absolute; inset: 0; }
+#wallDark {
+	background:
+		radial-gradient(900px 600px at 18% 88%, rgba(53, 132, 228, 0.42), transparent 60%),
+		radial-gradient(700px 520px at 82% 18%, rgba(145, 65, 172, 0.30), transparent 60%),
+		radial-gradient(600px 420px at 62% 105%, rgba(230, 97, 0, 0.22), transparent 60%),
+		linear-gradient(135deg, #0c111c 0%, #161d2e 48%, #10141f 100%);
+}
+#wallLight {
+	opacity: 0;
+	background:
+		radial-gradient(900px 600px at 18% 88%, rgba(53, 132, 228, 0.30), transparent 60%),
+		radial-gradient(700px 520px at 82% 18%, rgba(145, 65, 172, 0.20), transparent 60%),
+		radial-gradient(600px 420px at 62% 105%, rgba(255, 163, 72, 0.25), transparent 60%),
+		linear-gradient(135deg, #e9eef6 0%, #f4f1f8 48%, #eef1f6 100%);
+}
+
+/* the top bar stays dark in the light style too */
+#panel { position: absolute; left: 0; top: 0; right: 0; height: 32px; background: #000; display: flex; align-items: center; padding: 0 4px; font-size: 14.5px; font-weight: 700; color: #fff; }
+.pbtn { height: 24px; border-radius: 99px; display: flex; align-items: center; padding: 0 11px; gap: 10px; color: #fff; }
+.pbtn.active { background: rgba(255, 255, 255, 0.22); }
+.ws { display: flex; align-items: center; gap: 5px; height: 24px; padding: 0 10px; }
+.ws span { display: block; height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.45); width: 8px; }
+.ws span.a { width: 34px; background: #fff; }
+#clock { position: absolute; left: 50%; transform: translateX(-50%); }
+#panelRight { margin-left: auto; display: flex; align-items: center; gap: 2px; }
+#dot { width: 8px; height: 8px; border-radius: 4px; background: #fff; margin-right: -6px; }
+
+#menu { position: absolute; left: 886px; top: 38px; width: 386px; transform-origin: 50% 0; color: var(--menu-fg); }
+.mcontent { background: var(--menu-bg); border-radius: 16px; padding: 6px; box-shadow: 0 0 0 1px rgba(var(--ov), 0.07), 0 8px 26px rgba(0, 0, 0, 0.45); font-size: 14.5px; }
+.item { border-radius: 10px; display: flex; align-items: center; gap: 6px; padding: 7px 8px; }
+.item.hover { background: rgba(var(--ov), 0.09); }
+.item.press { background: rgba(var(--ov), 0.17) !important; }
+
+.hdr { display: flex; align-items: center; gap: 10px; padding: 12px 14px 10px 14px; }
+.hicon { width: 32px; height: 32px; border-radius: 8px; background: rgba(127, 127, 127, 0.15); display: flex; align-items: center; justify-content: center; }
+.htitles { flex: 1; min-width: 0; }
+.ht { font-size: 14px; font-weight: 700; }
+.hsub { display: flex; align-items: center; font-size: 11px; height: 17px; margin-top: 1px; }
+#sub { opacity: 0.8; }
+.warnpill { font-size: 11px; padding: 0 6px; margin-left: 6px; border-radius: 9px; background: rgba(229, 165, 10, 0.25); line-height: 16px; transform-origin: 0 50%; }
+.warnpill.hover { background: rgba(229, 165, 10, 0.4); }
+.badge { width: 30px; height: 30px; border-radius: 15px; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; flex: none; }
+.badge.hover { filter: brightness(1.12); }
+.ibtn { width: 30px; height: 30px; border-radius: 15px; display: flex; align-items: center; justify-content: center; flex: none; }
+.ibtn.hover { background: rgba(127, 127, 127, 0.18); }
+
+#mbody { position: relative; overflow: hidden; }
+#classic, #minimal { position: absolute; left: 0; right: 0; top: 0; }
+#scrollbar { position: absolute; right: 1px; top: 4px; width: 5px; border-radius: 3px; background: rgba(var(--ov), 0.32); }
+
+.grp { border-radius: 12px; overflow: hidden; }
+.grp.open { background: rgba(var(--ov), 0.045); }
+.grp.open .feed { background: rgba(var(--ov), 0.07); }
+.grp.open .feed.hover { background: rgba(var(--ov), 0.12); }
+.feed { padding: 7px 8px; }
+.avatar { width: 32px; height: 32px; border-radius: 16px; background: rgba(127, 127, 127, 0.15); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none; margin-right: 6px; }
+.ftitle { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.count { min-width: 30px; height: 30px; border-radius: 15px; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none; }
+.count.hover { filter: brightness(1.12); }
+.arrow { width: 16px; height: 16px; flex: none; margin-left: 4px; }
+.sub { overflow: hidden; }
+.awrap { overflow: hidden; }
+.art { padding: 8px 8px; }
+.atitle { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.unread { font-weight: 700; }
+.read { font-weight: 300; opacity: 0.45; }
+.atime { font-size: 11px; opacity: 0.6; flex: none; }
+
+.sechdr { padding: 8px 8px 7px; margin-top: 4px; border-bottom: 1px solid rgba(127, 127, 127, 0.2); border-radius: 10px 10px 0 0; }
+.seclabel { flex: 1; font-size: 10px; font-weight: 700; letter-spacing: 0.07em; opacity: 0.65; }
+.mart { flex-direction: column; align-items: stretch; gap: 3px; padding: 7px 8px; }
+.mwrap { overflow: hidden; }
+.mtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta { display: flex; align-items: center; gap: 6px; }
+.tag { font-size: 10px; border-radius: 4px; padding: 1px 5px; background: rgba(127, 127, 127, 0.16); }
+.showmore { font-size: 11px; padding: 10px 8px; }
+.showmore span { opacity: 0.6; }
+
+#banner { position: absolute; left: 50%; top: 40px; width: 430px; background: #333338; border-radius: 18px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 10px 30px rgba(0, 0, 0, 0.55); padding: 10px 12px 12px; font-size: 13.5px; }
+.nhdr { display: flex; align-items: center; gap: 6px; font-size: 12px; height: 22px; }
+.nsrc { font-weight: 700; opacity: 0.9; }
+.ntime { opacity: 0.6; }
+.nbtns { margin-left: auto; display: flex; gap: 6px; }
+.ncirc { width: 22px; height: 22px; border-radius: 11px; background: rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; }
+.nbody { display: flex; gap: 12px; margin-top: 8px; }
+.navatar { width: 40px; height: 40px; border-radius: 20px; background: #5f6368; flex: none; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: rgba(255, 255, 255, 0.95); }
+.ntext { min-width: 0; flex: 1; }
+.ntitle { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nmsg { opacity: 0.85; font-size: 13px; line-height: 1.35; margin-top: 2px; }
+#nactsWrap { overflow: hidden; }
+.nacts { display: flex; gap: 6px; padding-top: 12px; }
+.nact { flex: 1; text-align: center; font-weight: 700; font-size: 13px; background: rgba(255, 255, 255, 0.1); border-radius: 99px; padding: 7px 0; }
+.nact.hover { background: rgba(255, 255, 255, 0.17); }
+
+#browser { position: absolute; left: 572px; top: 58px; width: 668px; height: 600px; background: #1d1d20; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 48px rgba(0, 0, 0, 0.6); transform-origin: 50% 40%; }
+.bhb { height: 46px; display: flex; align-items: center; gap: 6px; padding: 0 10px; background: #2b2b2f; }
+.bbtn { width: 30px; height: 30px; border-radius: 15px; display: flex; align-items: center; justify-content: center; opacity: 0.85; }
+.burl { flex: 1; height: 30px; border-radius: 8px; background: rgba(255, 255, 255, 0.08); display: flex; align-items: center; justify-content: center; font-size: 13px; opacity: 0.85; margin: 0 6px; }
+.burl b { font-weight: 600; }
+.bclose { width: 24px; height: 24px; border-radius: 12px; background: rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; }
+.bpage { padding: 38px 60px; }
+.bpage .bsite { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; opacity: 0.5; text-transform: uppercase; }
+.bpage h3 { font-size: 30px; font-weight: 800; line-height: 1.15; margin-top: 10px; letter-spacing: -0.01em; }
+.bpage .bmeta { font-size: 13px; opacity: 0.5; margin-top: 10px; }
+.bimg { height: 150px; border-radius: 10px; margin: 22px 0 20px; background: linear-gradient(135deg, rgba(53, 132, 228, 0.35), rgba(145, 65, 172, 0.3)); }
+.sk { height: 10px; border-radius: 5px; background: rgba(255, 255, 255, 0.1); margin-bottom: 12px; }
+
+#prefs { position: absolute; left: 596px; top: 48px; width: 640px; height: 648px; background: var(--window-bg); border-radius: 14px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 48px rgba(0, 0, 0, 0.6); overflow: hidden; font-size: 14.5px; transform-origin: 50% 50%; }
+.hb { height: 47px; display: flex; align-items: center; justify-content: center; position: relative; }
+.vs { display: flex; gap: 4px; }
+.vsb { display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: 13.5px; padding: 6px 12px; border-radius: 8px; }
+.vsb.sel { background: rgba(255, 255, 255, 0.1); }
+.closeb { position: absolute; right: 12px; width: 24px; height: 24px; border-radius: 12px; background: rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; }
+.pcontent { padding: 18px 28px; }
+.ghdr { display: flex; align-items: center; margin-bottom: 10px; height: 34px; }
+.gtitle { font-weight: 700; font-size: 14.5px; flex: 1; }
+.gacts { display: flex; align-items: center; gap: 6px; }
+.gacts > span { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+.gacts > span.info { width: 22px; }
+.gacts > span.hover { background: rgba(255, 255, 255, 0.08); }
+.red { color: var(--error); }
+.blist { background: var(--card-bg); border-radius: 12px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.18), 0 1px 3px rgba(0, 0, 0, 0.15); overflow: hidden; }
+.swrap { overflow: hidden; }
+.srow { display: flex; align-items: center; gap: 10px; height: 60px; padding: 0 12px; border-bottom: 1px solid rgba(0, 0, 0, 0.28); }
+.drag { opacity: 0.35; flex: none; }
+.savatar { width: 32px; height: 32px; border-radius: 16px; background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.4); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none; margin-right: 2px; }
+.stext { flex: 1; min-width: 0; }
+.stitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ssub { font-size: 12.5px; opacity: 0.55; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.pill { border-radius: 99px; padding: 2px 8px; font-size: 11px; font-weight: 500; background: rgba(255, 255, 255, 0.06); flex: none; white-space: nowrap; }
+.pill.ok { background: rgba(143, 240, 164, 0.15); color: var(--success); }
+.pill.err { background: rgba(255, 147, 140, 0.13); color: var(--error); }
+.sbtn { width: 32px; height: 32px; border-radius: 16px; display: flex; align-items: center; justify-content: center; flex: none; }
+.sbtn.hover { background: rgba(255, 255, 255, 0.08); }
+.sbtn.del { color: var(--error); }
+.sbtn.del.hover { background: rgba(255, 147, 140, 0.12); }
+.sexp { width: 22px; flex: none; opacity: 0.9; display: flex; justify-content: center; }
+.erow { position: relative; height: 60px; padding: 0 12px; display: flex; align-items: center; }
+.elabel { opacity: 0.55; white-space: nowrap; }
+
+#toast { position: absolute; left: 50%; bottom: 18px; background: #45454b; color: #fff; border-radius: 99px; padding: 10px 20px; font-size: 14px; font-weight: 500; white-space: nowrap; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45); opacity: 0; }
+
+#dim { position: absolute; left: 596px; top: 48px; width: 640px; height: 648px; border-radius: 14px; background: rgba(0, 0, 0, 0.35); opacity: 0; pointer-events: none; }
+#fdlg { position: absolute; left: 606px; top: 166px; width: 620px; height: 410px; background: var(--window-bg); border-radius: 14px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 18px 50px rgba(0, 0, 0, 0.65); overflow: hidden; font-size: 14px; display: flex; flex-direction: column; transform-origin: 50% 50%; }
+.fhb { height: 47px; display: flex; align-items: center; padding: 0 8px; position: relative; flex: none; }
+.fbtn { padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 13.5px; background: rgba(255, 255, 255, 0.1); }
+.fbtn.sugg { background: var(--accent); color: #fff; margin-left: auto; }
+.fbtn.hover { filter: brightness(1.15); }
+.ftitlebar { position: absolute; left: 50%; transform: translateX(-50%); font-weight: 700; font-size: 14px; }
+.fmain { flex: 1; display: flex; min-height: 0; }
+.fside { width: 168px; padding: 6px; flex: none; background: rgba(255, 255, 255, 0.025); border-right: 1px solid rgba(0, 0, 0, 0.3); }
+.fplace { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; font-size: 13.5px; }
+.fplace.sel { background: rgba(255, 255, 255, 0.1); font-weight: 600; }
+.fview { flex: 1; background: #1e1e20; display: flex; flex-direction: column; }
+.fpath { display: flex; gap: 4px; padding: 8px 10px; }
+.fpath span { padding: 4px 10px; border-radius: 7px; font-size: 13px; font-weight: 600; }
+.fpath span.cur { background: rgba(255, 255, 255, 0.1); }
+.fcols { display: flex; padding: 6px 16px; font-size: 12px; opacity: 0.55; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+.frow { display: flex; align-items: center; padding: 8px 16px; font-size: 13.5px; margin: 2px 6px 0; border-radius: 8px; }
+.frow.hover { background: rgba(255, 255, 255, 0.06); }
+.frow.sel { background: rgba(53, 132, 228, 0.35); }
+.fname { flex: 1; display: flex; align-items: center; gap: 10px; }
+.fsize { width: 80px; opacity: 0.6; font-size: 12.5px; }
+.fdate { width: 90px; opacity: 0.6; font-size: 12.5px; }
+.ffoot { display: flex; justify-content: flex-end; padding: 8px 10px; border-top: 1px solid rgba(255, 255, 255, 0.06); margin-top: auto; }
+.fdrop { display: flex; align-items: center; gap: 8px; padding: 5px 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.08); font-size: 13px; }
+
+#cursor { position: absolute; left: 0; top: 0; width: 22px; height: 26px; pointer-events: none; z-index: 50; }
+#ring { position: absolute; width: 36px; height: 36px; margin: -18px 0 0 -18px; border-radius: 18px; border: 2px solid rgba(255, 255, 255, 0.85); pointer-events: none; z-index: 49; opacity: 0; }
+#shadeB { position: absolute; inset: 0; -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 58%, transparent 68%); background: linear-gradient(to top, rgba(var(--shade), 0.85) 0%, rgba(var(--shade), 0.55) 22%, rgba(var(--shade), 0) 48%); pointer-events: none; opacity: 0; }
+#shade { position: absolute; inset: 0; -webkit-mask-image: linear-gradient(to bottom, transparent 40px, #000 64px); background: linear-gradient(90deg, rgba(var(--shade), 0.8) 0%, rgba(var(--shade), 0.5) 32%, rgba(var(--shade), 0) 55%); pointer-events: none; opacity: 0; }
+.cap { position: absolute; left: 64px; top: 50%; width: 480px; pointer-events: none; opacity: 0; }
+.cap.bottom { top: auto; bottom: 60px; width: 900px; }
+.cap .kicker { display: block; font-size: 46px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; color: var(--kick); }
+.cap h2 { font-size: 40px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; color: var(--cap-fg); }
+.cap p { font-size: 22px; line-height: 1.4; margin-top: 12px; color: var(--cap-fg); font-weight: 500; opacity: 0.85; }
+
+#card { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; text-align: center;
+	background:
+		radial-gradient(700px 480px at 20% 85%, rgba(53, 132, 228, 0.22), transparent 65%),
+		radial-gradient(600px 420px at 80% 18%, rgba(145, 65, 172, 0.16), transparent 65%),
+		linear-gradient(135deg, #0a0d15 0%, #10141f 50%, #0b0e16 100%);
+}
+.logo { width: 124px; height: 124px; border-radius: 27px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16), 0 18px 50px rgba(0, 0, 0, 0.7), 0 0 80px rgba(53, 132, 228, 0.18); }
+#card h1 { font-size: 64px; font-weight: 800; letter-spacing: -0.03em; margin-top: 30px; }
+#card .tagline { font-size: 22px; font-weight: 500; color: rgba(255, 255, 255, 0.78); margin-top: 10px; }
+#card .ego { margin-top: 30px; display: flex; gap: 10px; align-items: center; }
+#card .chip { font-size: 15px; font-weight: 600; padding: 8px 16px; border-radius: 99px; background: rgba(255, 255, 255, 0.1); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12); }
+#card .chip.acc { background: #3584e4; box-shadow: none; }
+</style>
+</head>
+<body>
+<div id="screen">
+	<div id="cam">
+		<div id="desk">
+			<div class="wall" id="wallDark"><svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" stroke="#fff">
+				<g opacity="0.03" stroke-width="26"><circle cx="300" cy="610" r="190"/><circle cx="300" cy="610" r="290"/><circle cx="300" cy="610" r="390"/><circle cx="300" cy="610" r="490"/></g>
+				<g opacity="0.025" stroke-width="18"><circle cx="1120" cy="120" r="160"/><circle cx="1120" cy="120" r="240"/><circle cx="1120" cy="120" r="320"/></g>
+			</svg></div>
+			<div class="wall" id="wallLight"><svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" stroke="#1d2a44">
+				<g opacity="0.045" stroke-width="26"><circle cx="300" cy="610" r="190"/><circle cx="300" cy="610" r="290"/><circle cx="300" cy="610" r="390"/><circle cx="300" cy="610" r="490"/></g>
+				<g opacity="0.035" stroke-width="18"><circle cx="1120" cy="120" r="160"/><circle cx="1120" cy="120" r="240"/><circle cx="1120" cy="120" r="320"/></g>
+			</svg></div>
+
+			<div id="panel">
+				<div class="ws"><span class="a"></span><span></span><span></span></div>
+				<div id="clock">Sep 23&nbsp;&nbsp;19:54</div>
+				<div id="panelRight">
+					<div id="rssBtn" class="pbtn"><div id="dot"></div><span data-i="rss" data-s="16"></span></div>
+					<div class="pbtn"><span data-i="wifi" data-s="16"></span><span data-i="vol" data-s="16"></span><span data-i="bat" data-s="16"></span></div>
+				</div>
+			</div>
+
+			<div id="banner">
+				<div class="nhdr"><span data-i="rss" data-s="14"></span><span class="nsrc">Hacker News</span><span class="ntime">Just now</span>
+					<span class="nbtns"><span class="ncirc"><span data-i="down" data-s="12"></span></span><span class="ncirc"><span data-i="x" data-s="12"></span></span></span></div>
+				<div class="nbody">
+					<div class="navatar">HN</div>
+					<div class="ntext">
+						<div class="ntitle">Show HN: A static site generator in 300 lines</div>
+						<div class="nmsg">Plain Markdown in, fast HTML out. No plugins and no config files, just one script you can read in a single sitting.</div>
+					</div>
+				</div>
+				<div id="nactsWrap"><div class="nacts"><div class="nact hv">Open</div><div class="nact hv">Copy URL</div><div class="nact hv" id="bMark">Mark as read</div></div></div>
+			</div>
+
+			<div id="browser">
+				<div class="bhb">
+					<span class="bbtn"><span data-i="chevl" data-s="16"></span></span>
+					<span class="bbtn" style="opacity: 0.35"><span data-i="chev" data-s="16"></span></span>
+					<span class="bbtn"><span data-i="refresh" data-s="16"></span></span>
+					<span class="burl"><b>blog.example.net</b>/plain-text</span>
+					<span class="bclose"><span data-i="x" data-s="12"></span></span>
+				</div>
+				<div class="bpage">
+					<div class="bsite">blog.example.net</div>
+					<h3>The unreasonable effectiveness of plain text</h3>
+					<div class="bmeta">6 min read</div>
+					<div class="bimg"></div>
+					<div class="sk" style="width: 100%"></div>
+					<div class="sk" style="width: 94%"></div>
+					<div class="sk" style="width: 97%"></div>
+					<div class="sk" style="width: 62%"></div>
+				</div>
+			</div>
+
+			<div id="menu">
+				<div class="mcontent">
+					<div class="hdr">
+						<div class="hicon"><span data-i="rss" data-s="20"></span></div>
+						<div class="htitles">
+							<div class="ht">RSS Feed</div>
+							<div class="hsub"><span id="sub">Updated at 19:42</span><span id="failPill" class="warnpill hv">1 failed</span></div>
+						</div>
+						<div id="hBadge" class="badge hv">12</div>
+						<div id="refreshBtn" class="ibtn hv"><span data-i="refresh" data-s="16"></span></div>
+						<div class="ibtn hv"><span data-i="gear" data-s="16"></span></div>
+					</div>
+					<div id="mbody">
+						<div id="classic"></div>
+						<div id="minimal"></div>
+						<div id="scrollbar"></div>
+					</div>
+				</div>
+			</div>
+
+			<div id="prefs">
+				<div class="hb">
+					<div class="vs">
+						<div class="vsb"><span data-i="gear" data-s="16"></span>General</div>
+						<div class="vsb"><span data-i="bell" data-s="16"></span>Notifications</div>
+						<div class="vsb sel"><span data-i="list" data-s="16"></span>Sources</div>
+					</div>
+					<div class="closeb"><span data-i="x" data-s="12"></span></div>
+				</div>
+				<div class="pcontent">
+					<div class="ghdr">
+						<div class="gtitle">RSS Sources</div>
+						<div class="gacts">
+							<span class="info"><span data-i="info" data-s="16"></span></span>
+							<span class="hv"><span data-i="refresh" data-s="16"></span></span>
+							<span class="hv" id="importBtn"><span data-i="open" data-s="16"></span></span>
+							<span class="hv"><span data-i="save" data-s="16"></span></span>
+							<span class="hv red"><span data-i="trash" data-s="16"></span></span>
+						</div>
+					</div>
+					<div class="blist" id="blist"></div>
+				</div>
+				<div id="toast">Imported 6 feeds</div>
+			</div>
+
+			<div id="dim"></div>
+			<div id="fdlg">
+				<div class="fhb"><span class="fbtn hv">Cancel</span><span class="ftitlebar">Import OPML</span><span class="fbtn sugg hv" id="fOpen">Open</span></div>
+				<div class="fmain">
+					<div class="fside">
+						<div class="fplace"><span data-i="clock" data-s="16"></span>Recent</div>
+						<div class="fplace"><span data-i="home" data-s="16"></span>Home</div>
+						<div class="fplace"><span data-i="doc" data-s="16"></span>Documents</div>
+						<div class="fplace sel"><span data-i="save" data-s="16"></span>Downloads</div>
+						<div class="fplace"><span data-i="music" data-s="16"></span>Music</div>
+						<div class="fplace"><span data-i="image" data-s="16"></span>Pictures</div>
+					</div>
+					<div class="fview">
+						<div class="fpath"><span>Home</span><span class="cur">Downloads</span></div>
+						<div class="fcols"><span style="flex:1">Name</span><span style="width:80px">Size</span><span style="width:90px">Modified</span></div>
+						<div class="frow hv"><span class="fname"><span data-i="doc" data-s="16"></span>feeds-backup.xml</span><span class="fsize">12.1 kB</span><span class="fdate">Yesterday</span></div>
+						<div class="frow hv" id="fSubs"><span class="fname"><span data-i="doc" data-s="16"></span>subscriptions.opml</span><span class="fsize">4.2 kB</span><span class="fdate">19:38</span></div>
+						<div class="ffoot"><span class="fdrop">OPML files<span data-i="down" data-s="12"></span></span></div>
+					</div>
+				</div>
+			</div>
+
+			<div id="ring"></div>
+			<div id="cursor"><svg width="22" height="26" viewBox="0 0 22 26"><path d="M2 1.5 L2 20.5 L6.6 16.2 L9.7 23.3 L12.9 21.9 L9.9 15 L16.4 15 Z" fill="#000" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+		</div>
+	</div>
+
+	<div id="shade"></div>
+	<div id="shadeB"></div>
+	<div id="caps"></div>
+
+	<div id="card">
+		<img class="logo" src="logo.png" alt="">
+		<h1>RSS Feed</h1>
+		<div class="tagline">Your feeds, right in the GNOME top bar</div>
+		<div class="ego"><span class="chip acc">GNOME 46 - 51</span><span class="chip">extensions.gnome.org</span><span class="chip">version 9.0</span></div>
+	</div>
+</div>
+
+<script>
+const ICONS = {
+	rss: '<circle cx="3.6" cy="12.4" r="1.9" fill="currentColor"/><path d="M2 7.3a6.7 6.7 0 0 1 6.7 6.7M2 2.4A11.6 11.6 0 0 1 13.6 14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>',
+	refresh: '<path d="M13.2 8.2A5.2 5.2 0 1 1 11.6 4.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M9.3 1.8h4.3v4.3z" fill="currentColor"/>',
+	chevl: '<path d="M10 3.5 5.5 8 10 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+	chev: '<path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+	down: '<path d="M3.5 6 8 10.5 12.5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+	check: '<path d="M3.2 8.4 6.4 11.6 12.8 4.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+	x: '<path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>',
+	bell: '<path d="M8 1.6c-2.4 0-4.1 1.8-4.1 4.3v2.9L2.6 11v1h10.8v-1l-1.3-2.2V5.9C12.1 3.4 10.4 1.6 8 1.6z" fill="currentColor"/><path d="M6.3 13.2a1.7 1.7 0 0 0 3.4 0z" fill="currentColor"/>',
+	trash: '<path d="M5.6 1.6h4.8v1.6H14v1.6H2V3.2h3.6z" fill="currentColor"/><path d="M3.4 5.8h9.2l-.8 8a1.2 1.2 0 0 1-1.2 1H5.4a1.2 1.2 0 0 1-1.2-1z" fill="currentColor"/>',
+	drag: '<g fill="currentColor"><circle cx="5.5" cy="3.5" r="1.3"/><circle cx="10.5" cy="3.5" r="1.3"/><circle cx="5.5" cy="8" r="1.3"/><circle cx="10.5" cy="8" r="1.3"/><circle cx="5.5" cy="12.5" r="1.3"/><circle cx="10.5" cy="12.5" r="1.3"/></g>',
+	info: '<circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="7.1" y="6.8" width="1.8" height="5" rx=".6" fill="currentColor"/><circle cx="8" cy="4.8" r="1.05" fill="currentColor"/>',
+	open: '<path d="M1.6 3.2c0-.6.4-1 1-1h3.6l1.6 1.6h5.6c.6 0 1 .4 1 1V12.8c0 .6-.4 1-1 1H2.6c-.6 0-1-.4-1-1z" fill="currentColor"/>',
+	save: '<path d="M8 1.8v7.4M4.8 6.4 8 9.6l3.2-3.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.4 10.4v2.4c0 .6.4 1 1 1h9.2c.6 0 1-.4 1-1v-2.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+	list: '<g fill="currentColor"><rect x="1.5" y="2.5" width="2.4" height="2.4" rx=".6"/><rect x="1.5" y="6.8" width="2.4" height="2.4" rx=".6"/><rect x="1.5" y="11.1" width="2.4" height="2.4" rx=".6"/><rect x="5.6" y="2.9" width="9" height="1.6" rx=".8"/><rect x="5.6" y="7.2" width="9" height="1.6" rx=".8"/><rect x="5.6" y="11.5" width="9" height="1.6" rx=".8"/></g>',
+	wifi: '<path d="M8 13.6 .9 5.4a10.8 10.8 0 0 1 14.2 0z" fill="currentColor"/>',
+	vol: '<path d="M1.6 5.6h2.8L8 2.4v11.2L4.4 10.4H1.6z" fill="currentColor"/><path d="M10.2 5.4a3.4 3.4 0 0 1 0 5.2M12.1 3.2a6.4 6.4 0 0 1 0 9.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+	bat: '<rect x="4.4" y="2.6" width="7.2" height="12" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="6.4" y="1.2" width="3.2" height="1.6" rx=".5" fill="currentColor"/><rect x="5.9" y="6" width="4.2" height="7.1" rx=".5" fill="currentColor"/>',
+	doc: '<path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M9.5 1.5v3h3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>',
+	home: '<path d="M8 1.8 1.6 7.4h1.8v6.8h3.4V10h2.4v4.2h3.4V7.4h1.8z" fill="currentColor"/>',
+	clock: '<circle cx="8" cy="8" r="6.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.2V8l2.6 1.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+	music: '<path d="M6 12V3.2l7-1.4v8.4" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="4.3" cy="12.2" r="2" fill="currentColor"/><circle cx="11.3" cy="10.6" r="2" fill="currentColor"/>',
+	image: '<rect x="1.8" y="2.8" width="12.4" height="10.4" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3 12l3.6-4 2.6 2.6 1.6-1.6L13 11.4V12z" fill="currentColor"/><circle cx="10.6" cy="5.8" r="1.2" fill="currentColor"/>',
+};
+ICONS.gear = (() => {
+	let d = '', n = 8, ro = 7.2, ri = 5.6;
+	for (let i = 0; i < n; i++) {
+		let a = i / n * Math.PI * 2;
+		let w = Math.PI / n * 0.55;
+		let pts = [[ri, a - Math.PI / n + 0.05], [ro, a - w], [ro, a + w], [ri, a + Math.PI / n - 0.05]];
+		for (let [r, ang] of pts)
+			d += (d ? 'L' : 'M') + (8 + r * Math.cos(ang)).toFixed(2) + ' ' + (8 + r * Math.sin(ang)).toFixed(2);
+	}
+	d += 'Z M10.3 8a2.3 2.3 0 1 0-4.6 0 2.3 2.3 0 1 0 4.6 0z';
+	return '<path fill-rule="evenodd" d="' + d + '" fill="currentColor"/>';
+})();
+
+function icon(name, size) {
+	return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 16 16">' + ICONS[name] + '</svg>';
+}
+function fillIcons(root) {
+	root.querySelectorAll('[data-i]').forEach(el => { el.innerHTML = icon(el.dataset.i, +el.dataset.s); el.style.display = 'inline-flex'; });
+}
+
+const $ = (id) => document.getElementById(id);
+const q = (s) => document.querySelector(s);
+
+const FEEDS = [
+	{ id: 'tw', title: 'This Week in GNOME', av: 'TW', count: 1 },
+	{ id: 'hn', title: 'Hacker News', av: 'HN', count: 2, arts: [
+		['Show HN: A static site generator in 300 lines', '1m', 0],
+		['The unreasonable effectiveness of plain text', '48m', 0],
+		['Ask HN: How do you keep up with blogs in 2026?', '2h', 0],
+		['Understanding the Linux page cache', '5h', 1],
+		['Why we moved our CI back to bare metal', '1d', 1],
+	] },
+	{ id: 'pg', title: 'Planet GNOME', av: 'PG', count: 3, arts: [
+		['Building adaptive layouts with GTK 4 and libadwaita', '1h', 0],
+		['A closer look at the new Files search popover', '3h', 0],
+		['Notes from the GNOME design hackfest', '5h', 0],
+		['Profiling GNOME Shell with Sysprof', '2d', 1],
+	] },
+	{ id: 'ph', title: 'Phoronix', av: 'PH', count: 1 },
+	{ id: 'ou', title: 'OMG! Ubuntu', av: 'OU', count: 0 },
+	{ id: 'be', title: 'blog.example.com', av: 'BE', count: 0 },
+];
+
+let classicHtml = '';
+for (let f of FEEDS) {
+	classicHtml += '<div class="grp" id="g_' + f.id + '"><div class="item feed hv" id="f_' + f.id + '"><div class="avatar">' + f.av + '</div><div class="ftitle">' + f.title + '</div>'
+		+ (f.count ? '<div class="count hv" id="c_' + f.id + '">' + f.count + '</div>' : '')
+		+ '<div class="arrow" id="a_' + f.id + '">' + icon('chev', 16) + '</div></div>';
+	if (f.arts) {
+		classicHtml += '<div class="sub" id="s_' + f.id + '"><div>';
+		f.arts.forEach((a, i) => {
+			const id = f.id === 'hn' ? 'art' + i : f.id + 'a' + i;
+			classicHtml += '<div class="awrap" id="w_' + id + '"><div class="item art hv" id="' + id + '"><div class="atitle ' + (a[2] ? 'read' : 'unread') + '">' + a[0] + '</div><div class="atime">' + a[1] + '</div></div></div>';
+		});
+		classicHtml += '</div></div>';
+	}
+	classicHtml += '</div>';
+}
+$('classic').innerHTML = classicHtml;
+
+const MIN_UNREAD = [
+	['Linux 7.1 lands with a reworked I/O scheduler', 'Phoronix', '1m', 'new'],
+	['#218 Faster Thumbnails', 'This Week in GNOME', '3m', 'new2'],
+	['Ask HN: How do you keep up with blogs in 2026?', 'Hacker News', '2h'],
+];
+const MIN_READ = [
+	['Show HN: A static site generator in 300 lines', 'Hacker News', '1m'],
+	['The unreasonable effectiveness of plain text', 'Hacker News', '48m'],
+	['Building adaptive layouts with GTK 4 and libadwaita', 'Planet GNOME', '1h'],
+	['A closer look at the new Files search popover', 'Planet GNOME', '3h'],
+	['Notes from the GNOME design hackfest', 'Planet GNOME', '5h'],
+];
+function mrow(a, cls, id) {
+	return '<div class="mwrap"' + (id ? ' id="' + id + '"' : '') + '><div class="item mart hv"><div class="mtitle ' + cls + '">' + a[0] + '</div><div class="meta"><span class="tag">' + a[1] + '</span><span class="atime">' + a[2] + '</span></div></div></div>';
+}
+let minHtml = '<div class="item sechdr hv"><span class="seclabel">UNREAD</span>' + icon('down', 16) + '</div>';
+MIN_UNREAD.forEach((a, i) => { minHtml += mrow(a, 'unread', a[3] ? 'm_' + a[3] : 'mu' + i); });
+minHtml += '<div class="item sechdr hv"><span class="seclabel">READ</span>' + icon('down', 16) + '</div>';
+MIN_READ.forEach((a, i) => { minHtml += mrow(a, 'read', 'mr' + i); });
+$('minimal').innerHTML = minHtml;
+
+const SOURCES = [
+	['TW', 'This Week in GNOME', 'https://thisweek.gnome.org/index.xml', 'OK (RSS 2.0)'],
+	['HN', 'Hacker News', 'https://hnrss.org/frontpage', 'OK (RSS 2.0)'],
+	['PG', 'Planet GNOME', 'https://planet.gnome.org/atom.xml', 'OK (Atom)'],
+	['PH', 'Phoronix', 'https://www.phoronix.com/rss.php', 'OK (RSS 2.0)'],
+	['OU', 'OMG! Ubuntu', 'https://www.omgubuntu.co.uk/feed', 'OK (RSS 2.0)'],
+	['BE', 'blog.example.com', 'https://blog.example.com/feed.xml', 'OK (RSS 2.0)'],
+];
+let blHtml = '';
+SOURCES.forEach((s, i) => {
+	blHtml += '<div class="swrap" id="sw' + i + '"><div class="srow">'
+		+ '<span class="drag">' + icon('drag', 16) + '</span><span class="savatar">' + s[0] + '</span>'
+		+ '<div class="stext"><div class="stitle">' + s[1] + '</div><div class="ssub">' + s[2] + '</div></div>'
+		+ '<span class="pill">Checking…</span>'
+		+ '<span class="sbtn hv">' + icon('bell', 16) + '</span><span class="sbtn del hv">' + icon('trash', 16) + '</span>'
+		+ '<span class="sexp">' + icon('down', 16) + '</span></div></div>';
+});
+blHtml += '<div class="erow" id="erow"><span class="elabel">New RSS source URL</span></div>';
+$('blist').innerHTML = blHtml;
+
+fillIcons(document);
+
+// [in, out, feature, text, shown at the bottom]
+const CAPS = [
+	[2.9, 8.8, 'OPML import', 'Import and export your subscriptions'],
+	[11.2, 15.0, 'Notifications', 'Quick actions on every new article', 1],
+	[15.8, 17.25, 'Classic layout', 'Articles grouped by feed'],
+	[17.35, 20.55, 'One click to read', 'Opens in your default browser'],
+	[20.7, 22.75, 'Mark all as read', 'Two steps, no accidental clicks'],
+	[23.15, 25.55, 'Minimal layout', 'One timeline, unread first'],
+	[25.75, 28.4, 'Refresh', 'Live progress, broken feeds flagged'],
+	[29.1, 31.7, 'Source management', 'Add, reorder or remove feeds anytime'],
+	[33.1, 38.2, 'Light or dark', 'Follows your theme and accent color'],
+];
+$('caps').innerHTML = CAPS.map((c, i) => '<div class="cap' + (c[4] ? ' bottom' : '') + '" id="cap' + i + '"><span class="kicker">' + c[2] + '</span><p>' + c[3] + '</p></div>').join('');
+
+const DURATION = 41.6;
+const MAX_BODY = 430;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const seg = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
+const lerp = (a, b, k) => a + (b - a) * k;
+const eio = (k) => k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+const eout = (k) => 1 - Math.pow(1 - k, 3);
+const ein = (k) => k * k * k;
+const eback = (k) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(k - 1, 3) + c1 * Math.pow(k - 1, 2); };
+const hex = (h) => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const mix = (a, b, k) => { const x = hex(a), y = hex(b); return x.map((v, i) => Math.round(lerp(v, y[i], k))); };
+const rgb = (c) => 'rgb(' + c.join(',') + ')';
+
+const desk = $('desk');
+function pos(el, ax = 0.5, ay = 0.5) {
+	let x = 0, y = 0, e = el;
+	while (e && e !== desk) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; }
+	return [x + el.offsetWidth * ax, y + el.offsetHeight * ay];
+}
+
+const CLICKS = [4.0, 5.1, 5.85, 10.35, 11.1, 13.7, 17.15, 19.6, 20.55, 21.5, 22.3, 25.85, 28.3, 30.4, 32.65];
+const PATH = [
+	{ at: 0, to: () => [760, 610] },
+	{ at: 3.9, dur: 0.8, to: () => pos($('importBtn'), 0.35, 0.75) },
+	{ at: 5.0, dur: 0.6, to: () => pos($('fSubs'), 0.3, 0.55) },
+	{ at: 5.7, dur: 0.55, to: () => pos($('fOpen'), 0.4, 0.7) },
+	{ at: 8.4, dur: 0.9, to: () => [560, 640] },
+	{ at: 10.2, dur: 0.8, to: () => pos($('rssBtn'), 0.62, 0.55) },
+	{ at: 11.0, dur: 0.6, to: () => pos($('f_hn'), 0.42, 0.5) },
+	{ at: 12.8, dur: 0.7, to: () => { const [x, y] = pos($('banner'), 0.62, 0.42); return [x - 215, y]; } },
+	{ at: 13.55, dur: 0.45, to: () => { const [x, y] = pos($('bMark'), 0.45, 0.6); return [x - 215, y]; } },
+	{ at: 17.0, dur: 0.8, to: () => pos($('art1'), 0.4, 0.5) },
+	{ at: 18.2, dur: 0.7, to: () => [880, 420] },
+	{ at: 19.45, dur: 0.6, to: () => pos($('rssBtn'), 0.62, 0.55) },
+	{ at: 20.4, dur: 0.6, to: () => pos($('f_pg'), 0.42, 0.5) },
+	{ at: 21.35, dur: 0.6, to: () => pos($('c_pg'), 0.22, 0.86) },
+	{ at: 23.1, dur: 0.6, to: () => [818, 330] },
+	{ at: 25.7, dur: 0.7, to: () => pos($('refreshBtn'), 0.3, 0.85) },
+	{ at: 28.15, dur: 0.8, to: () => pos($('failPill'), 0.5, 0.55) },
+	{ at: 30.2, dur: 1.0, to: () => pos(q('#sw5 .del'), 0.35, 0.75) },
+	{ at: 32.5, dur: 0.9, to: () => pos($('rssBtn'), 0.62, 0.55) },
+	{ at: 33.6, dur: 0.7, to: () => [830, 420] },
+];
+
+function cursorAt(t) {
+	let p = PATH[0].to();
+	for (let i = 1; i < PATH.length; i++) {
+		const w = PATH[i];
+		const start = w.at - w.dur;
+		if (t < start) break;
+		const qd = w.to();
+		if (t >= w.at) { p = qd; continue; }
+		const k = eio((t - start) / w.dur);
+		const dx = qd[0] - p[0], dy = qd[1] - p[1];
+		const len = Math.hypot(dx, dy) || 1;
+		const bow = Math.sin(k * Math.PI) * len * 0.08;
+		p = [lerp(p[0], qd[0], k) - dy / len * bow, lerp(p[1], qd[1], k) + dx / len * bow];
+		break;
+	}
+	return p;
+}
+
+const CAM = [
+	[0, 1, 640, 360], [15.3, 1, 640, 360], [16.1, 1.25, 1080, 280],
+	[17.2, 1.25, 1080, 280], [17.8, 1, 640, 360], [19.6, 1, 640, 360], [20.3, 1.25, 1080, 280],
+	[28.3, 1.25, 1080, 280], [29.1, 1, 640, 360],
+	[32.7, 1, 640, 360], [33.5, 1.25, 1080, 280],
+];
+function camAt(t) {
+	let c = CAM[0];
+	for (let i = 1; i < CAM.length; i++) {
+		const a = CAM[i - 1], b = CAM[i];
+		if (t <= a[0]) break;
+		if (t >= b[0]) { c = b; continue; }
+		const k = eio((t - a[0]) / (b[0] - a[0]));
+		c = [t, lerp(a[1], b[1], k), lerp(a[2], b[2], k), lerp(a[3], b[3], k)];
+		break;
+	}
+	const s = c[1];
+	const tx = clamp(640 - c[2] * s, 1280 - 1280 * s, 0);
+	const ty = clamp(360 - c[3] * s, 720 - 720 * s, 0);
+	return [s, tx, ty];
+}
+
+const ACCENTS = [[0, '#3584e4'], [35.5, '#9141ac'], [36.5, '#3a944a']];
+function accentAt(t) {
+	let c = hex(ACCENTS[0][1]);
+	for (let i = 1; i < ACCENTS.length; i++) {
+		const [at, col] = ACCENTS[i];
+		if (t < at) break;
+		const k = eio(seg(t, at, at + 0.35));
+		c = c.map((v, j) => lerp(v, hex(col)[j], k));
+	}
+	return c.map(Math.round);
+}
+
+const NAT = {};
+function measure() {
+	NAT.art = $('art1').offsetHeight;
+	NAT.nacts = $('nactsWrap').firstElementChild.offsetHeight;
+	NAT.mrow = $('m_new').firstElementChild.offsetHeight;
+	NAT.srow = $('sw0').firstElementChild.offsetHeight;
+}
+
+function setH(el, h) { el.style.height = h + 'px'; }
+function show(el, v) { el.style.display = v ? '' : 'none'; }
+
+function render(t) {
+	const root = document.documentElement.style;
+
+	// title card, same at both ends so the loop is seamless
+	const card = Math.max(1 - eio(seg(t, 2.0, 2.6)), eio(seg(t, 38.4, 39.1)));
+	const cam = $('cam');
+	cam.style.filter = card > 0.001 ? 'blur(' + (16 * card).toFixed(2) + 'px)' : 'none';
+	$('card').style.opacity = card;
+	$('card').style.transform = 'scale(' + (1 + 0.04 * (1 - card)) + ')';
+
+	const lk = eio(seg(t, 34, 34.7));
+	$('wallLight').style.opacity = lk;
+	root.setProperty('--menu-bg', rgb(mix('#2e2e32', '#fafafb', lk)));
+	root.setProperty('--menu-fg', rgb(mix('#f6f6f7', '#2e2e33', lk)));
+	root.setProperty('--ov', mix('#ffffff', '#000000', lk).join(','));
+	root.setProperty('--shade', mix('#04060c', '#f2f4f8', lk).join(','));
+	root.setProperty('--cap-fg', rgb(mix('#ffffff', '#1d1d22', lk)));
+	root.setProperty('--cap-p', 'rgba(' + mix('#ffffff', '#1d1d22', lk).join(',') + ',0.78)');
+	const acc = accentAt(t);
+	root.setProperty('--accent', rgb(acc));
+	// lighter on dark backgrounds, like the Adwaita accent text color
+	root.setProperty('--kick', rgb(acc.map(v => Math.round(lerp(v + (255 - v) * 0.35, v * 0.9, lk)))));
+
+	const pOpen = eout(seg(t, 2.4, 2.75)) * (1 - eio(seg(t, 8.9, 9.25)))
+		+ eout(seg(t, 28.7, 29.05)) * (1 - eio(seg(t, 31.5, 31.85)));
+	const prefs = $('prefs');
+	prefs.style.opacity = pOpen;
+	prefs.style.transform = 'scale(' + (0.94 + 0.06 * pOpen) + ')';
+	prefs.style.visibility = pOpen > 0.001 ? 'visible' : 'hidden';
+
+	const dOpen = eout(seg(t, 4.15, 4.4)) * (1 - seg(t, 5.85, 6.05));
+	const dlg = $('fdlg');
+	dlg.style.opacity = dOpen;
+	dlg.style.transform = 'scale(' + (0.95 + 0.05 * dOpen) + ')';
+	dlg.style.visibility = dOpen > 0.001 ? 'visible' : 'hidden';
+	$('dim').style.opacity = dOpen;
+	$('fSubs').classList.toggle('sel', t >= 5.1);
+
+	SOURCES.forEach((s, i) => {
+		const w = $('sw' + i);
+		const a = 6.1 + i * 0.12;
+		let h = eio(seg(t, a, a + 0.25));
+		let o = h;
+		if (i === 5) {
+			o *= 1 - eout(seg(t, 30.4, 30.54));
+			h *= 1 - eio(seg(t, 30.44, 30.74));
+		}
+		setH(w, NAT.srow * h);
+		w.style.opacity = o;
+		const pill = w.querySelector('.pill');
+		const second = t >= 28.7;
+		const done = second ? t >= 29.1 + i * 0.1 : t >= 6.9 + i * 0.15;
+		const failed = second && i === 5;
+		pill.textContent = done ? (failed ? '404 Not Found' : s[3]) : 'Checking…';
+		pill.className = 'pill' + (done ? (failed ? ' err' : ' ok') : '');
+	});
+	const tk = eout(seg(t, 6.2, 6.5)) * (1 - seg(t, 8.3, 8.6));
+	$('toast').style.opacity = tk;
+	$('toast').style.transform = 'translate(-50%, ' + (20 * (1 - tk)) + 'px)';
+
+	const dotK = seg(t, 9.7, 10.0);
+	$('dot').style.transform = 'scale(' + (dotK > 0 ? eback(dotK) : 0) + ')';
+	$('dot').style.opacity = dotK > 0 ? 1 : 0;
+	$('rssBtn').style.gap = dotK > 0 ? '10px' : '0px';
+	$('dot').style.marginRight = dotK > 0 ? '-6px' : '-8px';
+
+	const bIn = eout(seg(t, 11.7, 12.15));
+	const bOut = ein(seg(t, 13.75, 14.1));
+	const banner = $('banner');
+	banner.style.transform = 'translate(-50%, ' + (lerp(-150, 0, bIn) - 170 * bOut) + 'px)';
+	banner.style.opacity = bIn * (1 - bOut);
+	const bExp = eio(seg(t, 12.8, 13.1));
+	setH($('nactsWrap'), NAT.nacts * bExp);
+	$('nactsWrap').style.opacity = bExp;
+	const arrived = t >= 11.8;
+	const markedInNotif = t >= 13.7;
+
+	const brP = eout(seg(t, 17.3, 17.6)) * (1 - eio(seg(t, 19.0, 19.3)));
+	const br = $('browser');
+	br.style.opacity = brP;
+	br.style.transform = 'scale(' + (0.95 + 0.05 * brP) + ')';
+	br.style.visibility = brP > 0.001 ? 'visible' : 'hidden';
+
+	const mOpen = eout(seg(t, 10.35, 10.57)) * (1 - seg(t, 17.15, 17.3)) + eout(seg(t, 19.6, 19.82)) * (1 - seg(t, 28.3, 28.46)) + eout(seg(t, 32.65, 32.87));
+	const menu = $('menu');
+	menu.style.opacity = mOpen;
+	menu.style.transform = 'translateY(' + (-10 * (1 - mOpen)) + 'px) scale(' + (0.97 + 0.03 * mOpen) + ')';
+	menu.style.visibility = mOpen > 0.001 ? 'visible' : 'hidden';
+	$('rssBtn').classList.toggle('active', (t >= 10.35 && t < 17.15) || (t >= 19.6 && t < 28.3) || t >= 32.65);
+
+	const hnP = eio(seg(t, 11.1, 11.4)) * (1 - eio(seg(t, 20.55, 20.85)));
+	const newRow = eio(seg(t, 11.8, 12.1));
+	setH($('w_art0'), NAT.art * newRow);
+	$('w_art0').style.opacity = newRow;
+	setH($('s_hn'), $('s_hn').firstElementChild.offsetHeight * hnP);
+	$('a_hn').style.transform = 'rotate(' + (90 * hnP) + 'deg)';
+	$('g_hn').classList.toggle('open', hnP > 0);
+	const art1Read = t >= 17.15;
+	FEEDS[1].arts.forEach((a, i) => {
+		const r = a[2] || (i === 1 && art1Read) || (i === 0 && markedInNotif);
+		$('art' + i).firstElementChild.className = 'atitle ' + (r ? 'read' : 'unread');
+	});
+	const cHn = $('c_hn');
+	cHn.textContent = art1Read ? '1' : arrived && !markedInNotif ? '3' : '2';
+	const pulse = (k) => 1 + 0.22 * Math.sin(Math.PI * k);
+	const pk = Math.max(seg(t, 11.8, 12.1), seg(t, 13.7, 14.0));
+	const pv = pk > 0 && pk < 1 ? pulse(pk) : 1;
+	cHn.style.transform = 'scale(' + pv + ')';
+	$('hBadge').style.transform = 'scale(' + pv + ')';
+
+	const pgP = eio(seg(t, 20.55, 20.85));
+	setH($('s_pg'), $('s_pg').firstElementChild.offsetHeight * pgP);
+	$('a_pg').style.transform = 'rotate(' + (90 * pgP) + 'deg)';
+	$('g_pg').classList.toggle('open', pgP > 0);
+	const pgAllRead = t >= 22.3;
+	const pgConfirm = t >= 21.5 && t < 22.3;
+	FEEDS[2].arts.forEach((a, i) => {
+		$('pga' + i).firstElementChild.className = 'atitle ' + (a[2] || pgAllRead ? 'read' : 'unread');
+	});
+	const cPg = $('c_pg');
+	show(cPg, !pgAllRead);
+	cPg.innerHTML = pgConfirm ? icon('check', 14) : '3';
+	show($('c_tw'), t >= 26.8);
+	show($('c_ph'), t >= 26.8);
+	const beGone = t >= 30.4;
+	show($('g_be'), !beGone);
+
+	$('hBadge').textContent = t < 11.8 ? 5 : t < 13.7 ? 6 : t < 17.15 ? 5 : t < 22.3 ? 4 : t < 26.8 ? 1 : 3;
+
+	const mm = eio(seg(t, 22.9, 23.35)) * (t < 32.2 ? 1 : 0);
+	const classic = $('classic'), minimal = $('minimal');
+	classic.style.opacity = 1 - mm;
+	minimal.style.opacity = mm;
+	classic.style.visibility = mm < 0.5 ? 'visible' : 'hidden';
+	minimal.style.visibility = mm >= 0.5 ? 'visible' : 'hidden';
+	classic.style.transform = 'translateX(' + (-24 * mm) + 'px)';
+	minimal.style.transform = 'translateX(' + (24 * (1 - mm)) + 'px)';
+
+	const nP = eio(seg(t, 26.8, 27.1));
+	setH($('m_new'), NAT.mrow * nP);
+	$('m_new').style.opacity = nP;
+	setH($('m_new2'), NAT.mrow * nP);
+	$('m_new2').style.opacity = nP;
+
+	$('mbody').style.height = Math.min(MAX_BODY, lerp(classic.offsetHeight, minimal.offsetHeight, mm)) + 'px';
+	const sb = $('scrollbar');
+	sb.style.opacity = mm * 0.9;
+	sb.style.height = Math.round(MAX_BODY * MAX_BODY / minimal.offsetHeight) + 'px';
+
+	let sub = 'Updated at 19:42';
+	if (t >= 25.85 && t < 27.15)
+		sub = 'Updating… ' + Math.min(6, Math.floor(seg(t, 25.9, 27.05) * 6.999)) + '/6';
+	else if (t >= 27.15)
+		sub = 'Updated at 19:54';
+	$('sub').textContent = sub;
+	const fp = seg(t, 27.15, 27.45);
+	$('failPill').style.display = fp > 0 && !beGone ? '' : 'none';
+	$('failPill').style.transform = 'scale(' + eback(fp) + ')';
+	$('failPill').style.opacity = fp;
+
+	CAPS.forEach((c, i) => {
+		const inK = eout(seg(t, c[0], c[0] + 0.4));
+		const outK = ein(seg(t, c[1] - 0.3, c[1]));
+		const el = $('cap' + i);
+		el.style.opacity = inK * (1 - outK);
+		el.style.transform = 'translateY(calc(' + (c[4] ? '0px' : '-50%') + ' + ' + (14 * (1 - inK) - 10 * outK) + 'px))';
+	});
+	const bK = eio(seg(t, 10.7, 11.2) * (1 - seg(t, 15.0, 15.5)));
+	$('shade').style.opacity = eio(seg(t, 2.5, 3.0) * (1 - seg(t, 38.2, 38.8))) * (1 - bK);
+	$('shadeB').style.opacity = bK;
+
+	const [s, tx, ty] = camAt(t);
+	cam.style.transform = 'translate(' + tx.toFixed(2) + 'px,' + ty.toFixed(2) + 'px) scale(' + s.toFixed(4) + ')';
+
+	const [cx, cy] = cursorAt(t);
+	const cv = seg(t, 2.9, 3.15) * (1 - seg(t, 38, 38.3));
+	let press = 0, ring = 0, ringK = 0;
+	for (const c of CLICKS) {
+		if (t >= c - 0.06 && t < c + 0.1) press = 1;
+		if (t >= c && t < c + 0.45) { ring = 1; ringK = (t - c) / 0.45; }
+	}
+	const cur = $('cursor');
+	cur.style.opacity = cv;
+	cur.style.transform = 'translate(' + (cx - 2) + 'px,' + (cy - 1.5) + 'px) scale(' + (press ? 0.86 : 1) + ')';
+	const rg = $('ring');
+	rg.style.left = cx + 'px';
+	rg.style.top = cy + 'px';
+	rg.style.opacity = ring ? (1 - ringK) * 0.8 * cv : 0;
+	rg.style.transform = 'scale(' + (0.4 + ringK * 0.9) + ')';
+
+	document.querySelectorAll('.hover, .press').forEach(el => el.classList.remove('hover', 'press'));
+	if (cv > 0.5 && card < 0.5) {
+		const sx = tx + cx * s, sy = ty + cy * s;
+		cur.style.visibility = 'hidden';
+		rg.style.visibility = 'hidden';
+		const hit = document.elementFromPoint(sx, sy);
+		cur.style.visibility = '';
+		rg.style.visibility = '';
+		const el = hit && hit.closest('.hv');
+		if (el) {
+			el.classList.add('hover');
+			if (press) el.classList.add('press');
+		}
+	}
+}
+
+window.renderAt = render;
+window.DURATION = DURATION;
+window.ready = document.fonts.ready.then(() => { measure(); render(0); return true; });
+
+if (!location.search.includes('capture')) {
+	window.ready.then(() => {
+		const params = new URLSearchParams(location.search);
+		const offset = parseFloat(params.get('t') || '0');
+		const t0 = performance.now() - offset * 1000;
+		const loop = (now) => { render(((now - t0) / 1000) % DURATION); requestAnimationFrame(loop); };
+		requestAnimationFrame(loop);
+	});
+}
+</script>
+</body>
+</html>
