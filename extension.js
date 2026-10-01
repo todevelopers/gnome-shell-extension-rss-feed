@@ -49,8 +49,8 @@ export default class RssFeedExtension extends Extension
 		settings.connectObject(
 			'changed::' + GSKeys.RSS_FEEDS_LIST, () =>
 			{
-				this._repository.sync(this._store);
-				this._poller.refresh();
+				if (this._repository.sync(this._store))
+					this._poller.refresh();
 			},
 			'changed::' + GSKeys.RSS_FEEDS_SETTINGS, () =>
 			{

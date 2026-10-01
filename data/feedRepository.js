@@ -80,16 +80,21 @@ export class FeedRepository
 			if (!wanted.has(source.url))
 				store.removeSource(source.url);
 
+		let added = false;
 		for (let url of urls)
 		{
 			let source = store.getSource(url);
 			if (source)
 				source.applyConfig(this._configFor(url));
 			else
+			{
 				store.addSource(new FeedSource(url, this._configFor(url)));
+				added = true;
+			}
 		}
 
 		store.reorder(urls);
+		return added;
 	}
 
 	_configFor(url)
