@@ -414,6 +414,14 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 			if (idx !== -1)
 				feeds.splice(idx, 1);
 			settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
+
+			// the focused button dies with the row, GTK then refocuses the first widget and the page jumps to the top
+			let neighbor = row.get_next_sibling();
+			if (!neighbor || neighbor === addRow)
+				neighbor = row.get_prev_sibling();
+			if (neighbor)
+				neighbor.grab_focus();
+
 			sourcesGroup.remove(row);
 			rowMap.delete(state.url);
 			updateStats();
