@@ -407,6 +407,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 		delBtn.add_css_class('source-delete-btn');
 		delBtn.connect('clicked', () =>
 		{
+			const t0 = GLib.get_monotonic_time();
 			cancelValidation(state.url);
 			aSettings.remove(state.url);
 			let feeds = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
@@ -414,6 +415,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 			if (idx !== -1)
 				feeds.splice(idx, 1);
 			settings.set_strv(GSKeys.RSS_FEEDS_LIST, feeds);
+			const t1 = GLib.get_monotonic_time();
 
 			// the focused button dies with the row, GTK then refocuses the first widget and the page jumps to the top
 			let neighbor = row.get_next_sibling();
@@ -421,10 +423,23 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 				neighbor = row.get_prev_sibling();
 			if (neighbor)
 				neighbor.grab_focus();
+			const t2 = GLib.get_monotonic_time();
 
 			sourcesGroup.remove(row);
+			const t3 = GLib.get_monotonic_time();
 			rowMap.delete(state.url);
 			updateStats();
+			const t4 = GLib.get_monotonic_time();
+
+			let ticks = 0;
+			sourcesGroup.add_tick_callback(() =>
+			{
+				if (++ticks < 3)
+					return GLib.SOURCE_CONTINUE;
+				const ms = (a, b) => (b - a) / 1000;
+				console.log(`TIMING del: settings ${ms(t0, t1)}, focus ${ms(t1, t2)}, remove ${ms(t2, t3)}, stats ${ms(t3, t4)}, 3rd frame at ${ms(t0, GLib.get_monotonic_time())} (ms)`);
+				return GLib.SOURCE_REMOVE;
+			});
 		});
 
 		row.add_suffix(delBtn);
