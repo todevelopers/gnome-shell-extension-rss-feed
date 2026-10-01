@@ -19,7 +19,7 @@
  * along with gnome-shell-extension-rss-feed.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Diffs a freshly parsed feed against the cached items: what was added, removed or updated.
+// Diffs a freshly parsed feed against the cached items: what was added, updated or evicted over the limit.
 export function computeFeedDiff(existing, parsed, opts)
 {
 	let retained = parsed.slice(0, opts.itemsRetained);
@@ -46,9 +46,7 @@ export function computeFeedDiff(existing, parsed, opts)
 		existingIds.add(item.id);
 
 		let match = incoming.get(item.id);
-		if (!match)
-			removed.push(item);
-		else if (isUpdate(item, match))
+		if (match && isUpdate(item, match))
 			updatedIds.add(item.id);
 	}
 
@@ -58,6 +56,17 @@ export function computeFeedDiff(existing, parsed, opts)
 			added.push(item);
 		else if (updatedIds.has(item.id))
 			updated.push(item);
+	}
+
+	// an article still in the feed must survive, evicting it would bring it back as new on the next poll
+	let overflow = existing.length + added.length - opts.itemsRetained;
+	for (let i = existing.length - 1; i >= 0 && overflow > 0; i--)
+	{
+		if (incoming.has(existing[i].id))
+			continue;
+
+		removed.push(existing[i]);
+		overflow--;
 	}
 
 	return { added, removed, updated };

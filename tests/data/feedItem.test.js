@@ -112,6 +112,29 @@ describe('FeedItem', () => {
 		});
 	});
 
+	describe('timestamp', () => {
+		it('is the publishDate in milliseconds', () => {
+			const i = new FeedItem(data({ publishDate: '2024-01-01T00:00:00Z' }));
+			expect(i.timestamp).toBe(Date.UTC(2024, 0, 1));
+		});
+
+		it('is zero for a date that cannot be parsed', () => {
+			expect(new FeedItem(data({ publishDate: 'not-a-date' })).timestamp).toBe(0);
+		});
+
+		it('follows a publishDate changed by update', () => {
+			const i = new FeedItem(data({ publishDate: '2024-01-01T00:00:00Z' }));
+			expect(i.timestamp).toBe(Date.UTC(2024, 0, 1));
+			i.update(data({ publishDate: '2024-06-01T00:00:00Z' }));
+			expect(i.timestamp).toBe(Date.UTC(2024, 5, 1));
+		});
+
+		it('works on a restored item', () => {
+			const i = FeedItem.restore({ id: 'a', read: true, publishDate: '2024-01-01T00:00:00Z' });
+			expect(i.timestamp).toBe(Date.UTC(2024, 0, 1));
+		});
+	});
+
 	describe('restore', () => {
 		const persisted = (over = {}) => ({
 			id: 'id-1',

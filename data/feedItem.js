@@ -57,6 +57,16 @@ export class FeedItem
 		this.publishDate = data.publishDate || this.publishDate;
 		this.updateTime = data.updateTime || '';
 		this.desc = buildDesc(data.desc);
+		this._timestamp = undefined;
+	}
+
+	// parsing the date is the expensive part of sorting, so it is done once per article
+	get timestamp()
+	{
+		if (this._timestamp === undefined)
+			this._timestamp = new Date(this.publishDate).getTime() || 0;
+
+		return this._timestamp;
 	}
 
 	// persisted fields are already normalized; the constructor would decode and strip them a second time

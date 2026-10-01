@@ -824,7 +824,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 	sourcesPage.add(sourcesOptionsGroup);
 
 	const itemsRetainedRow = makeSpinRow(settings, GSKeys.ITEMS_RETAINED, "Articles kept per feed", 1, MAX_SOURCES_LIMIT);
-	itemsRetainedRow.subtitle = "How many articles are stored per feed.";
+	itemsRetainedRow.subtitle = "Articles that drop out of the feed stay stored until the feed goes over this limit.";
 	sourcesOptionsGroup.add(itemsRetainedRow);
 
 	const initialUnreadRow = makeSwitchRow(settings, GSKeys.MARK_INITIAL_AS_NEW, "Initial unread");

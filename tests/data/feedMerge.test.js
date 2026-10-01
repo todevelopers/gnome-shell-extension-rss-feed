@@ -31,17 +31,60 @@ describe('computeFeedDiff', () => {
 		});
 	});
 
-	describe('removed', () => {
-		it('reports a cached item whose id is gone from the parse', () => {
+	describe('history', () => {
+		it('keeps a cached item whose id is gone from the parse', () => {
 			const r = computeFeedDiff([item('a'), item('b')], [item('a')], opts());
-			expect(ids(r.removed)).toEqual(['b']);
+			expect(r.removed).toEqual([]);
 			expect(r.added).toEqual([]);
 		});
 
+		it('does not report a cached item that returns to the parse as added', () => {
+			const r = computeFeedDiff([item('c'), item('a'), item('b')], [item('b'), item('c')], opts());
+			expect(r.added).toEqual([]);
+			expect(r.removed).toEqual([]);
+			expect(r.updated).toEqual([]);
+		});
+	});
+
+	describe('removed', () => {
 		it('reports a cached item pushed out of the itemsRetained window', () => {
 			const r = computeFeedDiff([item('c')], [item('a'), item('b'), item('c')], opts({ itemsRetained: 2 }));
 			expect(ids(r.removed)).toEqual(['c']);
 			expect(ids(r.added)).toEqual(['a', 'b']);
+		});
+
+		it('evicts from the end of the cache, only as many as the overflow', () => {
+			const r = computeFeedDiff(
+				[item('c'), item('b'), item('a')],
+				[item('e'), item('d')],
+				opts({ itemsRetained: 4 }));
+			expect(ids(r.added)).toEqual(['e', 'd']);
+			expect(ids(r.removed)).toEqual(['a']);
+		});
+
+		it('skips an item that is still in the parse even when it is the oldest', () => {
+			const r = computeFeedDiff(
+				[item('c'), item('b'), item('a')],
+				[item('d'), item('a')],
+				opts({ itemsRetained: 3 }));
+			expect(ids(r.added)).toEqual(['d']);
+			expect(ids(r.removed)).toEqual(['b']);
+		});
+
+		it('trims the cache when the limit was lowered', () => {
+			const r = computeFeedDiff(
+				[item('d'), item('c'), item('b'), item('a')],
+				[item('d')],
+				opts({ itemsRetained: 2 }));
+			expect(r.added).toEqual([]);
+			expect(ids(r.removed)).toEqual(['a', 'b']);
+		});
+
+		it('stays stable for a feed that carries more items than the limit', () => {
+			const parsed = [item('a'), item('b'), item('c')];
+			const r = computeFeedDiff([item('a'), item('b')], parsed, opts({ itemsRetained: 2 }));
+			expect(r.added).toEqual([]);
+			expect(r.removed).toEqual([]);
 		});
 	});
 

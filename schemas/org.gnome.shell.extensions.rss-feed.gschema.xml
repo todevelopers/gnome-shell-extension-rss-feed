@@ -13,9 +13,9 @@
 		    <description>How many articles each feed (Classic) or section (Minimal) shows before 'Show more'.</description>
 		</key>
 		<key type="i" name="items-retained">
-		    <default>500</default>
+		    <default>200</default>
 		    <summary>Articles kept per source</summary>
-		    <description>How many articles are stored per feed.</description>
+		    <description>How many articles are stored per feed. Articles that drop out of the feed stay stored until the feed goes over this limit, then the oldest ones are removed.</description>
 		</key>
 		<key type="i" name="max-height">
 		    <default>8192</default>

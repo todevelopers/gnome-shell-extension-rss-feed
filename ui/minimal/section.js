@@ -98,32 +98,46 @@ export class MinimalSection
 		this._rebuild();
 	}
 
-	_computeList()
+	// every stored article is visited, but only the newest ones up to the limit are kept and sorted
+	_newestItems(read, limit)
 	{
-		let out = [];
+		let entries = [];
+		let total = 0;
+		let floor = -Infinity;
+		let seq = 0;
+		// scan order breaks ties, so a longer list always starts with the shorter one
+		let newestFirst = (a, b) => b.ts - a.ts || a.seq - b.seq;
+
 		for (let source of this._store.getSources())
 		{
 			let feedTitle = Encoder.htmlDecode(source.title);
 			for (let item of source.items)
 			{
-				out.push({
-					item,
-					source,
-					feedTitle,
-					section: item.read ? 'read' : 'unread',
-					ts: new Date(item.publishDate || 0).getTime(),
-				});
+				if (item.read !== read)
+					continue;
+
+				total++;
+
+				let ts = item.timestamp;
+				if (ts <= floor)
+					continue;
+
+				entries.push({ item, source, feedTitle, ts, seq: seq++ });
+
+				if (limit > 0 && entries.length >= limit * 2)
+				{
+					entries.sort(newestFirst);
+					entries.length = limit;
+					floor = entries[limit - 1].ts;
+				}
 			}
 		}
 
-		out.sort((a, b) =>
-		{
-			if (a.section !== b.section)
-				return a.section === 'unread' ? -1 : 1;
-			return b.ts - a.ts;
-		});
+		entries.sort(newestFirst);
+		if (limit > 0 && entries.length > limit)
+			entries.length = limit;
 
-		return out;
+		return { entries, total };
 	}
 
 	_rebuild()
@@ -131,29 +145,26 @@ export class MinimalSection
 		this._cancelChunk();
 		this._expanded = false;
 
-		let items = this._computeList();
-
 		this._state = {
-			unread: { entries: [], header: null, showMore: null, rendered: 0 },
-			read: { entries: [], header: null, showMore: null, rendered: 0 },
+			unread: { total: 0, header: null, showMore: null, rendered: 0 },
+			read: { total: 0, header: null, showMore: null, rendered: 0 },
 		};
-		for (let entry of items)
-			this._state[entry.section].entries.push(entry);
 
 		let cap = this._displayLimit();
 		let plan = [];
 		for (let section of ['unread', 'read'])
 		{
 			let state = this._state[section];
-			if (state.entries.length === 0)
+			let list = this._newestItems(section === 'read', cap);
+			if (list.total === 0)
 				continue;
 
 			plan.push({ type: 'header', section });
-			let limit = cap > 0 ? Math.min(cap, state.entries.length) : state.entries.length;
-			for (let i = 0; i < limit; i++)
-				plan.push({ type: 'item', section, entry: state.entries[i] });
-			state.rendered = limit;
-			if (limit < state.entries.length)
+			for (let entry of list.entries)
+				plan.push({ type: 'item', section, entry });
+			state.total = list.total;
+			state.rendered = list.entries.length;
+			if (state.rendered < state.total)
 				plan.push({ type: 'showmore', section });
 		}
 
@@ -213,7 +224,7 @@ export class MinimalSection
 			else
 			{
 				let row = new ShowMoreRow(() => this._append(step.section));
-				row.setCounts(state.rendered, state.entries.length);
+				row.setCounts(state.rendered, state.total);
 				this.section.addMenuItem(row);
 				if (state.header)
 					state.header.addItem(row);
@@ -229,9 +240,11 @@ export class MinimalSection
 		if (!state || !state.showMore)
 			return;
 
-		let cap = this._displayLimit();
 		let from = state.rendered;
-		let to = cap > 0 ? Math.min(from + cap, state.entries.length) : state.entries.length;
+		let list = this._newestItems(section === 'read', from + this._displayLimit());
+		// a change that landed since the last rebuild can leave fewer articles than are already shown
+		let to = Math.max(from, list.entries.length);
+		state.total = list.total;
 
 		let items = this.section._getMenuItems();
 		let base = items.indexOf(state.showMore);
@@ -239,9 +252,9 @@ export class MinimalSection
 			base = items.length;
 
 		let firstNew = null;
-		for (let i = from; i < to; i++)
+		for (let i = from; i < list.entries.length; i++)
 		{
-			let entry = state.entries[i];
+			let entry = list.entries[i];
 			let mi = new MinimalArticleItem(entry.item, entry.source, this._store, entry.feedTitle);
 			this.section.addMenuItem(mi, base + (i - from));
 			if (state.header)
@@ -253,13 +266,13 @@ export class MinimalSection
 		state.rendered = to;
 		this._expanded = true;
 
-		if (to >= state.entries.length)
+		if (to >= state.total)
 		{
 			state.showMore.destroy();
 			state.showMore = null;
 		}
 		else
-			state.showMore.setCounts(to, state.entries.length);
+			state.showMore.setCounts(to, state.total);
 
 		firstNew?.grab_key_focus();
 	}
