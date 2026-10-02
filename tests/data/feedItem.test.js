@@ -36,6 +36,15 @@ describe('FeedItem', () => {
 			expect(new FeedItem(data({ title: '   spaced   ' })).title).toBe('spaced');
 		});
 
+		it('falls back to the description when the title is empty', () => {
+			const i = new FeedItem(data({ title: '', desc: 'First line\n\nsecond   line' }));
+			expect(i.title).toBe('First line second line');
+		});
+
+		it('falls back to the description when the title is only markup', () => {
+			expect(new FeedItem(data({ title: '<br/>', desc: 'Body' })).title).toBe('Body');
+		});
+
 		it('keeps a provided publishDate', () => {
 			expect(new FeedItem(data({ publishDate: '2024-06-01' })).publishDate).toBe('2024-06-01');
 		});
@@ -89,6 +98,12 @@ describe('FeedItem', () => {
 			expect(i.title).toBe('New');
 			expect(i.updateTime).toBe('2024-07-01');
 			expect(i.desc).toBe('fresh');
+		});
+
+		it('falls back to the description when the new title is empty', () => {
+			const i = new FeedItem(data({ title: '', desc: '' }));
+			i.update(data({ title: '', desc: 'Micro post' }));
+			expect(i.title).toBe('Micro post');
 		});
 
 		it('replaces publishDate when a new one is provided', () => {

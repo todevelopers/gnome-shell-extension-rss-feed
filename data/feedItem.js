@@ -36,6 +36,15 @@ function buildDesc(s)
 	return desc;
 }
 
+function buildTitle(title, desc)
+{
+	let result = stripTags(title);
+	if (result)
+		return result;
+
+	return desc.replace(/\s+/g, " ");
+}
+
 // A single feed entry: normalized fields and a read flag that FeedSource owns.
 export class FeedItem
 {
@@ -44,19 +53,19 @@ export class FeedItem
 		this.id = data.id;
 		this.read = true;
 		this.link = data.link;
-		this.title = stripTags(data.title);
 		this.publishDate = data.publishDate || new Date().toISOString();
 		this.updateTime = data.updateTime || '';
 		this.desc = buildDesc(data.desc);
+		this.title = buildTitle(data.title, this.desc);
 	}
 
 	update(data)
 	{
 		this.link = data.link;
-		this.title = stripTags(data.title);
 		this.publishDate = data.publishDate || this.publishDate;
 		this.updateTime = data.updateTime || '';
 		this.desc = buildDesc(data.desc);
+		this.title = buildTitle(data.title, this.desc);
 		this._timestamp = undefined;
 	}
 
