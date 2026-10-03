@@ -340,11 +340,15 @@ export class FeedPoller
 		this._repository.flushItems();
 
 		// temporary memory bisect
-		System.gc();
+		if (!globalThis.rssNoGc)
+			System.gc();
 		let [, status] = GLib.file_get_contents('/proc/self/status');
 		let rss = new TextDecoder().decode(status).match(/VmRSS:\s+(\d+)/)[1];
 		console.log("[rss-feed] cycle done, stage " + (globalThis.rssStage || 0)
-			+ ", cache " + (this._cacheRemoved ? "off" : "on") + ", rss " + rss + " kB");
+			+ ", cache " + (this._cacheRemoved ? "off" : "on")
+			+ ", gc " + (globalThis.rssNoGc ? "off" : "on")
+			+ ", failed " + this._store.failedCount + " of " + this._total
+			+ ", rss " + rss + " kB");
 
 		// the Shell does not disable extensions when the session ends, so an index written only in destroy() would be lost on logout
 		this._cache.dump();
