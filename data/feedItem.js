@@ -52,6 +52,8 @@ export class FeedItem
 	{
 		this.id = data.id;
 		this.read = true;
+		this.starred = false;
+		this.dismissed = false;
 		this.link = data.link;
 		this.publishDate = data.publishDate || new Date().toISOString();
 		this.updateTime = data.updateTime || '';
@@ -85,6 +87,8 @@ export class FeedItem
 
 		item.id = data.id;
 		item.read = !!data.read;
+		item.starred = !!data.starred;
+		item.dismissed = !!data.dismissed;
 		item.link = data.link;
 		item.title = data.title;
 		item.publishDate = data.publishDate;

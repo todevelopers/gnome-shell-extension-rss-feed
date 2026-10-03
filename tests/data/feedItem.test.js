@@ -18,6 +18,12 @@ describe('FeedItem', () => {
 			expect(new FeedItem(data()).read).toBe(true);
 		});
 
+		it('starts neither starred nor dismissed', () => {
+			const i = new FeedItem(data());
+			expect(i.starred).toBe(false);
+			expect(i.dismissed).toBe(false);
+		});
+
 		it('passes id and link through unchanged', () => {
 			const i = new FeedItem(data({ id: 'guid-9', link: 'http://x/9' }));
 			expect(i.id).toBe('guid-9');
@@ -125,6 +131,15 @@ describe('FeedItem', () => {
 			expect(i.id).toBe('keep');
 			expect(i.read).toBe(false);
 		});
+
+		it('does not touch starred or dismissed', () => {
+			const i = new FeedItem(data());
+			i.starred = true;
+			i.dismissed = true;
+			i.update(data({ title: 'X', starred: false, dismissed: false }));
+			expect(i.starred).toBe(true);
+			expect(i.dismissed).toBe(true);
+		});
 	});
 
 	describe('timestamp', () => {
@@ -171,6 +186,18 @@ describe('FeedItem', () => {
 		it('restores the read flag', () => {
 			expect(FeedItem.restore(persisted({ read: false })).read).toBe(false);
 			expect(FeedItem.restore(persisted({ read: true })).read).toBe(true);
+		});
+
+		it('restores the starred and dismissed flags', () => {
+			const i = FeedItem.restore(persisted({ starred: true, dismissed: true }));
+			expect(i.starred).toBe(true);
+			expect(i.dismissed).toBe(true);
+		});
+
+		it('reads a file written before the flags existed', () => {
+			const i = FeedItem.restore(persisted());
+			expect(i.starred).toBe(false);
+			expect(i.dismissed).toBe(false);
 		});
 
 		it('returns a FeedItem a later feed merge can update', () => {

@@ -105,7 +105,7 @@ export class NotificationManager
 		let stale = [];
 		for (let [id, notification] of this._notifications)
 		{
-			if (notification._rssSource === source && notification._rssItem.read)
+			if (notification._rssSource === source && (notification._rssItem.read || notification._rssItem.dismissed))
 				stale.push(id);
 		}
 

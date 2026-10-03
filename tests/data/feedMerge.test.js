@@ -88,6 +88,71 @@ describe('computeFeedDiff', () => {
 		});
 	});
 
+	describe('starred', () => {
+		const starred = id => ({ ...item(id), starred: true });
+
+		it('does not count a starred item towards the limit', () => {
+			const r = computeFeedDiff(
+				[item('c'), starred('b'), item('a')],
+				[item('c')],
+				opts({ itemsRetained: 2 }));
+			expect(r.removed).toEqual([]);
+			expect(r.added).toEqual([]);
+		});
+
+		it('never evicts a starred item, even the oldest one', () => {
+			const r = computeFeedDiff(
+				[item('c'), item('b'), starred('a')],
+				[item('e'), item('d')],
+				opts({ itemsRetained: 2 }));
+			expect(ids(r.added)).toEqual(['e', 'd']);
+			expect(ids(r.removed)).toEqual(['b', 'c']);
+		});
+
+		it('keeps every starred item when the limit is lower than their count', () => {
+			const r = computeFeedDiff(
+				[starred('d'), starred('c'), starred('b'), item('a')],
+				[item('e')],
+				opts({ itemsRetained: 1 }));
+			expect(ids(r.added)).toEqual(['e']);
+			expect(ids(r.removed)).toEqual(['a']);
+		});
+
+		it('evicts an item again once it is no longer starred', () => {
+			const existing = [item('c'), item('b'), starred('a')];
+			const parsed = [item('c'), item('b')];
+
+			expect(computeFeedDiff(existing, parsed, opts({ itemsRetained: 2 })).removed).toEqual([]);
+
+			existing[2].starred = false;
+			expect(ids(computeFeedDiff(existing, parsed, opts({ itemsRetained: 2 })).removed)).toEqual(['a']);
+		});
+
+		it('still keeps an unstarred item that is in the parse', () => {
+			const r = computeFeedDiff(
+				[item('d'), starred('c'), item('b'), item('a')],
+				[item('d'), item('a')],
+				opts({ itemsRetained: 2 }));
+			expect(r.added).toEqual([]);
+			expect(ids(r.removed)).toEqual(['b']);
+		});
+
+		it('evicts only the items that are neither starred nor in the parse', () => {
+			const r = computeFeedDiff(
+				[item('f'), starred('e'), item('d'), starred('c'), item('b'), item('a')],
+				[item('g'), item('f'), item('b')],
+				opts({ itemsRetained: 3 }));
+			expect(ids(r.added)).toEqual(['g']);
+			expect(ids(r.removed)).toEqual(['a', 'd']);
+		});
+
+		it('does not report a starred item that is still in the parse as added', () => {
+			const r = computeFeedDiff([starred('a')], [item('a'), item('b')], opts({ itemsRetained: 2 }));
+			expect(ids(r.added)).toEqual(['b']);
+			expect(r.removed).toEqual([]);
+		});
+	});
+
 	describe('unchanged — no bucket', () => {
 		it('ignores a matching id with identical dates', () => {
 			const r = computeFeedDiff([item('a', '2024-01-01')], [item('a', '2024-01-01')], opts());

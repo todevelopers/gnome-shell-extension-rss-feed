@@ -24,6 +24,7 @@ import Gio from 'gi://Gio';
 import { GSAA } from '../gsaa.js';
 import * as GSKeys from '../gskeys.js';
 import { FeedSource } from './feedSource.js';
+import { classifyOrphan } from './articleState.js';
 
 const ITEMS_FLUSH_DELAY = 2000;
 
@@ -65,9 +66,10 @@ export class FeedRepository
 		for (let url of urls)
 			store.addSource(new FeedSource(url, this._configFor(url)));
 
-		this._dropOrphanedItems(urls);
-
-		await Promise.all(store.getSources().map(source => this._restoreSource(source)));
+		await Promise.all([
+			...store.getSources().map(source => this._restoreSource(source)),
+			...this._orphanedItems(urls).map(path => this._restoreArchived(path)),
+		]);
 	}
 
 	sync(store)
@@ -77,8 +79,23 @@ export class FeedRepository
 
 		let wanted = new Set(urls);
 		for (let source of store.getSources())
-			if (!wanted.has(source.url))
-				store.removeSource(source.url);
+		{
+			if (wanted.has(source.url))
+				continue;
+
+			// archived before the removal, so the file is not deleted with the source
+			if (source.hasStarred())
+				source.archive();
+
+			store.removeSource(source.url);
+
+			if (source.archived)
+			{
+				store.addArchived(source);
+				this._watchSource(source);
+				this._markDirty(source);
+			}
+		}
 
 		let added = false;
 		for (let url of urls)
@@ -88,7 +105,17 @@ export class FeedRepository
 				source.applyConfig(this._configFor(url));
 			else
 			{
-				store.addSource(new FeedSource(url, this._configFor(url)));
+				source = new FeedSource(url, this._configFor(url));
+
+				let archived = store.getArchived().find(s => s.url === url);
+				if (archived)
+				{
+					store.removeArchived(url);
+					this._unwatchSource(archived);
+					source.adopt(archived);
+				}
+
+				store.addSource(source);
 				added = true;
 			}
 		}
@@ -118,6 +145,16 @@ export class FeedRepository
 		source.connectObject(
 			'items-changed', () => this._markDirty(source),
 			'unread-changed', () => this._markDirty(source),
+			'starred-changed', () =>
+			{
+				if (source.archived && !source.hasStarred())
+				{
+					this._store.removeArchived(source.url);
+					this._unwatchSource(source);
+				}
+				else
+					this._markDirty(source);
+			},
 			this
 		);
 	}
@@ -126,7 +163,10 @@ export class FeedRepository
 	{
 		source.disconnectObject(this);
 		this._dirty.delete(source.url);
-		Gio.File.new_for_path(this._itemsPath(source.url)).delete_async(GLib.PRIORITY_DEFAULT, null).catch(() => {});
+
+		// the file of a removed feed lives on as long as it holds starred articles
+		if (!source.hasStarred())
+			Gio.File.new_for_path(this._itemsPath(source.url)).delete_async(GLib.PRIORITY_DEFAULT, null).catch(() => {});
 	}
 
 	_markDirty(source)
@@ -135,10 +175,11 @@ export class FeedRepository
 		this.scheduleItemsFlush();
 	}
 
-	// feeds removed while the extension was disabled leave their file behind
-	_dropOrphanedItems(urls)
+	// feeds removed while the extension was disabled leave their file behind, and so do archived ones
+	_orphanedItems(urls)
 	{
 		let keep = new Set(urls.map(url => this._itemsPath(url)));
+		let paths = [];
 
 		let dir;
 		try
@@ -147,7 +188,7 @@ export class FeedRepository
 		}
 		catch
 		{
-			return;
+			return paths;
 		}
 
 		let name;
@@ -155,10 +196,47 @@ export class FeedRepository
 		{
 			let path = GLib.build_filenamev([this._dir, name]);
 			if (!keep.has(path))
-				Gio.File.new_for_path(path).delete_async(GLib.PRIORITY_DEFAULT, null).catch(() => {});
+				paths.push(path);
 		}
 
 		dir.close();
+		return paths;
+	}
+
+	async _restoreArchived(path)
+	{
+		let file = Gio.File.new_for_path(path);
+
+		try
+		{
+			let [contents] = await file.load_contents_async(null);
+			let data = JSON.parse(new TextDecoder().decode(contents));
+
+			// the feed can be back in the list by the time the file is read
+			if (!this._store || this._store.getSource(data?.url))
+				return;
+
+			if (classifyOrphan(data) === 'archive')
+			{
+				let source = new FeedSource(data.url);
+				source.restore(data);
+				source.archive();
+
+				this._store.addArchived(source);
+				this._watchSource(source);
+
+				if (source.items.length !== data.items.length)
+					this._markDirty(source);
+
+				return;
+			}
+		}
+		catch
+		{
+			// a damaged file is dropped like any other leftover, a throw here would leave the poller unstarted
+		}
+
+		file.delete_async(GLib.PRIORITY_DEFAULT, null).catch(() => {});
 	}
 
 	async _restoreSource(source)
@@ -189,7 +267,7 @@ export class FeedRepository
 		this._cancelScheduledFlush();
 
 		let flushed = [];
-		for (let source of this._store.getSources())
+		for (let source of [...this._store.getSources(), ...this._store.getArchived()])
 		{
 			if (this._dirty.has(source.url))
 			{
@@ -234,15 +312,19 @@ export class FeedRepository
 			.catch(e => console.warn("[rss-feed] Writing '" + path + "' failed: " + e));
 	}
 
+	// undefined is left out of the JSON, so the flags only take space where they are set
 	_serialize(source)
 	{
 		return JSON.stringify({
-			version: 1,
+			version: 2,
 			url: source.url,
+			archived: source.archived || undefined,
 			publisherTitle: source.publisherTitle,
 			items: source.items.map(i => ({
 				id: i.id,
 				read: i.read,
+				starred: i.starred || undefined,
+				dismissed: i.dismissed || undefined,
 				link: i.link,
 				title: i.title,
 				desc: i.desc,
@@ -295,7 +377,7 @@ export class FeedRepository
 		if (this._store)
 		{
 			// the final flush must be synchronous, an async write would not complete after disable
-			for (let source of this._store.getSources())
+			for (let source of [...this._store.getSources(), ...this._store.getArchived()])
 			{
 				source.disconnectObject(this);
 				if (this._dirty.has(source.url))

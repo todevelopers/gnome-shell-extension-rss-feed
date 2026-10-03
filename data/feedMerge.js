@@ -40,10 +40,13 @@ export function computeFeedDiff(existing, parsed, opts)
 
 	let existingIds = new Set();
 	let updatedIds = new Set();
+	let starred = 0;
 
 	for (let item of existing)
 	{
 		existingIds.add(item.id);
+		if (item.starred)
+			starred++;
 
 		let match = incoming.get(item.id);
 		if (match && isUpdate(item, match))
@@ -58,11 +61,11 @@ export function computeFeedDiff(existing, parsed, opts)
 			updated.push(item);
 	}
 
-	// an article still in the feed must survive, evicting it would bring it back as new on the next poll
-	let overflow = existing.length + added.length - opts.itemsRetained;
+	// an article still in the feed must survive, evicting it would bring it back as new on the next poll; starred ones are kept on top of the limit
+	let overflow = existing.length - starred + added.length - opts.itemsRetained;
 	for (let i = existing.length - 1; i >= 0 && overflow > 0; i--)
 	{
-		if (incoming.has(existing[i].id))
+		if (existing[i].starred || incoming.has(existing[i].id))
 			continue;
 
 		removed.push(existing[i]);

@@ -20,6 +20,7 @@
  */
 
 import GObject from 'gi://GObject';
+import { collectStarred } from './articleState.js';
 
 // Collection of FeedSources: owns the total unread count and routes read operations; views observe it.
 export const FeedStore = GObject.registerClass(
@@ -29,6 +30,7 @@ export const FeedStore = GObject.registerClass(
 		'source-removed': { param_types: [GObject.TYPE_JSOBJECT] },
 		'reordered': {},
 		'changed': {},
+		'starred-changed': {},
 	},
 },
 class FeedStore extends GObject.Object
@@ -38,6 +40,7 @@ class FeedStore extends GObject.Object
 		super._init();
 
 		this._sources = new Map();
+		this._archived = new Map();
 		this.totalUnread = 0;
 		this.failedCount = 0;
 	}
@@ -48,11 +51,14 @@ class FeedStore extends GObject.Object
 		source.connectObject(
 			'unread-changed', () => this._recomputeUnread(),
 			'status-changed', () => this._recomputeFailed(),
+			'starred-changed', () => this.emit('starred-changed'),
 			this
 		);
 
 		this.emit('source-added', source);
 		this._recomputeUnread();
+		if (source.hasStarred())
+			this.emit('starred-changed');
 	}
 
 	removeSource(url)
@@ -67,6 +73,40 @@ class FeedStore extends GObject.Object
 		this._recomputeUnread();
 		this._recomputeFailed();
 		this.emit('source-removed', source);
+		if (source.hasStarred())
+			this.emit('starred-changed');
+	}
+
+	// feeds that were removed while they had starred articles, never polled and not part of getSources()
+	addArchived(source)
+	{
+		this._archived.set(source.url, source);
+		source.connectObject(
+			'unread-changed', () => this._recomputeUnread(),
+			'starred-changed', () => this.emit('starred-changed'),
+			this
+		);
+
+		this._recomputeUnread();
+		this.emit('starred-changed');
+	}
+
+	removeArchived(url)
+	{
+		let source = this._archived.get(url);
+		if (!source)
+			return;
+
+		source.disconnectObject(this);
+		this._archived.delete(url);
+
+		this._recomputeUnread();
+		this.emit('starred-changed');
+	}
+
+	getArchived()
+	{
+		return [...this._archived.values()];
 	}
 
 	getSource(url)
@@ -104,16 +144,61 @@ class FeedStore extends GObject.Object
 		source.markRead(item);
 	}
 
+	markUnread(source, item)
+	{
+		source.markUnread(item);
+	}
+
+	toggleRead(source, item)
+	{
+		if (item.read)
+			source.markUnread(item);
+		else
+			source.markRead(item);
+	}
+
+	toggleStar(source, item)
+	{
+		source.setStarred(item, !item.starred);
+	}
+
+	dismiss(source, item)
+	{
+		source.dismiss(item);
+	}
+
+	markOlderRead(source, item)
+	{
+		source.markOlderRead(item);
+	}
+
 	markAllSeen()
 	{
 		for (let source of this._sources.values())
 			source.markAllSeen();
+		for (let source of this._archived.values())
+			source.markAllSeen();
+	}
+
+	markStarredRead()
+	{
+		for (let source of this._sources.values())
+			source.markStarredRead();
+		for (let source of this._archived.values())
+			source.markStarredRead();
+	}
+
+	starredEntries()
+	{
+		return collectStarred([...this._sources.values(), ...this._archived.values()]);
 	}
 
 	_recomputeUnread()
 	{
 		let total = 0;
 		for (let source of this._sources.values())
+			total += source.unreadCount;
+		for (let source of this._archived.values())
 			total += source.unreadCount;
 
 		if (total !== this.totalUnread)

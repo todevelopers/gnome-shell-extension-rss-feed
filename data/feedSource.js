@@ -22,6 +22,7 @@
 import GObject from 'gi://GObject';
 import { FeedItem } from './feedItem.js';
 import { computeFeedDiff } from './feedMerge.js';
+import { countUnread, olderItems } from './articleState.js';
 
 // One feed: owns its FeedItem list and unread count, merges parsed results and signals views.
 export const FeedSource = GObject.registerClass(
@@ -33,6 +34,7 @@ export const FeedSource = GObject.registerClass(
 		'items-added': { param_types: [GObject.TYPE_JSOBJECT] },
 		'items-removed': { param_types: [GObject.TYPE_JSOBJECT] },
 		'status-changed': {},
+		'starred-changed': {},
 	},
 },
 class FeedSource extends GObject.Object
@@ -50,6 +52,7 @@ class FeedSource extends GObject.Object
 		this.items = [];
 		this.unreadCount = 0;
 		this.lastError = null;
+		this.archived = false;
 
 		this._initialDone = false;
 		this._persistedUnread = new Set(config.persistedUnread || []);
@@ -83,16 +86,44 @@ class FeedSource extends GObject.Object
 			this.emit('meta-changed');
 
 		this.items = data.items.map(d => FeedItem.restore(d));
-		this.unreadCount = this.items.filter(i => !i.read).length;
-		this._initialDone = true;
+		this.unreadCount = countUnread(this.items);
+		// an archive holds only the starred articles, the first merge on top of it still has to count as the initial one
+		this._initialDone = !data.archived;
 
 		this.emit('items-changed');
 		if (this.unreadCount)
 			this.emit('unread-changed');
+		if (this.hasStarred())
+			this.emit('starred-changed');
+	}
+
+	// the feed is gone from the settings, only its starred articles stay
+	archive()
+	{
+		let removed = this.items.filter(i => !i.starred);
+
+		this.archived = true;
+		this.items = this.items.filter(i => i.starred);
+		this.unreadCount = countUnread(this.items);
+
+		if (removed.length)
+			this.emit('items-removed', { items: removed });
+	}
+
+	// _initialDone stays unset, the first merge of a feed that was added again must not report its whole content as new
+	adopt(archived)
+	{
+		this.publisherTitle = archived.publisherTitle;
+		this.items = archived.items;
+		this.unreadCount = archived.unreadCount;
 	}
 
 	merge(parsed, opts)
 	{
+		// a fetch can still be in flight when its feed gets removed
+		if (this.archived)
+			return;
+
 		if (parsed.Publisher && parsed.Publisher.Title
 			&& parsed.Publisher.Title !== this.publisherTitle)
 		{
@@ -126,7 +157,7 @@ class FeedSource extends GObject.Object
 			let idx = this.items.indexOf(item);
 			if (idx !== -1)
 				this.items.splice(idx, 1);
-			if (!item.read)
+			if (!item.read && !item.dismissed)
 				this.unreadCount--;
 		}
 
@@ -191,6 +222,87 @@ class FeedSource extends GObject.Object
 			item.read = true;
 
 		this.unreadCount = 0;
+		this.emit('unread-changed');
+	}
+
+	markUnread(item)
+	{
+		if (!item.read)
+			return;
+
+		item.read = false;
+		this.unreadCount++;
+		this.emit('unread-changed');
+	}
+
+	markOlderRead(item)
+	{
+		for (let older of olderItems(this.items, item))
+			older.read = true;
+
+		this._recountUnread();
+	}
+
+	markStarredRead()
+	{
+		for (let item of this.items)
+		{
+			if (item.starred)
+				item.read = true;
+		}
+
+		this._recountUnread();
+	}
+
+	hasStarred()
+	{
+		return this.items.some(i => i.starred);
+	}
+
+	setStarred(item, value)
+	{
+		if (item.starred === value)
+			return;
+
+		item.starred = value;
+
+		// an archived source has no feed the article could go back to
+		if (this.archived && !value)
+		{
+			this.items.splice(this.items.indexOf(item), 1);
+			this._recountUnread();
+		}
+
+		this.emit('starred-changed');
+	}
+
+	dismiss(item)
+	{
+		if (item.dismissed)
+			return;
+
+		this.setStarred(item, false);
+
+		// unstarring already dropped it from an archived source
+		if (this.archived)
+			return;
+
+		item.dismissed = true;
+		if (!item.read)
+			this.unreadCount--;
+
+		this.emit('items-changed');
+		if (!item.read)
+			this.emit('unread-changed');
+	}
+
+	_recountUnread()
+	{
+		let count = countUnread(this.items);
+		if (count === this.unreadCount)
+			return;
+
+		this.unreadCount = count;
 		this.emit('unread-changed');
 	}
 });
