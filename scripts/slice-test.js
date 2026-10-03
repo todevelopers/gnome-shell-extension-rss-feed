@@ -1,18 +1,19 @@
 // Checks whether a short string cut out of a downloaded feed keeps the whole feed text alive.
-// Run each mode in its own process:
-//   for m in slice copy feed feed-copy; do gjs -m slice-test.js $m; done
-// The feed modes load the installed extension, pass its directory as the second argument when it is not in the default place.
+// Run each mode in its own process, the second argument is the number of rounds:
+//   for r in 300 900; do for m in feed feed-none; do gjs -m slice-test.js $m $r; done; done
+// feed-none parses the same feeds but keeps nothing, so growth it shares with feed is not held by the articles.
+// The feed modes load the installed extension, pass its directory as the third argument when it is not in the default place.
 
 /* global ARGV, print */
 
 import GLib from 'gi://GLib';
 import System from 'system';
 
-const ROUNDS = 300;
 const UUID = 'rss-feed@gnome-shell-extension.todevelopers.github.com';
 
 const mode = ARGV[0] || 'slice';
-const dir = ARGV[1] || GLib.build_filenamev([GLib.get_user_data_dir(), 'gnome-shell', 'extensions', UUID]);
+const ROUNDS = Number(ARGV[1]) || 300;
+const dir = ARGV[2] || GLib.build_filenamev([GLib.get_user_data_dir(), 'gnome-shell', 'extensions', UUID]);
 
 function rss()
 {
@@ -65,6 +66,9 @@ else
 		let parser = createRssParser(feedBody(i), 'test');
 		parser.parse();
 
+		if (mode === 'feed-none')
+			continue;
+
 		// one new article per poll, built the same way FeedSource.merge builds it
 		let p = parser.Items[0];
 		let data = {
@@ -92,4 +96,4 @@ System.gc();
 System.gc();
 
 let after = rss();
-print(mode.padEnd(10) + ' before ' + before + ' kB, after ' + after + ' kB, grew ' + (after - before) + ' kB, kept ' + kept.length);
+print(mode.padEnd(10) + ' rounds ' + ROUNDS + ', before ' + before + ' kB, after ' + after + ' kB, grew ' + (after - before) + ' kB, kept ' + kept.length);
