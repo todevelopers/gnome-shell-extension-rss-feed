@@ -4,7 +4,7 @@
 // feed-none parses the same feeds but keeps nothing, so growth it shares with feed is not held by the articles.
 // feed-flat, feed-flat-json, feed-flat-codec and feed-flat-split keep the articles with every text field copied in a different way,
 // the one that grows like feed-none releases the feed text.
-// The feed modes load the installed extension, pass its directory as the third argument when it is not in the default place.
+// The feed modes load the installed extension, pass its directory as the fourth argument when it is not in the default place.
 
 /* global ARGV, print */
 
@@ -15,7 +15,9 @@ const UUID = 'rss-feed@gnome-shell-extension.todevelopers.github.com';
 
 const mode = ARGV[0] || 'slice';
 const ROUNDS = Number(ARGV[1]) || 300;
-const dir = ARGV[2] || GLib.build_filenamev([GLib.get_user_data_dir(), 'gnome-shell', 'extensions', UUID]);
+// "gc" as the third argument collects garbage every 25 rounds, growth that survives it is really held
+const collect = ARGV[2] === 'gc';
+const dir = ARGV[3] || GLib.build_filenamev([GLib.get_user_data_dir(), 'gnome-shell', 'extensions', UUID]);
 
 function rss()
 {
@@ -73,6 +75,9 @@ else
 
 	for (let i = 0; i < ROUNDS; i++)
 	{
+		if (collect && i % 25 === 0)
+			System.gc();
+
 		let parser = createRssParser(feedBody(i), 'test');
 		parser.parse();
 
@@ -114,4 +119,4 @@ System.gc();
 System.gc();
 
 let after = rss();
-print(mode.padEnd(10) + ' rounds ' + ROUNDS + ', before ' + before + ' kB, after ' + after + ' kB, grew ' + (after - before) + ' kB, kept ' + kept.length);
+print(mode.padEnd(10) + ' rounds ' + ROUNDS + (collect ? ' gc' : '') + ', before ' + before + ' kB, after ' + after + ' kB, grew ' + (after - before) + ' kB, kept ' + kept.length);

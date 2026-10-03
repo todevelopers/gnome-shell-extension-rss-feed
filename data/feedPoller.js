@@ -255,6 +255,13 @@ export class FeedPoller
 						return;
 					}
 
+					// temporary memory bisect, set globalThis.rssStage in Looking Glass: 1 stops after the download, 2 after the parse
+					if (globalThis.rssStage === 1)
+					{
+						this._settle(attempt);
+						return;
+					}
+
 					let parser = createRssParser(response.data, source.url);
 					if (!parser)
 					{
@@ -265,6 +272,13 @@ export class FeedPoller
 					}
 
 					parser.parse();
+
+					if (globalThis.rssStage === 2)
+					{
+						this._settle(attempt);
+						return;
+					}
+
 					source.merge(parser, { itemsRetained, markInitialAsNew });
 					source.setError(null);
 
@@ -316,6 +330,11 @@ export class FeedPoller
 
 		this._announced = false;
 		this._repository.flushItems();
+
+		// temporary memory bisect
+		let [, status] = GLib.file_get_contents('/proc/self/status');
+		let rss = new TextDecoder().decode(status).match(/VmRSS:\s+(\d+)/)[1];
+		console.log("[rss-feed] cycle done, stage " + (globalThis.rssStage || 0) + ", rss " + rss + " kB");
 
 		// the Shell does not disable extensions when the session ends, so an index written only in destroy() would be lost on logout
 		this._cache.dump();
