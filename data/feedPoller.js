@@ -22,6 +22,7 @@
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 import Soup from 'gi://Soup';
+import System from 'system';
 
 import * as GSKeys from '../gskeys.js';
 import * as HTTP from '../http.js';
@@ -123,6 +124,13 @@ export class FeedPoller
 	{
 		this._interval = this._settings.get_int(GSKeys.UPDATE_INTERVAL);
 		this._forceRevalidate = force;
+
+		// temporary memory bisect: globalThis.rssNoCache = true takes the HTTP cache out for the rest of the session
+		if (globalThis.rssNoCache && !this._cacheRemoved)
+		{
+			this._httpSession.remove_feature(this._cache);
+			this._cacheRemoved = true;
+		}
 
 		// a new cycle supersedes the previous one, whatever it still has in flight must not report into the new counters
 		this._cancellable.cancel();
@@ -332,9 +340,11 @@ export class FeedPoller
 		this._repository.flushItems();
 
 		// temporary memory bisect
+		System.gc();
 		let [, status] = GLib.file_get_contents('/proc/self/status');
 		let rss = new TextDecoder().decode(status).match(/VmRSS:\s+(\d+)/)[1];
-		console.log("[rss-feed] cycle done, stage " + (globalThis.rssStage || 0) + ", rss " + rss + " kB");
+		console.log("[rss-feed] cycle done, stage " + (globalThis.rssStage || 0)
+			+ ", cache " + (this._cacheRemoved ? "off" : "on") + ", rss " + rss + " kB");
 
 		// the Shell does not disable extensions when the session ends, so an index written only in destroy() would be lost on logout
 		this._cache.dump();
@@ -375,6 +385,10 @@ export class FeedPoller
 
 		if (!bytes)
 			return { error : "Empty response", retryable : true };
+
+		// temporary memory bisect: 3 stops before the body is decoded
+		if (globalThis.rssStage === 3)
+			return { notModified : true };
 
 		let rawBytes = bytes.toArray();
 		let encoding = 'utf-8';
