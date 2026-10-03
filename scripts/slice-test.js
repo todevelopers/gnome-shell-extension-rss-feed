@@ -2,6 +2,7 @@
 // Run each mode in its own process, the second argument is the number of rounds:
 //   for r in 300 900; do for m in feed feed-none; do gjs -m slice-test.js $m $r; done; done
 // feed-none parses the same feeds but keeps nothing, so growth it shares with feed is not held by the articles.
+// feed-flat keeps the articles with every text field copied, it should grow like feed-none when the copy releases the feed text.
 // The feed modes load the installed extension, pass its directory as the third argument when it is not in the default place.
 
 /* global ARGV, print */
@@ -88,7 +89,15 @@ else
 			data.updateTime = copy(data.updateTime);
 		}
 
-		kept.push(new FeedItem(data));
+		let item = new FeedItem(data);
+
+		if (mode === 'feed-flat')
+		{
+			for (let key of ['id', 'link', 'title', 'desc', 'publishDate', 'updateTime'])
+				item[key] = copy(item[key]);
+		}
+
+		kept.push(item);
 	}
 }
 
