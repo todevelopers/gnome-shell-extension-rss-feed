@@ -4,7 +4,7 @@
 }
 
 .rss-menu {
-	width: 370px;
+	width: 400px;
 }
 
 
@@ -75,6 +75,10 @@
 }
 
 .rss-icon-btn:active {
+	background-color: rgba(127, 127, 127, 0.25);
+}
+
+.rss-icon-btn:checked {
 	background-color: rgba(127, 127, 127, 0.25);
 }
 

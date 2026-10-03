@@ -85,6 +85,9 @@ class RssIndicator extends PanelMenu.Button
 
 			this._minimal.setMenuOpen(open);
 
+			if (open == false)
+				this._header.closeMenu();
+
 			if (open == false && this._activeConfirm)
 			{
 				this._activeConfirm.exitConfirm();
@@ -130,7 +133,7 @@ class RssIndicator extends PanelMenu.Button
 			onOpenSettings : () => this._onSettingsBtnClicked(),
 			onOpenSources : () => this._onFailedPillClicked(),
 			onOpenLink : (url) => { this.menu.close(); Misc.processLinkOpen(url); },
-		});
+		}, extension.path);
 		this.menu.addMenuItem(this._header);
 
 		let maxHeight = settings.get_int(GSKeys.MAX_HEIGHT);
@@ -261,6 +264,11 @@ class RssIndicator extends PanelMenu.Button
 	markIdle()
 	{
 		this._header?.markIdle();
+	}
+
+	flash(text)
+	{
+		this._header?.flash(text);
 	}
 
 	_reorderClassicSection()

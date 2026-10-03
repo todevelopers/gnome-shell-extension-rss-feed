@@ -20,9 +20,13 @@
  */
 
 import Clutter from 'gi://Clutter';
+import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
+import Pango from 'gi://Pango';
 import St from 'gi://St';
 
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import { ConfirmBadge } from './confirmBadge.js';
@@ -32,9 +36,12 @@ const REPO_URL = 'https://github.com/todevelopers/gnome-shell-extension-rss-feed
 export const RssHeader = GObject.registerClass(
 class RssHeader extends PopupMenu.PopupBaseMenuItem
 {
-	_init(callbacks)
+	_init(callbacks, path)
 	{
 		super._init({ reactive : false, can_focus : false, style_class : 'rss-header' });
+
+		this._status = '';
+		this._flashId = 0;
 
 		let iconBox = new St.Button(
 		{
@@ -59,13 +66,19 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 		});
 		subtitleBox.add_child(this._subtitle);
 
+		// without ellipsis the pill keeps its width and only the status text gives way
+		let failedLabel = new St.Label();
+		failedLabel.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
+
 		this._failedPill = new St.Button(
 		{
 			visible : false,
 			can_focus : true,
 			style_class : 'rss-header-warning',
 			y_align : Clutter.ActorAlign.CENTER,
+			child : failedLabel,
 		});
+		this._failedPill.label_actor = failedLabel;
 		this._failedPill.connect('clicked', () => callbacks.onOpenSources());
 		subtitleBox.add_child(this._failedPill);
 
@@ -79,31 +92,61 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 		this._badge.onEnterConfirm = (b) => callbacks.onActivateConfirm(b);
 		this.add_child(this._badge);
 
-		let reloadBtn = new St.Button(
+		let moreBtn = new St.Button(
 		{
 			style_class : 'rss-icon-btn',
 			y_align : Clutter.ActorAlign.CENTER,
 			can_focus : true,
-			accessible_name : 'Refresh',
-			child : new St.Icon({ icon_name : 'view-refresh-symbolic', style_class : 'popup-menu-icon' }),
+			accessible_name : 'More actions',
+			child : new St.Icon({ icon_name : 'view-more-symbolic', style_class : 'popup-menu-icon' }),
 		});
-		reloadBtn.connect('clicked', () => callbacks.onReload());
+		this.add_child(moreBtn);
 
-		let settingsBtn = new St.Button(
+		this._menu = this._buildMenu(moreBtn, path, callbacks);
+		this._menu.connect('open-state-changed', (_menu, open) =>
 		{
-			style_class : 'rss-icon-btn',
-			y_align : Clutter.ActorAlign.CENTER,
-			can_focus : true,
-			accessible_name : 'Settings',
-			child : new St.Icon({ icon_name : 'applications-system-symbolic', style_class : 'popup-menu-icon' }),
+			moreBtn.checked = open;
+			// an armed badge would swallow the first Escape after the menu closes
+			if (open)
+				callbacks.onActivateConfirm(null);
 		});
-		settingsBtn.connect('clicked', () => callbacks.onOpenSettings());
+		moreBtn.connect('clicked', () =>
+		{
+			// focus goes back to whatever had it when the menu opened
+			moreBtn.grab_key_focus();
+			this._menu.toggle();
+		});
 
-		this.add_child(reloadBtn);
-		this.add_child(settingsBtn);
-
-		this._navButtons = [this._failedPill, this._badge, reloadBtn, settingsBtn];
+		this._navButtons = [this._failedPill, this._badge, moreBtn];
 		this.connect('key-press-event', (_actor, event) => this._navigate(event));
+
+		this.connect('destroy', () =>
+		{
+			if (this._flashId)
+			{
+				GLib.source_remove(this._flashId);
+				this._flashId = 0;
+			}
+			this._menu.destroy();
+		});
+	}
+
+	_buildMenu(button, path, callbacks)
+	{
+		let menu = new PopupMenu.PopupMenu(button, 1, St.Side.TOP);
+		menu.addAction('Refresh', () => callbacks.onReload(), 'view-refresh-symbolic');
+		this._markAllItem = menu.addAction('Mark all as read', () => callbacks.onMarkAllSeen(), 'object-select-symbolic');
+		menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+		menu.addAction('Website', () => callbacks.onOpenLink(REPO_URL), Gio.icon_new_for_string(path + '/icons/external-link-symbolic.svg'));
+		menu.addAction('Settings', () => callbacks.onOpenSettings(), 'applications-system-symbolic');
+
+		Main.uiGroup.add_child(menu.actor);
+		menu.actor.hide();
+
+		this._menuManager = new PopupMenu.PopupMenuManager(button);
+		this._menuManager.addMenu(menu);
+
+		return menu;
 	}
 
 	_navigate(event)
@@ -137,32 +180,59 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 	setUnreadCount(n)
 	{
 		this._badge.setCount(n);
+		this._markAllItem.setSensitive(n > 0);
 	}
 
 	setFailedCount(n)
 	{
 		this._failedPill.visible = n > 0;
 		if (n > 0)
-			this._failedPill.label = n + ' failed';
+			this._failedPill.child.text = n + ' failed';
+	}
+
+	closeMenu()
+	{
+		this._menu.close();
+	}
+
+	flash(text, ms = 2000)
+	{
+		if (this._flashId)
+			GLib.source_remove(this._flashId);
+
+		this._subtitle.set_text(text);
+		this._flashId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms, () =>
+		{
+			this._flashId = 0;
+			this._subtitle.set_text(this._status);
+			return GLib.SOURCE_REMOVE;
+		});
+	}
+
+	_setStatus(text)
+	{
+		this._status = text;
+		if (!this._flashId)
+			this._subtitle.set_text(text);
 	}
 
 	markUpdating(total)
 	{
-		this._subtitle.set_text('Updating… 0/' + total);
+		this._setStatus('Updating… 0/' + total);
 	}
 
 	markProgress(done, total)
 	{
-		this._subtitle.set_text('Updating… ' + done + '/' + total);
+		this._setStatus('Updating… ' + done + '/' + total);
 	}
 
 	markIdle()
 	{
-		this._subtitle.set_text('');
+		this._setStatus('');
 	}
 
 	markUpdated()
 	{
-		this._subtitle.set_text('Updated at ' + new Date().toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' }));
+		this._setStatus('Updated at ' + new Date().toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' }));
 	}
 });
