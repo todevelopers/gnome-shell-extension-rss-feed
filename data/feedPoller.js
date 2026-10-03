@@ -57,6 +57,7 @@ export class FeedPoller
 		this._announced = false;
 		this._forceRevalidate = false;
 		this._retries = new Set();
+		this._checksums = new WeakMap();
 		this.onStart = null;
 		this.onProgress = null;
 		this.onComplete = null;
@@ -82,6 +83,11 @@ export class FeedPoller
 			{
 				this._interval = this._settings.get_int(GSKeys.UPDATE_INTERVAL);
 				this._scheduleNext();
+			},
+			// a lowered limit is applied by the merge, so every feed has to go through it once more
+			'changed::' + GSKeys.ITEMS_RETAINED, () =>
+			{
+				this._checksums = new WeakMap();
 			},
 			this
 		);
@@ -222,7 +228,7 @@ export class FeedPoller
 
 				try
 				{
-					let response = this._readResponse(session, result, message, source.url);
+					let response = this._readResponse(session, result, message, source.url, this._checksums.get(source));
 
 					if (response.cancelled)
 						return;
@@ -267,6 +273,7 @@ export class FeedPoller
 					parser.parse();
 					source.merge(parser, { itemsRetained, markInitialAsNew });
 					source.setError(null);
+					this._checksums.set(source, response.checksum);
 
 					this._settle(attempt);
 				}
@@ -324,7 +331,7 @@ export class FeedPoller
 			this.onComplete();
 	}
 
-	_readResponse(session, result, message, sourceURL)
+	_readResponse(session, result, message, sourceURL, knownChecksum)
 	{
 		let bytes;
 		try
@@ -357,6 +364,11 @@ export class FeedPoller
 		if (!bytes)
 			return { error : "Empty response", retryable : true };
 
+		// most feeds come back with the body they had on the last poll, comparing it spares decoding and parsing it again
+		let checksum = GLib.compute_checksum_for_bytes(GLib.ChecksumType.SHA256, bytes);
+		if (checksum === knownChecksum)
+			return { notModified : true };
+
 		let rawBytes = bytes.toArray();
 		let encoding = 'utf-8';
 
@@ -374,6 +386,6 @@ export class FeedPoller
 			if (m) encoding = m[1];
 		}
 
-		return { data : new TextDecoder(encoding).decode(rawBytes) };
+		return { data : new TextDecoder(encoding).decode(rawBytes), checksum };
 	}
 }
