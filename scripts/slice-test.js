@@ -2,7 +2,8 @@
 // Run each mode in its own process, the second argument is the number of rounds:
 //   for r in 300 900; do for m in feed feed-none; do gjs -m slice-test.js $m $r; done; done
 // feed-none parses the same feeds but keeps nothing, so growth it shares with feed is not held by the articles.
-// feed-flat keeps the articles with every text field copied, it should grow like feed-none when the copy releases the feed text.
+// feed-flat, feed-flat-json, feed-flat-codec and feed-flat-split keep the articles with every text field copied in a different way,
+// the one that grows like feed-none releases the feed text.
 // The feed modes load the installed extension, pass its directory as the third argument when it is not in the default place.
 
 /* global ARGV, print */
@@ -26,6 +27,14 @@ function copy(s)
 {
 	return (' ' + s).slice(1);
 }
+
+// candidates for a copy that no longer points into the feed text
+const FLATTEN = {
+	'feed-flat': copy,
+	'feed-flat-json': s => JSON.parse(JSON.stringify(s)),
+	'feed-flat-codec': s => new TextDecoder().decode(new TextEncoder().encode(s)),
+	'feed-flat-split': s => s.split('').join(''),
+};
 
 function feedBody(round)
 {
@@ -91,10 +100,10 @@ else
 
 		let item = new FeedItem(data);
 
-		if (mode === 'feed-flat')
+		if (FLATTEN[mode])
 		{
 			for (let key of ['id', 'link', 'title', 'desc', 'publishDate', 'updateTime'])
-				item[key] = copy(item[key]);
+				item[key] = FLATTEN[mode](item[key]);
 		}
 
 		kept.push(item);
