@@ -25,11 +25,26 @@ import { RdfParser } from './rdf.js';
 import { AtomParser } from './atom.js';
 import { RssParser } from './rss.js';
 
+const VOID_TAGS = ['img', 'br', 'hr'];
+
+// unclosed void tags in an unescaped description fail the strict parse, so retry once with them treated as self-closing
+function parseXml(text)
+{
+	try
+	{
+		return parse(text, { selfClosingTags: [] });
+	}
+	catch
+	{
+		return parse(text, { selfClosingTags: VOID_TAGS });
+	}
+}
+
 export function createRssParser(rawXml, sourceURL)
 {
 	try
 	{
-		let nodes = parse(rawXml, { selfClosingTags: [] });
+		let nodes = parseXml(rawXml);
 		let root = nodes.find(n => typeof n === 'object' && n.tagName[0] !== '?');
 
 		if (!root)
@@ -74,7 +89,7 @@ export function describeParseFailure(rawXml)
 
 	try
 	{
-		parse(text, { selfClosingTags: [] });
+		parseXml(text);
 	}
 	catch
 	{
