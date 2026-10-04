@@ -25,9 +25,15 @@ export function countUnread(items)
 	return items.filter(i => !i.read && !i.dismissed).length;
 }
 
+// bulk read operations leave dismissed articles alone, so a restore brings them back as they were
 export function olderItems(items, item)
 {
-	return items.filter(i => i.timestamp <= item.timestamp);
+	return items.filter(i => !i.dismissed && i.timestamp <= item.timestamp);
+}
+
+export function countDismissed(items)
+{
+	return items.filter(i => i.dismissed).length;
 }
 
 export function collectStarred(sources)

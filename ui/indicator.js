@@ -131,6 +131,8 @@ class RssIndicator extends PanelMenu.Button
 		this._header = new RssHeader({
 			onReload : () => this.onReload?.(),
 			onMarkAllSeen : () => this._store.markAllSeen(),
+			getDismissedCount : () => this._store.dismissedCount(),
+			onRestoreDismissed : () => this._onRestoreDismissed(),
 			onActivateConfirm : (b) => this._activateConfirm(b),
 			onOpenSettings : () => this._onSettingsBtnClicked(),
 			onOpenSources : () => this._onFailedPillClicked(),
@@ -271,6 +273,12 @@ class RssIndicator extends PanelMenu.Button
 	flash(text)
 	{
 		this._header?.flash(text);
+	}
+
+	_onRestoreDismissed()
+	{
+		let count = this._store.restoreDismissed();
+		this.flash(count === 1 ? '1 article restored' : count + ' articles restored');
 	}
 
 	_reorderClassicSection()

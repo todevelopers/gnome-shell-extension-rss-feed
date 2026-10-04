@@ -119,6 +119,8 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 		{
 			// closing the menu restores the previous focus; park it on the popup so a mouse click leaves no focus ring
 			this._getTopMenu().actor.grab_key_focus();
+			if (!this._menu.isOpen)
+				this._updateRestoreItem(callbacks.getDismissedCount());
 			this._menu.toggle();
 		});
 
@@ -141,6 +143,8 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 		let menu = new PopupMenu.PopupMenu(button, 1, St.Side.TOP);
 		menu.addAction('Refresh', () => callbacks.onReload(), 'view-refresh-symbolic');
 		this._markAllItem = menu.addAction('Mark all as read', () => callbacks.onMarkAllSeen(), 'object-select-symbolic');
+		this._restoreItem = menu.addAction('Restore dismissed', () => callbacks.onRestoreDismissed(), 'edit-undo-symbolic');
+		this._restoreItem.visible = false;
 		menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 		menu.addAction('Website', () => callbacks.onOpenLink(REPO_URL), Gio.icon_new_for_string(path + '/icons/external-link-symbolic.svg'));
 		menu.addAction('Settings', () => callbacks.onOpenSettings(), 'applications-system-symbolic');
@@ -152,6 +156,12 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 		this._menuManager.addMenu(menu);
 
 		return menu;
+	}
+
+	_updateRestoreItem(count)
+	{
+		this._restoreItem.visible = count > 0;
+		this._restoreItem.label.text = 'Restore dismissed (' + count + ')';
 	}
 
 	_navigate(event)

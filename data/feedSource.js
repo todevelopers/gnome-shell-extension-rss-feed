@@ -22,7 +22,7 @@
 import GObject from 'gi://GObject';
 import { FeedItem } from './feedItem.js';
 import { computeFeedDiff } from './feedMerge.js';
-import { countUnread, olderItems } from './articleState.js';
+import { countUnread, countDismissed, olderItems } from './articleState.js';
 
 // One feed: owns its FeedItem list and unread count, merges parsed results and signals views.
 export const FeedSource = GObject.registerClass(
@@ -219,7 +219,10 @@ class FeedSource extends GObject.Object
 			return;
 
 		for (let item of this.items)
-			item.read = true;
+		{
+			if (!item.dismissed)
+				item.read = true;
+		}
 
 		this.unreadCount = 0;
 		this.emit('unread-changed');
@@ -294,6 +297,21 @@ class FeedSource extends GObject.Object
 		this.emit('items-changed');
 		if (!item.read)
 			this.emit('unread-changed');
+	}
+
+	restoreDismissed()
+	{
+		let count = countDismissed(this.items);
+		if (!count)
+			return 0;
+
+		for (let item of this.items)
+			item.dismissed = false;
+
+		this.emit('items-changed');
+		this._recountUnread();
+
+		return count;
 	}
 
 	_recountUnread()

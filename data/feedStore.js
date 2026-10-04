@@ -20,7 +20,7 @@
  */
 
 import GObject from 'gi://GObject';
-import { collectStarred } from './articleState.js';
+import { collectStarred, countDismissed } from './articleState.js';
 
 // Collection of FeedSources: owns the total unread count and routes read operations; views observe it.
 export const FeedStore = GObject.registerClass(
@@ -186,6 +186,24 @@ class FeedStore extends GObject.Object
 			source.markStarredRead();
 		for (let source of this._archived.values())
 			source.markStarredRead();
+	}
+
+	dismissedCount()
+	{
+		let total = 0;
+		for (let source of this._sources.values())
+			total += countDismissed(source.items);
+
+		return total;
+	}
+
+	restoreDismissed()
+	{
+		let total = 0;
+		for (let source of this._sources.values())
+			total += source.restoreDismissed();
+
+		return total;
 	}
 
 	starredEntries()

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { countUnread, olderItems, collectStarred, classifyOrphan } from '../../data/articleState.js';
+import { countUnread, olderItems, countDismissed, collectStarred, classifyOrphan } from '../../data/articleState.js';
 
 const item = (id, over = {}) => ({ id, read: true, starred: false, dismissed: false, timestamp: 0, ...over });
 const ids = list => list.map(x => x.id);
@@ -51,6 +51,22 @@ describe('olderItems', () => {
 		const undated = item('undated', { timestamp: 0 });
 		expect(ids(olderItems([...items, undated], items[2]))).toEqual(['old', 'undated']);
 		expect(ids(olderItems([...items, undated], undated))).toEqual(['undated']);
+	});
+
+	it('leaves out a dismissed item', () => {
+		const hidden = item('hidden', { timestamp: 150, dismissed: true });
+		expect(ids(olderItems([...items, hidden], items[1]))).toEqual(['mid', 'old']);
+	});
+});
+
+describe('countDismissed', () => {
+	it('counts the dismissed items whatever their read state', () => {
+		expect(countDismissed([item('a', { dismissed: true }), item('b', { read: false, dismissed: true }), item('c')])).toBe(2);
+	});
+
+	it('is zero when nothing is dismissed', () => {
+		expect(countDismissed([item('a'), item('b', { read: false })])).toBe(0);
+		expect(countDismissed([])).toBe(0);
 	});
 });
 
