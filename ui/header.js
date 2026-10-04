@@ -40,6 +40,9 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 	{
 		super._init({ reactive : false, can_focus : false, style_class : 'rss-header' });
 
+		// St flags a non-reactive row as insensitive and the theme then greys out its buttons too
+		this.remove_style_pseudo_class('insensitive');
+
 		this._status = '';
 		this._flashId = 0;
 
@@ -55,7 +58,8 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 		this.add_child(iconBox);
 
 		let titleBox = new St.BoxLayout({ vertical : true, x_expand : true });
-		titleBox.add_child(new St.Label({ text : 'RSS Feed', style_class : 'rss-header-title' }));
+		// title and status keep the dimmed look; St CSS has no opacity, so it is set on the actors
+		titleBox.add_child(new St.Label({ text : 'RSS Feed', style_class : 'rss-header-title', opacity : 128 }));
 
 		let subtitleBox = new St.BoxLayout({ x_expand : true });
 		this._subtitle = new St.Label(
@@ -63,6 +67,7 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 			text : '',
 			y_align : Clutter.ActorAlign.CENTER,
 			style_class : 'rss-header-subtitle',
+			opacity : 128,
 		});
 		subtitleBox.add_child(this._subtitle);
 
@@ -112,8 +117,8 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 		});
 		moreBtn.connect('clicked', () =>
 		{
-			// focus goes back to whatever had it when the menu opened
-			moreBtn.grab_key_focus();
+			// closing the menu restores the previous focus; park it on the popup so a mouse click leaves no focus ring
+			this._getTopMenu().actor.grab_key_focus();
 			this._menu.toggle();
 		});
 
