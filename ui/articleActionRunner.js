@@ -36,13 +36,14 @@ export const ArticleActionRunner = GObject.registerClass(
 },
 class ArticleActionRunner extends GObject.Object
 {
-	_init(settings, store, flash)
+	_init(settings, store, flash, path)
 	{
 		super._init();
 
 		this._settings = settings;
 		this._store = store;
 		this._flash = flash;
+		this._path = path;
 
 		settings.connectObject(
 			'changed::' + GSKeys.HOVER_ACTION_1, () => this.emit('changed'),
@@ -80,6 +81,12 @@ class ArticleActionRunner extends GObject.Object
 			return config[GSKeys.CLICK_ACTION_RIGHT];
 
 		return 'none';
+	}
+
+	// an action without a themed icon has its icon in the extension directory
+	iconPath(name)
+	{
+		return this._path + '/icons/' + name + '.svg';
 	}
 
 	// only opening and marking as read closes the popup, the other actions flash their message in the header

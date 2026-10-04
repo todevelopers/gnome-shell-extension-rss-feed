@@ -24,6 +24,7 @@ import GObject from 'gi://GObject';
 import St from 'gi://St';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import * as Misc from '../../misc.js';
+import { ArticleHoverButtons } from '../articleHoverButtons.js';
 
 export const ClassicArticleItem = GObject.registerClass(
 class ClassicArticleItem extends PopupMenu.PopupMenuItem
@@ -36,8 +37,12 @@ class ClassicArticleItem extends PopupMenu.PopupMenuItem
 
 		super._init(title);
 
+		this.add_style_class_name('rss-article-row');
 		this.label.add_style_class_name('rss-article-read');
 		this.label.x_expand = true;
+
+		// star and time give way to the hover buttons as one, the star keeps its own visibility inside
+		let trailing = new St.BoxLayout({ style_class: 'rss-article-trailing' });
 
 		this._starIcon = new St.Icon(
 		{
@@ -47,7 +52,7 @@ class ClassicArticleItem extends PopupMenu.PopupMenuItem
 			y_align: Clutter.ActorAlign.CENTER,
 			visible: item.starred,
 		});
-		this.add_child(this._starIcon);
+		trailing.add_child(this._starIcon);
 
 		this._timeLabel = new St.Label(
 		{
@@ -56,13 +61,21 @@ class ClassicArticleItem extends PopupMenu.PopupMenuItem
 			y_align: Clutter.ActorAlign.CENTER,
 			x_align: Clutter.ActorAlign.END,
 		});
-		this.add_child(this._timeLabel);
+		trailing.add_child(this._timeLabel);
+
+		this._hoverButtons = new ArticleHoverButtons(this, item, source, runner, [trailing]);
+		this.add_child(this._hoverButtons);
+		this.add_child(trailing);
 
 		this._item = item;
 		this._source = source;
 		this._runner = runner;
 
 		this.setOrnament(item.read ? PopupMenu.Ornament.NONE : PopupMenu.Ornament.DOT);
+
+		this.connect('notify::hover', () => this._hoverButtons.sync());
+		this.connect('notify::active', () => this._hoverButtons.sync());
+		this.connect('key-press-event', (_actor, event) => this._hoverButtons.navigate(event));
 	}
 
 	// PopupBaseMenuItem activates on any button release; the menu closes only through the base activate
@@ -74,6 +87,7 @@ class ClassicArticleItem extends PopupMenu.PopupMenuItem
 
 		let id = this._runner.mouseAction(button);
 		this._runner.run(id, this._source, this._item);
+		this._hoverButtons.sync();
 		if (this._runner.closesMenu(id))
 			super.activate(event);
 	}

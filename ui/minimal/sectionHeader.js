@@ -74,8 +74,10 @@ class MinimalSectionHeader extends PopupMenu.PopupBaseMenuItem
 		{
 			if (this._collapsed)
 				this.toggle();
-			let first = this._items.find(it => !it._destroyed && it.visible);
-			first?.grab_key_focus();
+			// new rows are inserted at their place in the menu, so the list is not in the order of the screen
+			let first = this.get_next_sibling();
+			if (this._items.includes(first))
+				first.grab_key_focus();
 			return Clutter.EVENT_STOP;
 		}
 
@@ -94,6 +96,13 @@ class MinimalSectionHeader extends PopupMenu.PopupBaseMenuItem
 			return;
 		this._items.push(item);
 		item.visible = !this._collapsed;
+	}
+
+	removeItem(item)
+	{
+		let idx = this._items.indexOf(item);
+		if (idx !== -1)
+			this._items.splice(idx, 1);
 	}
 
 	toggle()

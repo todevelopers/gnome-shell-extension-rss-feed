@@ -242,7 +242,7 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 			if (!wanted.has(item))
 			{
 				// destroying the row that holds the key focus logs "already disposed" warnings
-				if (row.has_key_focus())
+				if (row.contains(global.stage.get_key_focus()))
 					this.menu.actor.navigate_focus(row, St.DirectionType.TAB_FORWARD, true);
 				row.destroy();
 				this._rowByItem.delete(item);

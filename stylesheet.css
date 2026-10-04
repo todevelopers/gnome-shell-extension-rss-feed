@@ -87,6 +87,12 @@
 	border-color: -st-accent-color;
 }
 
+.rss-icon-btn-small {
+	width: 16px;
+	height: 16px;
+	border-radius: 10px;
+}
+
 .rss-feed-avatar {
 	width: 32px;
 	height: 32px;
@@ -137,6 +143,30 @@
 .rss-menu .popup-menu-item .popup-menu-ornament {
 	width: 0;
 	min-width: 0;
+}
+
+.rss-menu .rss-article-row {
+	min-height: 20px;
+	padding-top: 8px;
+	padding-bottom: 8px;
+}
+
+.rss-menu .rss-minimal-article-row {
+	padding-top: 6px;
+	padding-bottom: 6px;
+}
+
+.rss-article-meta {
+	spacing: 6px;
+	min-height: 20px;
+}
+
+.rss-article-actions {
+	spacing: 2px;
+}
+
+.rss-article-trailing {
+	spacing: 6px;
 }
 
 .rss-article-time {

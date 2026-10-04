@@ -20,6 +20,7 @@
  */
 
 import GLib from 'gi://GLib';
+import St from 'gi://St';
 
 import * as GSKeys from '../../gskeys.js';
 import { getInstance } from '../../encoder.js';
@@ -41,7 +42,11 @@ export class MinimalSection
 		this.section = new ScrollSection(style);
 
 		this._plan = null;
-		this._state = null;
+		// extra is the number of rows that Show more added on top of the visible limit
+		this._state = {
+			unread: { extra: 0, total: 0, shown: 0, header: null, showMore: null, rows: new Map() },
+			read: { extra: 0, total: 0, shown: 0, header: null, showMore: null, rows: new Map() },
+		};
 		this._collapsed = {};
 		this._chunkId = 0;
 		this._rebuildId = 0;
@@ -67,7 +72,12 @@ export class MinimalSection
 				this._flush();
 		}
 		else if (this._expanded)
+		{
+			this._expanded = false;
+			this._state.unread.extra = 0;
+			this._state.read.extra = 0;
 			this.markDirty();
+		}
 	}
 
 	markDirty()
@@ -96,7 +106,7 @@ export class MinimalSection
 			return;
 		this._dirty = false;
 
-		this._rebuild();
+		this._reconcile();
 	}
 
 	// every stored article is visited, but only the newest ones up to the limit are kept and sorted
@@ -141,48 +151,86 @@ export class MinimalSection
 		return { entries, total };
 	}
 
-	_rebuild()
+	// rows of articles that stay in their section are kept, only the difference is destroyed and created
+	_reconcile()
 	{
 		this._cancelChunk();
-		this._expanded = false;
-
-		this._state = {
-			unread: { total: 0, header: null, showMore: null, rendered: 0 },
-			read: { total: 0, header: null, showMore: null, rendered: 0 },
-		};
 
 		let cap = this._displayLimit();
 		let plan = [];
+		let gone = [];
+
 		for (let section of ['unread', 'read'])
 		{
 			let state = this._state[section];
-			let list = this._newestItems(section === 'read', cap);
-			if (list.total === 0)
+			let list = this._newestItems(section === 'read', cap > 0 ? cap + state.extra : 0);
+			let sources = new Map(list.entries.map(entry => [entry.item, entry.source]));
+
+			for (let [item, row] of state.rows)
+			{
+				// a feed that was removed and added again hands its starred articles over to a new source
+				if (sources.get(item) !== row.source)
+				{
+					state.rows.delete(item);
+					state.header.removeItem(row);
+					gone.push(row);
+				}
+			}
+
+			state.total = list.total;
+			state.shown = list.entries.length;
+
+			if (state.showMore && state.shown >= state.total)
+			{
+				state.header.removeItem(state.showMore);
+				gone.push(state.showMore);
+				state.showMore = null;
+			}
+
+			if (state.total === 0)
+			{
+				if (state.header)
+				{
+					gone.push(state.header);
+					state.header = null;
+				}
 				continue;
+			}
 
 			plan.push({ type: 'header', section });
 			for (let entry of list.entries)
 				plan.push({ type: 'item', section, entry });
-			state.total = list.total;
-			state.rendered = list.entries.length;
-			if (state.rendered < state.total)
+			if (state.shown < state.total)
 				plan.push({ type: 'showmore', section });
 		}
 
+		// a row destroyed while it holds the key focus stays the active item of the menu and logs "already disposed" warnings
+		let focus = global.stage.get_key_focus();
+		let focused = gone.find(row => row.contains(focus));
+		for (let row of gone)
+		{
+			if (row !== focused)
+				row.destroy();
+		}
+		if (focused)
+		{
+			this.section.actor.navigate_focus(focused, St.DirectionType.TAB_FORWARD, true);
+			focused.destroy();
+		}
+
 		this._plan = plan;
-		this.section.removeAll();
-
-		if (plan.length === 0)
-			return;
-
 		this._renderRange(0);
 	}
 
+	// the first chunk is not deferred, a row that changed its section must not leave a gap for a frame
 	_renderRange(from)
 	{
 		this._cancelChunk();
 
-		let idx = from;
+		let idx = this._renderChunk(from);
+		if (idx < 0)
+			return;
+
 		this._chunkId = GLib.idle_add(GLib.PRIORITY_LOW, () =>
 		{
 			idx = this._renderChunk(idx);
@@ -195,44 +243,74 @@ export class MinimalSection
 		});
 	}
 
+	// building rows is the slow part, so a chunk ends after ten new ones; rows that already exist cost nothing
 	_renderChunk(from)
 	{
 		if (!this._plan)
 			return -1;
 
-		let end = Math.min(from + 10, this._plan.length);
-		for (let i = from; i < end; i++)
+		let next = this.section.box.get_child_at_index(from);
+		let created = 0;
+		let i = from;
+
+		for (; i < this._plan.length && created < 10; i++)
 		{
 			let step = this._plan[i];
 			let state = this._state[step.section];
+			let row;
+			let fresh = false;
+
 			if (step.type === 'header')
 			{
-				let sec = step.section;
-				let h = new MinimalSectionHeader(
-					sec.toUpperCase(),
-					this._collapsed[sec],
-					(collapsed) => { this._collapsed[sec] = collapsed; });
-				this.section.addMenuItem(h);
-				state.header = h;
+				if (!state.header)
+				{
+					let sec = step.section;
+					state.header = new MinimalSectionHeader(
+						sec.toUpperCase(),
+						this._collapsed[sec],
+						(collapsed) => { this._collapsed[sec] = collapsed; });
+					fresh = true;
+				}
+				row = state.header;
 			}
 			else if (step.type === 'item')
 			{
-				let mi = new MinimalArticleItem(step.entry.item, step.entry.source, this._runner, step.entry.feedTitle);
-				this.section.addMenuItem(mi);
-				if (state.header)
-					state.header.addItem(mi);
+				row = state.rows.get(step.entry.item);
+				if (row)
+					row.refresh(step.entry.feedTitle);
+				else
+				{
+					row = new MinimalArticleItem(step.entry.item, step.entry.source, this._runner, step.entry.feedTitle);
+					state.rows.set(step.entry.item, row);
+					state.header.addItem(row);
+					fresh = true;
+				}
 			}
 			else
 			{
-				let row = new ShowMoreRow(() => this._append(step.section));
-				row.setCounts(state.rendered, state.total);
-				this.section.addMenuItem(row);
-				if (state.header)
-					state.header.addItem(row);
-				state.showMore = row;
+				if (!state.showMore)
+				{
+					state.showMore = new ShowMoreRow(() => this._append(step.section));
+					state.header.addItem(state.showMore);
+					fresh = true;
+				}
+				row = state.showMore;
+				row.setCounts(state.shown, state.total);
 			}
+
+			// everything before this index is already in its place, next is what the menu has here now
+			if (fresh)
+			{
+				this.section.addMenuItem(row, next ? i : undefined);
+				created++;
+			}
+			else if (row === next)
+				next = next.get_next_sibling();
+			else
+				this.section.moveMenuItem(row, i);
 		}
-		return end >= this._plan.length ? -1 : end;
+
+		return i < this._plan.length ? i : -1;
 	}
 
 	_append(section)
@@ -241,41 +319,14 @@ export class MinimalSection
 		if (!state || !state.showMore)
 			return;
 
-		let from = state.rendered;
-		let list = this._newestItems(section === 'read', from + this._displayLimit());
-		// a change that landed since the last rebuild can leave fewer articles than are already shown
-		let to = Math.max(from, list.entries.length);
-		state.total = list.total;
-
-		let items = this.section._getMenuItems();
-		let base = items.indexOf(state.showMore);
-		if (base < 0)
-			base = items.length;
-
-		let firstNew = null;
-		for (let i = from; i < list.entries.length; i++)
-		{
-			let entry = list.entries[i];
-			let mi = new MinimalArticleItem(entry.item, entry.source, this._runner, entry.feedTitle);
-			this.section.addMenuItem(mi, base + (i - from));
-			if (state.header)
-				state.header.addItem(mi);
-			if (!firstNew)
-				firstNew = mi;
-		}
-
-		state.rendered = to;
+		let from = state.shown;
+		state.extra += this._displayLimit();
 		this._expanded = true;
+		this._reconcile();
 
-		if (to >= state.total)
-		{
-			state.showMore.destroy();
-			state.showMore = null;
-		}
-		else
-			state.showMore.setCounts(to, state.total);
-
-		firstNew?.grab_key_focus();
+		let first = this._plan.filter(step => step.type === 'item' && step.section === section)[from];
+		if (first)
+			state.rows.get(first.entry.item)?.grab_key_focus();
 	}
 
 	_displayLimit()

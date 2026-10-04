@@ -45,7 +45,7 @@ class RssIndicator extends PanelMenu.Button
 		this._settings = settings;
 		this._extension = extension;
 		this._store = store;
-		this._runner = new ArticleActionRunner(settings, store, (text) => this.flash(text));
+		this._runner = new ArticleActionRunner(settings, store, (text) => this.flash(text), extension.path);
 
 		this._groups = new Map();
 		this._sourceBindings = new Map();
