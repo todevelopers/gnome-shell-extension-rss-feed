@@ -21,6 +21,7 @@
 
 import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
+import Pango from 'gi://Pango';
 import St from 'gi://St';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
@@ -40,14 +41,19 @@ class MinimalSectionHeader extends PopupMenu.PopupBaseMenuItem
 			y_align: Clutter.ActorAlign.CENTER,
 			style_class: 'rss-minimal-section-label',
 		});
+		// with letter-spacing Pango cuts a label that is exactly as wide as its text
+		this._label.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
 		this.add_child(this._label);
 
-		this.add_child(new St.Widget(
+		let line = new St.Widget(
 		{
 			x_expand: true,
 			y_align: Clutter.ActorAlign.CENTER,
 			style_class: 'rss-minimal-section-line',
-		}));
+		});
+		// St has no currentColor, so the text colour of the row is copied over
+		line.connect('style-changed', () => line.set_background_color(line.get_theme_node().get_foreground_color()));
+		this.add_child(line);
 
 		this._count = new St.Label(
 		{
