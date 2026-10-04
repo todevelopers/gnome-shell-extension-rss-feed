@@ -194,9 +194,11 @@
 
 .rss-minimal-section-header {
 	margin-top: 4px;
-	border-bottom-width: 1px;
-	border-bottom-style: solid;
-	border-bottom-color: rgba(127, 127, 127, 0.2);
+}
+
+.rss-minimal-section-line {
+	height: 1px;
+	background-color: rgba(127, 127, 127, 0.3);
 }
 
 .rss-source-tag {
