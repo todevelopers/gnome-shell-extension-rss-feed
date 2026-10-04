@@ -206,7 +206,8 @@ export class MinimalSection
 
 		// a row destroyed while it holds the key focus stays the active item of the menu and logs "already disposed" warnings
 		let focus = global.stage.get_key_focus();
-		let focused = gone.find(row => row.contains(focus));
+		// since GNOME 48 the focus is null, not the stage, when nothing in the Shell has it; that is the case while the menu opens
+		let focused = focus ? gone.find(row => row.contains(focus)) : null;
 		for (let row of gone)
 		{
 			if (row !== focused)

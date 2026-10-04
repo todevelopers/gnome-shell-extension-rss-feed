@@ -241,8 +241,9 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		{
 			if (!wanted.has(item))
 			{
-				// destroying the row that holds the key focus logs "already disposed" warnings
-				if (row.contains(global.stage.get_key_focus()))
+				// destroying the row that holds the key focus logs "already disposed" warnings; the focus is null since GNOME 48 when nothing has it
+				let focus = global.stage.get_key_focus();
+				if (focus && row.contains(focus))
 					this.menu.actor.navigate_focus(row, St.DirectionType.TAB_FORWARD, true);
 				row.destroy();
 				this._rowByItem.delete(item);
