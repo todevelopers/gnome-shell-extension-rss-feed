@@ -29,12 +29,12 @@ import * as Misc from '../../misc.js';
 export const MinimalArticleItem = GObject.registerClass(
 class MinimalArticleItem extends PopupMenu.PopupBaseMenuItem
 {
-	_init(item, source, store, feedTitle)
+	_init(item, source, runner, feedTitle)
 	{
 		super._init();
 		this._item = item;
 		this._source = source;
-		this._store = store;
+		this._runner = runner;
 
 		let contentBox = new St.BoxLayout({ vertical: true, x_expand: true });
 		this._titleLabel = new St.Label({ text: item.title });
@@ -50,22 +50,22 @@ class MinimalArticleItem extends PopupMenu.PopupBaseMenuItem
 		contentBox.add_child(metaBox);
 		this.add_child(contentBox);
 
-		this.connect('activate', (self, event) =>
-		{
-			if (event.type() == Clutter.EventType.BUTTON_RELEASE
-				&& event.get_button() == Clutter.BUTTON_SECONDARY)
-			{
-				St.Clipboard.get_default().set_text(St.ClipboardType.CLIPBOARD, this._item.link);
-			}
-			else if (Misc.processLinkOpen(this._item.link))
-			{
-				this._store.markRead(this._source, this._item);
-			}
-		});
-
 		this.connect('destroy', () =>
 		{
 			this._destroyed = true;
 		});
+	}
+
+	// PopupBaseMenuItem activates on any button release; the menu closes only through the base activate
+	activate(event)
+	{
+		let button = Clutter.BUTTON_PRIMARY;
+		if (event.type() === Clutter.EventType.BUTTON_RELEASE)
+			button = event.get_button();
+
+		let id = this._runner.mouseAction(button);
+		this._runner.run(id, this._source, this._item);
+		if (this._runner.closesMenu(id))
+			super.activate(event);
 	}
 });

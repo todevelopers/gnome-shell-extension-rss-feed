@@ -32,10 +32,11 @@ const Encoder = getInstance();
 
 export class MinimalSection
 {
-	constructor(store, settings, style)
+	constructor(store, settings, style, runner)
 	{
 		this._store = store;
 		this._settings = settings;
+		this._runner = runner;
 
 		this.section = new ScrollSection(style);
 
@@ -113,7 +114,7 @@ export class MinimalSection
 			let feedTitle = Encoder.htmlDecode(source.title);
 			for (let item of source.items)
 			{
-				if (item.read !== read)
+				if (item.dismissed || item.read !== read)
 					continue;
 
 				total++;
@@ -216,7 +217,7 @@ export class MinimalSection
 			}
 			else if (step.type === 'item')
 			{
-				let mi = new MinimalArticleItem(step.entry.item, step.entry.source, this._store, step.entry.feedTitle);
+				let mi = new MinimalArticleItem(step.entry.item, step.entry.source, this._runner, step.entry.feedTitle);
 				this.section.addMenuItem(mi);
 				if (state.header)
 					state.header.addItem(mi);
@@ -255,7 +256,7 @@ export class MinimalSection
 		for (let i = from; i < list.entries.length; i++)
 		{
 			let entry = list.entries[i];
-			let mi = new MinimalArticleItem(entry.item, entry.source, this._store, entry.feedTitle);
+			let mi = new MinimalArticleItem(entry.item, entry.source, this._runner, entry.feedTitle);
 			this.section.addMenuItem(mi, base + (i - from));
 			if (state.header)
 				state.header.addItem(mi);

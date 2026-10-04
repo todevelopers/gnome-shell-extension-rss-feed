@@ -29,6 +29,7 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 
 import * as GSKeys from '../gskeys.js';
 import * as Misc from '../misc.js';
+import { ArticleActionRunner } from './articleActionRunner.js';
 import { ScrollSection } from './scrollSection.js';
 import { RssHeader } from './header.js';
 import { ClassicFeedGroup } from './classic/feedGroup.js';
@@ -44,6 +45,7 @@ class RssIndicator extends PanelMenu.Button
 		this._settings = settings;
 		this._extension = extension;
 		this._store = store;
+		this._runner = new ArticleActionRunner(settings, store, (text) => this.flash(text));
 
 		this._groups = new Map();
 		this._sourceBindings = new Map();
@@ -138,7 +140,7 @@ class RssIndicator extends PanelMenu.Button
 
 		let maxHeight = settings.get_int(GSKeys.MAX_HEIGHT);
 		this._feedsSection = new ScrollSection(this._generatePopupMenuCSS(maxHeight));
-		this._minimal = new MinimalSection(store, settings, this._generatePopupMenuCSS(maxHeight));
+		this._minimal = new MinimalSection(store, settings, this._generatePopupMenuCSS(maxHeight), this._runner);
 		this.menu.addMenuItem(this._feedsSection);
 		this.menu.addMenuItem(this._minimal.section);
 
@@ -191,7 +193,7 @@ class RssIndicator extends PanelMenu.Button
 
 	_addGroup(source)
 	{
-		let group = new ClassicFeedGroup(source, this._store, this._settings);
+		let group = new ClassicFeedGroup(source, this._runner, this._settings);
 		group.onActivateConfirm = (b) => this._activateConfirm(b);
 		this._feedsSection.addMenuItem(group);
 		this._groups.set(source.url, group);
@@ -365,6 +367,7 @@ class RssIndicator extends PanelMenu.Button
 		this._sourceBindings.clear();
 
 		this._minimal.destroy();
+		this._runner.destroy();
 
 		if (this._scrollIdleId)
 		{

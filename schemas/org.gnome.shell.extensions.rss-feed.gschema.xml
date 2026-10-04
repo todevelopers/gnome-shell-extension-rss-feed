@@ -76,5 +76,30 @@
 		    <summary>Group by RSS Source</summary>
 		    <description>Show a separate notification group per feed instead of pooling all notifications under one shared source.</description>
 		</key>
+		<key type="s" name="hover-action-1">
+		    <default>'read'</default>
+		    <summary>First hover button</summary>
+		    <description>Action of the first button shown when hovering over an article. One of: 'none', 'read', 'star', 'dismiss', 'older', 'copy', 'open'.</description>
+		</key>
+		<key type="s" name="hover-action-2">
+		    <default>'star'</default>
+		    <summary>Second hover button</summary>
+		    <description>Action of the second button shown when hovering over an article. One of: 'none', 'read', 'star', 'dismiss', 'older', 'copy', 'open'.</description>
+		</key>
+		<key type="s" name="click-action-left">
+		    <default>'openread'</default>
+		    <summary>Left click action</summary>
+		    <description>What a left click on an article does. One of: 'openread', 'open'.</description>
+		</key>
+		<key type="s" name="click-action-middle">
+		    <default>'open'</default>
+		    <summary>Middle click action</summary>
+		    <description>What a middle click on an article does. One of: 'none', 'openread', 'open', 'read', 'star', 'dismiss', 'older', 'copy'.</description>
+		</key>
+		<key type="s" name="click-action-right">
+		    <default>'copy'</default>
+		    <summary>Right click action</summary>
+		    <description>What a right click on an article does. One of: 'none', 'openread', 'open', 'read', 'star', 'dismiss', 'older', 'copy'.</description>
+		</key>
     </schema>
 </schemalist>

@@ -28,7 +28,7 @@ import * as Misc from '../../misc.js';
 export const ClassicArticleItem = GObject.registerClass(
 class ClassicArticleItem extends PopupMenu.PopupMenuItem
 {
-	_init(item, source, store)
+	_init(item, source, runner)
 	{
 		let title = item.title;
 		if (title.length > 100)
@@ -38,6 +38,16 @@ class ClassicArticleItem extends PopupMenu.PopupMenuItem
 
 		this.label.add_style_class_name('rss-article-read');
 		this.label.x_expand = true;
+
+		this._starIcon = new St.Icon(
+		{
+			icon_name: 'starred-symbolic',
+			icon_size: 12,
+			style_class: 'rss-article-star',
+			y_align: Clutter.ActorAlign.CENTER,
+			visible: item.starred,
+		});
+		this.add_child(this._starIcon);
 
 		this._timeLabel = new St.Label(
 		{
@@ -50,22 +60,27 @@ class ClassicArticleItem extends PopupMenu.PopupMenuItem
 
 		this._item = item;
 		this._source = source;
-		this._store = store;
+		this._runner = runner;
 
 		this.setOrnament(item.read ? PopupMenu.Ornament.NONE : PopupMenu.Ornament.DOT);
+	}
 
-		this.connect('activate', (self, event) =>
-		{
-			if (event.type() == Clutter.EventType.BUTTON_RELEASE
-				&& event.get_button() == Clutter.BUTTON_SECONDARY)
-			{
-				St.Clipboard.get_default().set_text(St.ClipboardType.CLIPBOARD, this._item.link);
-			}
-			else if (Misc.processLinkOpen(this._item.link))
-			{
-				this._store.markRead(this._source, this._item);
-			}
-		});
+	// PopupBaseMenuItem activates on any button release; the menu closes only through the base activate
+	activate(event)
+	{
+		let button = Clutter.BUTTON_PRIMARY;
+		if (event.type() === Clutter.EventType.BUTTON_RELEASE)
+			button = event.get_button();
+
+		let id = this._runner.mouseAction(button);
+		this._runner.run(id, this._source, this._item);
+		if (this._runner.closesMenu(id))
+			super.activate(event);
+	}
+
+	setStarred(starred)
+	{
+		this._starIcon.visible = starred;
 	}
 
 	setOrnament(ornament)

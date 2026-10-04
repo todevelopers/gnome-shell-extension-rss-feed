@@ -37,7 +37,7 @@ const Encoder = getInstance();
 export const ClassicFeedGroup = GObject.registerClass(
 class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 {
-	_init(source, store, settings)
+	_init(source, runner, settings)
 	{
 		let title = Encoder.htmlDecode(source.title);
 		if (title.length > 128)
@@ -46,11 +46,12 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		super._init(title);
 
 		this._source = source;
-		this._store = store;
+		this._runner = runner;
 		this._settings = settings;
 		this._dirty = true;
 		this._rowByItem = new Map();
 		this._chunkBuildId = 0;
+		this._reconcileId = 0;
 		this._showMoreRow = null;
 		this._items = [];
 		this._renderLimit = 0;
@@ -87,10 +88,19 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 			'items-changed', () =>
 			{
 				this._dirty = true;
-				if (this.menu.isOpen)
-					this._reconcile();
+				// a row can be dismissed from its own click, it must not be destroyed before that event is done
+				if (this.menu.isOpen && !this._reconcileId)
+				{
+					this._reconcileId = GLib.idle_add(GLib.PRIORITY_DEFAULT, () =>
+					{
+						this._reconcileId = 0;
+						this._reconcile();
+						return GLib.SOURCE_REMOVE;
+					});
+				}
 			},
 			'unread-changed', () => this._syncUnread(),
+			'starred-changed', () => this._syncStarred(),
 			'meta-changed', () => this._syncMeta(),
 			this
 		);
@@ -103,6 +113,11 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 			{
 				GLib.source_remove(this._chunkBuildId);
 				this._chunkBuildId = 0;
+			}
+			if (this._reconcileId)
+			{
+				GLib.source_remove(this._reconcileId);
+				this._reconcileId = 0;
 			}
 			this._rowByItem = null;
 			this._showMoreRow = null;
@@ -141,7 +156,7 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		this._rowByItem = new Map();
 		this._showMoreRow = null;
 
-		this._items = [...this._source.items];
+		this._items = this._source.items.filter(i => !i.dismissed);
 		this._renderLimit = Math.min(this._displayLimit(), this._items.length);
 		this._renderRows(0);
 	}
@@ -184,7 +199,7 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		let end = Math.min(startIdx + 10, this._renderLimit);
 		for (let i = startIdx; i < end; i++)
 		{
-			let row = new ClassicArticleItem(this._items[i], this._source, this._store);
+			let row = new ClassicArticleItem(this._items[i], this._source, this._runner);
 			this.menu.addMenuItem(row);
 			this._rowByItem.set(this._items[i], row);
 		}
@@ -216,7 +231,7 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 
 		this._removeShowMore();
 
-		this._items = [...this._source.items];
+		this._items = this._source.items.filter(i => !i.dismissed);
 		this._renderLimit = Math.min(this._renderLimit || this._displayLimit(), this._items.length);
 
 		let desired = this._items.slice(0, this._renderLimit);
@@ -226,6 +241,9 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		{
 			if (!wanted.has(item))
 			{
+				// destroying the row that holds the key focus logs "already disposed" warnings
+				if (row.has_key_focus())
+					this.menu.actor.navigate_focus(row, St.DirectionType.TAB_FORWARD, true);
 				row.destroy();
 				this._rowByItem.delete(item);
 			}
@@ -236,7 +254,7 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 			let item = desired[i];
 			if (this._rowByItem.has(item))
 				continue;
-			let row = new ClassicArticleItem(item, this._source, this._store);
+			let row = new ClassicArticleItem(item, this._source, this._runner);
 			this._rowByItem.set(item, row);
 			this.menu.addMenuItem(row, i);
 		}
@@ -297,6 +315,15 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 
 		for (let [item, row] of this._rowByItem)
 			row.setOrnament(item.read ? PopupMenu.Ornament.NONE : PopupMenu.Ornament.DOT);
+	}
+
+	_syncStarred()
+	{
+		if (!this._rowByItem)
+			return;
+
+		for (let [item, row] of this._rowByItem)
+			row.setStarred(item.starred);
 	}
 
 	_syncMeta()

@@ -144,6 +144,10 @@
 	opacity: 0.6;
 }
 
+.rss-article-star {
+	opacity: 0.7;
+}
+
 .rss-minimal-section-label {
 	font-size: 10px;
 	font-weight: bold;
