@@ -47,7 +47,7 @@ export default class RssFeedPreferences extends ExtensionPreferences
 
 		const sourcesPage = buildSourcesPage(window, settings, aSettings, httpSession);
 
-		window.add(buildGeneralPage(window, settings));
+		window.add(buildGeneralPage(window, settings, this.metadata));
 		window.add(buildNotificationsPage(window, settings));
 		window.add(sourcesPage);
 

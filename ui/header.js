@@ -21,7 +21,6 @@
 
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
-import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
 import Pango from 'gi://Pango';
 import St from 'gi://St';
@@ -31,12 +30,10 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import { ConfirmBadge } from './confirmBadge.js';
 
-const REPO_URL = 'https://github.com/todevelopers/gnome-shell-extension-rss-feed';
-
 export const RssHeader = GObject.registerClass(
 class RssHeader extends PopupMenu.PopupBaseMenuItem
 {
-	_init(callbacks, path)
+	_init(callbacks)
 	{
 		super._init({ reactive : false, can_focus : false, style_class : 'rss-header' });
 
@@ -46,15 +43,13 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 		this._status = '';
 		this._flashId = 0;
 
-		let iconBox = new St.Button(
+		let iconBox = new St.Bin(
 		{
 			style_class : 'rss-header-icon',
 			x_align : Clutter.ActorAlign.CENTER,
 			y_align : Clutter.ActorAlign.CENTER,
-			can_focus : false,
 			child : new St.Icon({ icon_name : 'application-rss+xml-symbolic', icon_size : 20 }),
 		});
-		iconBox.connect('clicked', () => callbacks.onOpenLink(REPO_URL));
 		this.add_child(iconBox);
 
 		let titleBox = new St.BoxLayout({ vertical : true, x_expand : true });
@@ -107,7 +102,7 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 		});
 		this.add_child(moreBtn);
 
-		this._menu = this._buildMenu(moreBtn, path, callbacks);
+		this._menu = this._buildMenu(moreBtn, callbacks);
 		this._menu.connect('open-state-changed', (_menu, open) =>
 		{
 			moreBtn.checked = open;
@@ -138,7 +133,7 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 		});
 	}
 
-	_buildMenu(button, path, callbacks)
+	_buildMenu(button, callbacks)
 	{
 		let menu = new PopupMenu.PopupMenu(button, 1, St.Side.TOP);
 		menu.addAction('Refresh', () => callbacks.onReload(), 'view-refresh-symbolic');
@@ -146,7 +141,6 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 		this._restoreItem = menu.addAction('Restore dismissed', () => callbacks.onRestoreDismissed(), 'edit-undo-symbolic');
 		this._restoreItem.visible = false;
 		menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-		menu.addAction('Website', () => callbacks.onOpenLink(REPO_URL), Gio.icon_new_for_string(path + '/icons/external-link-symbolic.svg'));
 		menu.addAction('Settings', () => callbacks.onOpenSettings(), 'applications-system-symbolic');
 
 		Main.uiGroup.add_child(menu.actor);

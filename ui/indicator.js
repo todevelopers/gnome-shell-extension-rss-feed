@@ -136,8 +136,7 @@ class RssIndicator extends PanelMenu.Button
 			onActivateConfirm : (b) => this._activateConfirm(b),
 			onOpenSettings : () => this._onSettingsBtnClicked(),
 			onOpenSources : () => this._onFailedPillClicked(),
-			onOpenLink : (url) => { this.menu.close(); Misc.processLinkOpen(url); },
-		}, extension.path);
+		});
 		this.menu.addMenuItem(this._header);
 
 		let maxHeight = settings.get_int(GSKeys.MAX_HEIGHT);

@@ -24,12 +24,13 @@ import Gtk from 'gi://Gtk';
 
 import * as GSKeys from '../gskeys.js';
 import { makeSpinRow, makeSwitchRow } from './prefsWidgets.js';
+import { RELEASE_NOTES, RELEASE_NOTES_VERSION } from './releaseNotes.js';
 
 const MAX_UPDATE_INTERVAL = 1440;
 const MAX_SOURCES_LIMIT = 1024;
 const MAX_HEIGHT = 8192;
 
-export function buildGeneralPage(window, settings)
+export function buildGeneralPage(window, settings, metadata)
 {
 	const generalPage = new Adw.PreferencesPage({ title : "General", icon_name : 'preferences-system-symbolic' });
 
@@ -167,6 +168,27 @@ export function buildGeneralPage(window, settings)
 	const updateIntervalRow = makeSpinRow(settings, GSKeys.UPDATE_INTERVAL, "Update interval (min)", 1, MAX_UPDATE_INTERVAL);
 	updateIntervalRow.subtitle = "How often all feeds are downloaded in the background.";
 	pollingGroup.add(updateIntervalRow);
+
+	const aboutGroup = new Adw.PreferencesGroup();
+	generalPage.add(aboutGroup);
+
+	const aboutRow = new Adw.ActionRow({ title : "About RSS Feed", activatable : true });
+	aboutRow.add_suffix(new Gtk.Image({ icon_name : 'go-next-symbolic' }));
+	aboutRow.connect('activated', () =>
+	{
+		const dialog = new Adw.AboutDialog({
+			application_name : metadata.name,
+			application_icon : 'application-rss+xml-symbolic',
+			version : metadata['version-name'],
+			website : metadata.url,
+			issue_url : metadata.url + '/issues',
+			license_type : Gtk.License.GPL_3_0,
+			release_notes_version : RELEASE_NOTES_VERSION,
+			release_notes : RELEASE_NOTES,
+		});
+		dialog.present(window);
+	});
+	aboutGroup.add(aboutRow);
 
 	const updateLayoutSensitivity = () =>
 	{
