@@ -33,6 +33,7 @@ import { ArticleActionRunner } from './articleActionRunner.js';
 import { ScrollSection } from './scrollSection.js';
 import { RssHeader } from './header.js';
 import { ClassicFeedGroup } from './classic/feedGroup.js';
+import { ClassicStarredGroup } from './classic/starredGroup.js';
 import { MinimalSection } from './minimal/section.js';
 
 export const RssIndicator = GObject.registerClass(
@@ -145,6 +146,9 @@ class RssIndicator extends PanelMenu.Button
 		this.menu.addMenuItem(this._feedsSection);
 		this.menu.addMenuItem(this._minimal.section);
 
+		this._starredGroup = new ClassicStarredGroup(store, this._runner, settings);
+		this._setupGroup(this._starredGroup);
+
 		this._applyLayout();
 
 		settings.connectObject(
@@ -159,6 +163,7 @@ class RssIndicator extends PanelMenu.Button
 			'changed::' + GSKeys.ITEMS_VISIBLE, () =>
 			{
 				this._minimal.markDirty();
+				this._starredGroup.refreshVisibleLimit();
 				for (let group of this._groups.values())
 					group.refreshVisibleLimit();
 			},
@@ -172,7 +177,10 @@ class RssIndicator extends PanelMenu.Button
 			{
 				this._updateUnreadCountLabel(this._store.totalUnread);
 				this._updateFailedCount();
+				// the sources of removed feeds are not watched one by one, a read article of theirs shows only in the total
+				this._minimal.markDirty();
 			},
+			'starred-changed', () => this._minimal.markDirty(),
 			'reordered', () => this._reorderClassicSection(),
 			this
 		);
@@ -192,12 +200,10 @@ class RssIndicator extends PanelMenu.Button
 		this._minimal.setActive(this._minimalLayout);
 	}
 
-	_addGroup(source)
+	_setupGroup(group)
 	{
-		let group = new ClassicFeedGroup(source, this._runner, this._settings);
 		group.onActivateConfirm = (b) => this._activateConfirm(b);
 		this._feedsSection.addMenuItem(group);
-		this._groups.set(source.url, group);
 
 		group.menu.connectObject('open-state-changed', (self, open) =>
 		{
@@ -216,6 +222,13 @@ class RssIndicator extends PanelMenu.Button
 			else if (this.menu.isOpen && this._lastOpen === self)
 				this._lastOpen = undefined;
 		}, this);
+	}
+
+	_addGroup(source)
+	{
+		let group = new ClassicFeedGroup(source, this._runner, this._settings);
+		this._setupGroup(group);
+		this._groups.set(source.url, group);
 
 		source.connectObject(
 			'items-changed', () => this._minimal.markDirty(),
@@ -282,10 +295,10 @@ class RssIndicator extends PanelMenu.Button
 
 	_reorderClassicSection()
 	{
+		let groups = this._store.getSources().map(source => this._groups.get(source.url));
 		let pos = 0;
-		for (let source of this._store.getSources())
+		for (let group of [this._starredGroup, ...groups])
 		{
-			let group = this._groups.get(source.url);
 			if (!group)
 				continue;
 			this._feedsSection.box.set_child_at_index(group, pos);

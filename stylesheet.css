@@ -151,7 +151,8 @@
 	padding-bottom: 8px;
 }
 
-.rss-menu .rss-minimal-article-row {
+.rss-menu .rss-minimal-article-row,
+.rss-menu .rss-starred-article-row {
 	padding-top: 6px;
 	padding-bottom: 6px;
 }
@@ -183,6 +184,12 @@
 	font-weight: bold;
 	letter-spacing: 0.07em;
 	opacity: 0.65;
+}
+
+.rss-group-count {
+	font-size: 11px;
+	opacity: 0.6;
+	padding: 0 6px;
 }
 
 .rss-minimal-section-header {

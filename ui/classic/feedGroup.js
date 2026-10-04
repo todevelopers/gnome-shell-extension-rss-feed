@@ -39,13 +39,8 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 {
 	_init(source, runner, settings)
 	{
-		let title = Encoder.htmlDecode(source.title);
-		if (title.length > 128)
-			title = title.substr(0, 128) + "...";
+		super._init('');
 
-		super._init(title);
-
-		this._source = source;
 		this._runner = runner;
 		this._settings = settings;
 		this._dirty = true;
@@ -55,7 +50,7 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		this._showMoreRow = null;
 		this._items = [];
 		this._renderLimit = 0;
-		this._olabeltext = title;
+		this._olabeltext = '';
 		this.onActivateConfirm = null;
 
 		this._avatar = new St.Bin(
@@ -64,14 +59,9 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 			y_align: Clutter.ActorAlign.CENTER,
 			x_align: Clutter.ActorAlign.CENTER,
 		});
-		let avatarLabel = new St.Label({ text: source.customAvatar || feedInitials(title) });
-		avatarLabel.x_align = Clutter.ActorAlign.CENTER;
-		avatarLabel.y_align = Clutter.ActorAlign.CENTER;
-		this._avatar.child = avatarLabel;
 		this.insert_child_at_index(this._avatar, 0);
 
 		this._countBadge = new ConfirmBadge('rss-feed-count');
-		this._countBadge.onConfirm = () => this._source.markAllSeen();
 		this._countBadge.onEnterConfirm = (b) =>
 		{
 			if (this.onActivateConfirm)
@@ -84,28 +74,7 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		this.menu.connectObject('open-state-changed',
 			this._subMenuOpenStateChanged.bind(this), this);
 
-		source.connectObject(
-			'items-changed', () =>
-			{
-				this._dirty = true;
-				// a row can be dismissed from its own click, it must not be destroyed before that event is done
-				if (this.menu.isOpen && !this._reconcileId)
-				{
-					this._reconcileId = GLib.idle_add(GLib.PRIORITY_DEFAULT, () =>
-					{
-						this._reconcileId = 0;
-						this._reconcile();
-						return GLib.SOURCE_REMOVE;
-					});
-				}
-			},
-			'unread-changed', () => this._syncUnread(),
-			'starred-changed', () => this._syncStarred(),
-			'meta-changed', () => this._syncMeta(),
-			this
-		);
-
-		this.setUnreadCount(source.unreadCount);
+		this._attach(source);
 
 		this.connect('destroy', () =>
 		{
@@ -125,12 +94,60 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		});
 	}
 
+	// everything that depends on where the articles come from, the Starred group takes them from the store
+	_attach(source)
+	{
+		this._source = source;
+
+		let avatarLabel = new St.Label();
+		avatarLabel.x_align = Clutter.ActorAlign.CENTER;
+		avatarLabel.y_align = Clutter.ActorAlign.CENTER;
+		this._avatar.child = avatarLabel;
+
+		this._countBadge.onConfirm = () => this._source.markAllSeen();
+
+		source.connectObject(
+			'items-changed', () => this._queueReconcile(),
+			'unread-changed', () => this._syncUnread(),
+			'starred-changed', () => this._syncStarred(),
+			'meta-changed', () => this._syncMeta(),
+			this
+		);
+
+		this._syncMeta();
+		this.setUnreadCount(source.unreadCount);
+	}
+
+	_listItems()
+	{
+		return this._source.items.filter(i => !i.dismissed);
+	}
+
+	_createRow(item)
+	{
+		return new ClassicArticleItem(item, this._source, this._runner);
+	}
+
+	_unreadCount()
+	{
+		return this._source.unreadCount;
+	}
+
 	activate(event)
 	{
 		if (this._dirty && !this.menu.isOpen)
 			this._startChunkedBuild();
 
 		super.activate(event);
+	}
+
+	_subMenuOpenStateChanged(menu, open)
+	{
+		super._subMenuOpenStateChanged(menu, open);
+
+		// the popup opens the last group again by itself, past activate() and its rebuild
+		if (open && this._dirty && !this._chunkBuildId)
+			this._startChunkedBuild();
 	}
 
 	vfunc_key_press_event(event)
@@ -156,7 +173,7 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		this._rowByItem = new Map();
 		this._showMoreRow = null;
 
-		this._items = this._source.items.filter(i => !i.dismissed);
+		this._items = this._listItems();
 		this._renderLimit = Math.min(this._displayLimit(), this._items.length);
 		this._renderRows(0);
 	}
@@ -199,7 +216,7 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		let end = Math.min(startIdx + 10, this._renderLimit);
 		for (let i = startIdx; i < end; i++)
 		{
-			let row = new ClassicArticleItem(this._items[i], this._source, this._runner);
+			let row = this._createRow(this._items[i]);
 			this.menu.addMenuItem(row);
 			this._rowByItem.set(this._items[i], row);
 		}
@@ -218,6 +235,21 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 		this._rowByItem.get(this._items[from])?.grab_key_focus();
 	}
 
+	_queueReconcile()
+	{
+		this._dirty = true;
+		// a row can be dismissed from its own click, it must not be destroyed before that event is done
+		if (this.menu.isOpen && !this._reconcileId)
+		{
+			this._reconcileId = GLib.idle_add(GLib.PRIORITY_DEFAULT, () =>
+			{
+				this._reconcileId = 0;
+				this._reconcile();
+				return GLib.SOURCE_REMOVE;
+			});
+		}
+	}
+
 	_reconcile()
 	{
 		if (!this._rowByItem)
@@ -231,7 +263,7 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 
 		this._removeShowMore();
 
-		this._items = this._source.items.filter(i => !i.dismissed);
+		this._items = this._listItems();
 		this._renderLimit = Math.min(this._renderLimit || this._displayLimit(), this._items.length);
 
 		let desired = this._items.slice(0, this._renderLimit);
@@ -255,7 +287,7 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 			let item = desired[i];
 			if (this._rowByItem.has(item))
 				continue;
-			let row = new ClassicArticleItem(item, this._source, this._runner);
+			let row = this._createRow(item);
 			this._rowByItem.set(item, row);
 			this.menu.addMenuItem(row, i);
 		}
@@ -309,7 +341,7 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 
 	_syncUnread()
 	{
-		this.setUnreadCount(this._source.unreadCount);
+		this.setUnreadCount(this._unreadCount());
 
 		if (!this._rowByItem)
 			return;

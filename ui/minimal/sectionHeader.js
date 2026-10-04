@@ -43,6 +43,14 @@ class MinimalSectionHeader extends PopupMenu.PopupBaseMenuItem
 		});
 		this.add_child(this._label);
 
+		this._count = new St.Label(
+		{
+			y_align: Clutter.ActorAlign.CENTER,
+			style_class: 'rss-group-count',
+			visible: false,
+		});
+		this.add_child(this._count);
+
 		this._icon = new St.Icon(
 		{
 			icon_name: this._collapsed ? 'pan-end-symbolic' : 'pan-down-symbolic',
@@ -88,6 +96,12 @@ class MinimalSectionHeader extends PopupMenu.PopupBaseMenuItem
 		}
 
 		return super.vfunc_key_press_event(event);
+	}
+
+	setCount(count)
+	{
+		this._count.set_text(count.toString());
+		this._count.show();
 	}
 
 	addItem(item)

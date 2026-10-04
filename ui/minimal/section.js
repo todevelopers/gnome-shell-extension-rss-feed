@@ -24,6 +24,7 @@ import St from 'gi://St';
 
 import * as GSKeys from '../../gskeys.js';
 import { getInstance } from '../../encoder.js';
+import { newestEntries, sectionOf } from '../../data/articleSections.js';
 import { ScrollSection } from '../scrollSection.js';
 import { MinimalSectionHeader } from './sectionHeader.js';
 import { MinimalArticleItem } from './articleItem.js';
@@ -44,6 +45,7 @@ export class MinimalSection
 		this._plan = null;
 		// extra is the number of rows that Show more added on top of the visible limit
 		this._state = {
+			starred: { extra: 0, total: 0, shown: 0, header: null, showMore: null, rows: new Map() },
 			unread: { extra: 0, total: 0, shown: 0, header: null, showMore: null, rows: new Map() },
 			read: { extra: 0, total: 0, shown: 0, header: null, showMore: null, rows: new Map() },
 		};
@@ -74,6 +76,7 @@ export class MinimalSection
 		else if (this._expanded)
 		{
 			this._expanded = false;
+			this._state.starred.extra = 0;
 			this._state.unread.extra = 0;
 			this._state.read.extra = 0;
 			this.markDirty();
@@ -109,46 +112,16 @@ export class MinimalSection
 		this._reconcile();
 	}
 
-	// every stored article is visited, but only the newest ones up to the limit are kept and sorted
-	_newestItems(read, limit)
+	_sectionEntries(section, limit)
 	{
-		let entries = [];
-		let total = 0;
-		let floor = -Infinity;
-		let seq = 0;
-		// scan order breaks ties, so a longer list always starts with the shorter one
-		let newestFirst = (a, b) => b.ts - a.ts || a.seq - b.seq;
-
-		for (let source of this._store.getSources())
+		// the starred articles of a removed feed live in a source that getSources() does not list
+		if (section === 'starred')
 		{
-			let feedTitle = Encoder.htmlDecode(source.title);
-			for (let item of source.items)
-			{
-				if (item.dismissed || item.read !== read)
-					continue;
-
-				total++;
-
-				let ts = item.timestamp;
-				if (ts <= floor)
-					continue;
-
-				entries.push({ item, source, feedTitle, ts, seq: seq++ });
-
-				if (limit > 0 && entries.length >= limit * 2)
-				{
-					entries.sort(newestFirst);
-					entries.length = limit;
-					floor = entries[limit - 1].ts;
-				}
-			}
+			let entries = this._store.starredEntries();
+			return { entries: limit > 0 ? entries.slice(0, limit) : entries, total: entries.length };
 		}
 
-		entries.sort(newestFirst);
-		if (limit > 0 && entries.length > limit)
-			entries.length = limit;
-
-		return { entries, total };
+		return newestEntries(this._store.getSources(), item => sectionOf(item) === section, limit);
 	}
 
 	// rows of articles that stay in their section are kept, only the difference is destroyed and created
@@ -160,10 +133,10 @@ export class MinimalSection
 		let plan = [];
 		let gone = [];
 
-		for (let section of ['unread', 'read'])
+		for (let section of ['starred', 'unread', 'read'])
 		{
 			let state = this._state[section];
-			let list = this._newestItems(section === 'read', cap > 0 ? cap + state.extra : 0);
+			let list = this._sectionEntries(section, cap > 0 ? cap + state.extra : 0);
 			let sources = new Map(list.entries.map(entry => [entry.item, entry.source]));
 
 			for (let [item, row] of state.rows)
@@ -273,15 +246,19 @@ export class MinimalSection
 					fresh = true;
 				}
 				row = state.header;
+				// READ grows up to the retention limit, its count says nothing
+				if (step.section !== 'read')
+					row.setCount(state.total);
 			}
 			else if (step.type === 'item')
 			{
+				let feedTitle = Encoder.htmlDecode(step.entry.source.title);
 				row = state.rows.get(step.entry.item);
 				if (row)
-					row.refresh(step.entry.feedTitle);
+					row.refresh(feedTitle);
 				else
 				{
-					row = new MinimalArticleItem(step.entry.item, step.entry.source, this._runner, step.entry.feedTitle);
+					row = new MinimalArticleItem(step.entry.item, step.entry.source, this._runner, feedTitle);
 					state.rows.set(step.entry.item, row);
 					state.header.addItem(row);
 					fresh = true;
