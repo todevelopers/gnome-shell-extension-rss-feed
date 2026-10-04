@@ -71,6 +71,10 @@ class MinimalSectionHeader extends PopupMenu.PopupBaseMenuItem
 		});
 		this.add_child(this._icon);
 
+		// St ignores opacity in the stylesheet; the row itself stays opaque to keep its hover and focus highlight
+		for (let child of [this._label, line, this._count, this._icon])
+			child.opacity = 166;
+
 		this.connect('destroy', () =>
 		{
 			this._destroyed = true;
