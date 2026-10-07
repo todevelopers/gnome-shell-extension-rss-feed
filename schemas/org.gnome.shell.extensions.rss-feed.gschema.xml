@@ -86,6 +86,11 @@
 		    <summary>Second hover button</summary>
 		    <description>Action of the second button shown when hovering over an article. One of: 'none', 'read', 'star', 'dismiss', 'older', 'copy', 'open'.</description>
 		</key>
+		<key type="s" name="hover-action-3">
+		    <default>'none'</default>
+		    <summary>Third hover button</summary>
+		    <description>Action of the third button shown when hovering over an article. One of: 'none', 'read', 'star', 'dismiss', 'older', 'copy', 'open'.</description>
+		</key>
 		<key type="s" name="click-action-left">
 		    <default>'openread'</default>
 		    <summary>Left click action</summary>

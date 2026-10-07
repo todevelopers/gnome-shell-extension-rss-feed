@@ -15,6 +15,7 @@ export const PREFS_OPEN_SOURCES = 'prefs-open-sources';
 export const SHOW_FAILED_FEEDS = 'show-failed-feeds';
 export const HOVER_ACTION_1 = 'hover-action-1';
 export const HOVER_ACTION_2 = 'hover-action-2';
+export const HOVER_ACTION_3 = 'hover-action-3';
 export const CLICK_ACTION_LEFT = 'click-action-left';
 export const CLICK_ACTION_MIDDLE = 'click-action-middle';
 export const CLICK_ACTION_RIGHT = 'click-action-right';

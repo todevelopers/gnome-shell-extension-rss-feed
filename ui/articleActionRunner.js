@@ -48,6 +48,7 @@ class ArticleActionRunner extends GObject.Object
 		settings.connectObject(
 			'changed::' + GSKeys.HOVER_ACTION_1, () => this.emit('changed'),
 			'changed::' + GSKeys.HOVER_ACTION_2, () => this.emit('changed'),
+			'changed::' + GSKeys.HOVER_ACTION_3, () => this.emit('changed'),
 			'changed::' + GSKeys.CLICK_ACTION_LEFT, () => this.emit('changed'),
 			'changed::' + GSKeys.CLICK_ACTION_MIDDLE, () => this.emit('changed'),
 			'changed::' + GSKeys.CLICK_ACTION_RIGHT, () => this.emit('changed'),

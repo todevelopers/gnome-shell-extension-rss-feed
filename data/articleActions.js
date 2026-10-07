@@ -47,9 +47,12 @@ export const HOVER_ACTIONS = ['none', 'read', 'star', 'dismiss', 'older', 'copy'
 export const LEFT_CLICK_ACTIONS = ['openread', 'open'];
 export const CLICK_ACTIONS = ['none', 'openread', 'open', 'read', 'star', 'dismiss', 'older', 'copy'];
 
+export const HOVER_KEYS = [GSKeys.HOVER_ACTION_1, GSKeys.HOVER_ACTION_2, GSKeys.HOVER_ACTION_3];
+
 export const DEFAULT_CONFIG = {
 	[GSKeys.HOVER_ACTION_1]: 'read',
 	[GSKeys.HOVER_ACTION_2]: 'star',
+	[GSKeys.HOVER_ACTION_3]: 'none',
 	[GSKeys.CLICK_ACTION_LEFT]: 'openread',
 	[GSKeys.CLICK_ACTION_MIDDLE]: 'open',
 	[GSKeys.CLICK_ACTION_RIGHT]: 'copy',
@@ -58,6 +61,7 @@ export const DEFAULT_CONFIG = {
 const ALLOWED_ACTIONS = {
 	[GSKeys.HOVER_ACTION_1]: HOVER_ACTIONS,
 	[GSKeys.HOVER_ACTION_2]: HOVER_ACTIONS,
+	[GSKeys.HOVER_ACTION_3]: HOVER_ACTIONS,
 	[GSKeys.CLICK_ACTION_LEFT]: LEFT_CLICK_ACTIONS,
 	[GSKeys.CLICK_ACTION_MIDDLE]: CLICK_ACTIONS,
 	[GSKeys.CLICK_ACTION_RIGHT]: CLICK_ACTIONS,
@@ -81,18 +85,18 @@ export function resolveConfig(config)
 
 export function hoverSlots(config)
 {
-	let slots = [config[GSKeys.HOVER_ACTION_1], config[GSKeys.HOVER_ACTION_2]].filter(id => id !== 'none');
+	let slots = HOVER_KEYS.map(key => config[key]).filter(id => id !== 'none');
 
 	return [...new Set(slots)];
 }
 
-// picking the action that the other slot already has swaps the two slots
+// picking the action that another slot already has swaps the two slots
 export function chooseSlotAction(config, slot, value)
 {
-	let other = slot === GSKeys.HOVER_ACTION_1 ? GSKeys.HOVER_ACTION_2 : GSKeys.HOVER_ACTION_1;
+	let other = HOVER_KEYS.find(key => key !== slot && config[key] === value);
 	let next = { ...config, [slot]: value };
 
-	if (value !== 'none' && config[other] === value)
+	if (value !== 'none' && other)
 		next[other] = config[slot];
 
 	return next;

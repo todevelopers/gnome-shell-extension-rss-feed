@@ -30,6 +30,7 @@ describe('action lists', () => {
 	it('allow every default in its own list', () => {
 		expect(HOVER_ACTIONS).toContain(DEFAULT_CONFIG[GSKeys.HOVER_ACTION_1]);
 		expect(HOVER_ACTIONS).toContain(DEFAULT_CONFIG[GSKeys.HOVER_ACTION_2]);
+		expect(HOVER_ACTIONS).toContain(DEFAULT_CONFIG[GSKeys.HOVER_ACTION_3]);
 		expect(LEFT_CLICK_ACTIONS).toContain(DEFAULT_CONFIG[GSKeys.CLICK_ACTION_LEFT]);
 		expect(CLICK_ACTIONS).toContain(DEFAULT_CONFIG[GSKeys.CLICK_ACTION_MIDDLE]);
 		expect(CLICK_ACTIONS).toContain(DEFAULT_CONFIG[GSKeys.CLICK_ACTION_RIGHT]);
@@ -61,6 +62,7 @@ describe('resolveConfig', () => {
 		const config = {
 			[GSKeys.HOVER_ACTION_1]: 'dismiss',
 			[GSKeys.HOVER_ACTION_2]: 'none',
+			[GSKeys.HOVER_ACTION_3]: 'copy',
 			[GSKeys.CLICK_ACTION_LEFT]: 'open',
 			[GSKeys.CLICK_ACTION_MIDDLE]: 'star',
 			[GSKeys.CLICK_ACTION_RIGHT]: 'none',
@@ -72,6 +74,7 @@ describe('resolveConfig', () => {
 		const resolved = resolveConfig({
 			[GSKeys.HOVER_ACTION_1]: 'openread',
 			[GSKeys.HOVER_ACTION_2]: 'nonsense',
+			[GSKeys.HOVER_ACTION_3]: 'openread',
 			[GSKeys.CLICK_ACTION_LEFT]: 'copy',
 			[GSKeys.CLICK_ACTION_MIDDLE]: '',
 			[GSKeys.CLICK_ACTION_RIGHT]: 'star',
@@ -87,6 +90,10 @@ describe('resolveConfig', () => {
 describe('hoverSlots', () => {
 	it('returns both slots in order', () => {
 		expect(hoverSlots(DEFAULT_CONFIG)).toEqual(['read', 'star']);
+	});
+
+	it('adds the third slot after the other two', () => {
+		expect(hoverSlots({ ...DEFAULT_CONFIG, [GSKeys.HOVER_ACTION_3]: 'dismiss' })).toEqual(['read', 'star', 'dismiss']);
 	});
 
 	it('leaves out a slot that is none', () => {
@@ -120,6 +127,14 @@ describe('chooseSlotAction', () => {
 		const next = chooseSlotAction(DEFAULT_CONFIG, GSKeys.HOVER_ACTION_2, 'read');
 		expect(next[GSKeys.HOVER_ACTION_1]).toBe('star');
 		expect(next[GSKeys.HOVER_ACTION_2]).toBe('read');
+	});
+
+	it('swaps with the third slot', () => {
+		const config = { ...DEFAULT_CONFIG, [GSKeys.HOVER_ACTION_3]: 'copy' };
+		const next = chooseSlotAction(config, GSKeys.HOVER_ACTION_1, 'copy');
+		expect(next[GSKeys.HOVER_ACTION_1]).toBe('copy');
+		expect(next[GSKeys.HOVER_ACTION_2]).toBe('star');
+		expect(next[GSKeys.HOVER_ACTION_3]).toBe('read');
 	});
 
 	it('moves a none into the other slot on a swap', () => {
@@ -157,6 +172,7 @@ describe('isDefaultConfig', () => {
 	it('is false when any key differs', () => {
 		expect(isDefaultConfig({ ...DEFAULT_CONFIG, [GSKeys.HOVER_ACTION_1]: 'none' })).toBe(false);
 		expect(isDefaultConfig({ ...DEFAULT_CONFIG, [GSKeys.HOVER_ACTION_2]: 'none' })).toBe(false);
+		expect(isDefaultConfig({ ...DEFAULT_CONFIG, [GSKeys.HOVER_ACTION_3]: 'copy' })).toBe(false);
 		expect(isDefaultConfig({ ...DEFAULT_CONFIG, [GSKeys.CLICK_ACTION_LEFT]: 'open' })).toBe(false);
 		expect(isDefaultConfig({ ...DEFAULT_CONFIG, [GSKeys.CLICK_ACTION_MIDDLE]: 'none' })).toBe(false);
 		expect(isDefaultConfig({ ...DEFAULT_CONFIG, [GSKeys.CLICK_ACTION_RIGHT]: 'star' })).toBe(false);

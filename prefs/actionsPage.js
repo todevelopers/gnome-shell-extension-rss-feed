@@ -24,11 +24,9 @@ import Gtk from 'gi://Gtk';
 
 import * as GSKeys from '../gskeys.js';
 import {
-	ACTIONS, CLICK_ACTIONS, DEFAULT_CONFIG, HOVER_ACTIONS, LEFT_CLICK_ACTIONS,
+	ACTIONS, CLICK_ACTIONS, DEFAULT_CONFIG, HOVER_ACTIONS, HOVER_KEYS, LEFT_CLICK_ACTIONS,
 	chooseSlotAction, isDefaultConfig, resolveConfig,
 } from '../data/articleActions.js';
-
-const HOVER_KEYS = [GSKeys.HOVER_ACTION_1, GSKeys.HOVER_ACTION_2];
 
 export function buildActionsPage(window, settings)
 {
@@ -74,6 +72,7 @@ export function buildActionsPage(window, settings)
 	actionsPage.add(hoverGroup);
 	addComboRow(hoverGroup, GSKeys.HOVER_ACTION_1, "First button", HOVER_ACTIONS);
 	addComboRow(hoverGroup, GSKeys.HOVER_ACTION_2, "Second button", HOVER_ACTIONS);
+	addComboRow(hoverGroup, GSKeys.HOVER_ACTION_3, "Third button", HOVER_ACTIONS);
 
 	const clickGroup = new Adw.PreferencesGroup({ title : "Mouse buttons", description : "What happens when you click an article." });
 	actionsPage.add(clickGroup);
