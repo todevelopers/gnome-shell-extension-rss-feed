@@ -99,16 +99,25 @@ class ArticleActionRunner extends GObject.Object
 	run(id, source, item)
 	{
 		if (id === 'read')
+		{
 			this._store.toggleRead(source, item);
+			this._flash(item.read ? 'Marked as read' : 'Marked as unread');
+		}
 		else if (id === 'star')
+		{
 			this._store.toggleStar(source, item);
+			this._flash(item.starred ? 'Article starred' : 'Article unstarred');
+		}
 		else if (id === 'dismiss')
 		{
 			this._store.dismiss(source, item);
 			this._flash('Article dismissed');
 		}
 		else if (id === 'older')
+		{
 			this._store.markOlderRead(source, item);
+			this._flash('Older articles marked as read');
+		}
 		else if (id === 'copy')
 		{
 			St.Clipboard.get_default().set_text(St.ClipboardType.CLIPBOARD, item.link);
