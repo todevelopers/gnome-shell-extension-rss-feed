@@ -24,6 +24,7 @@ import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/
 
 import * as GSKeys from './gskeys.js';
 import { GSAA } from './gsaa.js';
+import { buildActionsPage } from './prefs/actionsPage.js';
 import { buildGeneralPage } from './prefs/generalPage.js';
 import { buildNotificationsPage } from './prefs/notificationsPage.js';
 import { buildSourcesPage } from './prefs/sourcesPage.js';
@@ -48,8 +49,9 @@ export default class RssFeedPreferences extends ExtensionPreferences
 		const sourcesPage = buildSourcesPage(window, settings, aSettings, httpSession);
 
 		window.add(buildGeneralPage(window, settings, this.metadata));
-		window.add(buildNotificationsPage(window, settings));
 		window.add(sourcesPage);
+		window.add(buildActionsPage(window, settings));
+		window.add(buildNotificationsPage(window, settings));
 
 		// only a freshly built window can honour it, an already open one keeps the page the user is on
 		if (settings.get_boolean(GSKeys.PREFS_OPEN_SOURCES))
