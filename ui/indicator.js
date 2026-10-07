@@ -272,9 +272,9 @@ class RssIndicator extends PanelMenu.Button
 		this._header?.markProgress(done, total);
 	}
 
-	markUpdated()
+	markUpdated(date)
 	{
-		this._header?.markUpdated();
+		this._header?.markUpdated(date);
 	}
 
 	markIdle()

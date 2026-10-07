@@ -106,8 +106,12 @@ export default class RssFeedExtension extends Extension
 		this._indicator.onReload = () => this._poller.refresh();
 		this._poller.onStart = (total) => this._indicator?.markUpdating(total);
 		this._poller.onProgress = (done, total) => this._indicator?.markProgress(done, total);
-		this._poller.onComplete = () => this._indicator?.markUpdated();
+		this._poller.onComplete = () => this._indicator?.markUpdated(this._poller.lastUpdated);
 		this._poller.onIdle = () => this._indicator?.markIdle();
 		Main.panel.addToStatusArea('rssFeedMenu', this._indicator, 0, 'right');
+
+		// a header created after the last cycle would stay empty until the next one
+		if (this._poller.lastUpdated)
+			this._indicator.markUpdated(this._poller.lastUpdated);
 	}
 }

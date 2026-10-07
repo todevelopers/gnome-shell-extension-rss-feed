@@ -240,8 +240,8 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 		this._setStatus('');
 	}
 
-	markUpdated()
+	markUpdated(date)
 	{
-		this._setStatus('Updated at ' + new Date().toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' }));
+		this._setStatus('Updated at ' + date.toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' }));
 	}
 });

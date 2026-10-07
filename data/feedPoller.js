@@ -58,6 +58,7 @@ export class FeedPoller
 		this._forceRevalidate = false;
 		this._retries = new Set();
 		this._checksums = new WeakMap();
+		this.lastUpdated = null;
 		this.onStart = null;
 		this.onProgress = null;
 		this.onComplete = null;
@@ -326,6 +327,8 @@ export class FeedPoller
 
 		// the Shell does not disable extensions when the session ends, so an index written only in destroy() would be lost on logout
 		this._cache.dump();
+
+		this.lastUpdated = new Date();
 
 		if (this.onComplete)
 			this.onComplete();
