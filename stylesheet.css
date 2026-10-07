@@ -87,12 +87,6 @@
 	border-color: -st-accent-color;
 }
 
-.rss-icon-btn-small {
-	width: 16px;
-	height: 16px;
-	border-radius: 10px;
-}
-
 .rss-feed-avatar {
 	width: 32px;
 	height: 32px;
@@ -164,6 +158,19 @@
 
 .rss-article-actions {
 	spacing: 2px;
+}
+
+.rss-article-action {
+	width: 16px;
+	height: 16px;
+	border-radius: 10px;
+	padding: 0;
+	border: 2px solid transparent;
+}
+
+.rss-article-action:focus {
+	border-color: #5f6368;
+	border-color: -st-accent-color;
 }
 
 .rss-article-trailing {

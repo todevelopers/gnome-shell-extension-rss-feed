@@ -84,7 +84,7 @@ class ArticleActionRunner extends GObject.Object
 		return 'none';
 	}
 
-	// an action without a themed icon has its icon in the extension directory
+	// the action icons are files in the extension directory, named after the themed icons they replace
 	iconPath(name)
 	{
 		return this._path + '/icons/' + name + '.svg';

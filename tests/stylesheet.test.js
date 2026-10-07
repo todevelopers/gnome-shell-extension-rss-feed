@@ -35,7 +35,7 @@ function boxHeight(props) {
 const badge = readRule('.rss-unread-badge');
 const iconBtn = readRule('.rss-icon-btn');
 const feedCount = readRule('.rss-feed-count');
-const smallBtn = { ...iconBtn, ...readRule('.rss-icon-btn-small') };
+const actionBtn = readRule('.rss-article-action');
 
 describe('header button sizing', () => {
 	it('mark-all-read badge is the same width as the icon buttons', () => {
@@ -57,8 +57,8 @@ describe('header button sizing', () => {
 	});
 
 	it('article hover buttons are 20px circles', () => {
-		expect(boxWidth(smallBtn)).toBe(20);
-		expect(boxHeight(smallBtn)).toBe(20);
-		expect(parseFloat(smallBtn['border-radius'])).toBe(boxWidth(smallBtn) / 2);
+		expect(boxWidth(actionBtn)).toBe(20);
+		expect(boxHeight(actionBtn)).toBe(20);
+		expect(parseFloat(actionBtn['border-radius'])).toBe(boxWidth(actionBtn) / 2);
 	});
 });

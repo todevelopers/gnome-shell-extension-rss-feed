@@ -27,8 +27,11 @@ import St from 'gi://St';
 
 import { EXTERNAL_LINK_ICON, buttonIcon, buttonTitle } from '../data/articleActions.js';
 
-// themed icon used when the icon file of the extension is missing
+// the external link icon has no themed namesake to stand in for a missing file
 const LINK_FALLBACK_ICON = 'web-browser-symbolic';
+
+// St CSS has no opacity; a button stays pale until the pointer or the key focus is on it
+const PALE_OPACITY = 128;
 
 // The action buttons of an article row, shown while the row is hovered or focused; replaced lists the actors that give way to them.
 export const ArticleHoverButtons = GObject.registerClass(
@@ -148,11 +151,18 @@ class ArticleHoverButtons extends St.BoxLayout
 		{
 			let button = new St.Button(
 			{
-				style_class: 'rss-icon-btn rss-icon-btn-small',
+				style_class: 'rss-article-action',
 				can_focus: true,
+				opacity: PALE_OPACITY,
 				y_align: Clutter.ActorAlign.CENTER,
 				child: new St.Icon({ icon_size: 16 }),
 			});
+			let highlight = () =>
+			{
+				button.opacity = button.hover || button.has_key_focus() ? 255 : PALE_OPACITY;
+			};
+			button.connect('notify::hover', highlight);
+			button.connect('key-focus-in', highlight);
 			button.connect('clicked', () =>
 			{
 				this._runner.run(id, this._source, this._item);
@@ -160,26 +170,25 @@ class ArticleHoverButtons extends St.BoxLayout
 			});
 			// a click with another mouse button must not reach the row either
 			button.connect_after('button-release-event', () => Clutter.EVENT_STOP);
-			button.connect('key-focus-out', () => this.sync());
+			button.connect('key-focus-out', () =>
+			{
+				highlight();
+				this.sync();
+			});
 
 			this.add_child(button);
 			this._slots.push({ id, button, icon: '' });
 		}
 	}
 
+	// the themed icons differ in size and some are drawn half transparent, so the extension's own files come first
 	_setIcon(icon, name)
 	{
-		if (name !== EXTERNAL_LINK_ICON)
-		{
-			icon.icon_name = name;
-			return;
-		}
-
 		let path = this._runner.iconPath(name);
 		if (GLib.file_test(path, GLib.FileTest.EXISTS))
 			icon.gicon = Gio.icon_new_for_string(path);
 		else
-			icon.icon_name = LINK_FALLBACK_ICON;
+			icon.icon_name = name === EXTERNAL_LINK_ICON ? LINK_FALLBACK_ICON : name;
 	}
 
 	// Clutter tells the old owner of the focus first, the buttons must not hide before the new owner has it
