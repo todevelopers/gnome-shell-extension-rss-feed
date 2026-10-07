@@ -40,7 +40,7 @@ export const ACTIONS = {
 	dismiss: { label: 'Dismiss', icon: () => 'window-close-symbolic', title: () => 'Dismiss' },
 	older: { label: 'Mark older as read', icon: () => 'go-bottom-symbolic', title: () => 'Mark this and older as read' },
 	copy: { label: 'Copy link', icon: () => 'edit-copy-symbolic', title: () => 'Copy link' },
-	open: { label: 'Open without marking as read', icon: () => EXTERNAL_LINK_ICON, title: () => 'Open without marking as read' },
+	open: { label: 'Open only', icon: () => EXTERNAL_LINK_ICON, title: () => 'Open without marking as read' },
 };
 
 export const HOVER_ACTIONS = ['none', 'read', 'star', 'dismiss', 'older', 'copy', 'open'];
