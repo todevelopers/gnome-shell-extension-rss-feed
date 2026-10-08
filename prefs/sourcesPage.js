@@ -171,8 +171,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 		}
 
 		// some feeds reject libsoup's default User-Agent; identify the extension honestly
-		msg.get_request_headers().replace("User-Agent",
-		"gnome-shell-extension-rss-feed/1.0 (+https://github.com/todevelopers/gnome-shell-extension-rss-feed)");
+		msg.get_request_headers().replace("User-Agent", HTTP.USER_AGENT);
 
 		if (fCache[url])
 			fCache[url].cancel();
@@ -249,24 +248,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 		let data;
 		try
 		{
-			let rawBytes = bytes.toArray();
-			let encoding = 'utf-8';
-
-			let ctHeader = msg.get_response_headers().get_one('content-type');
-			if (ctHeader)
-			{
-				let m = ctHeader.match(/charset=([^\s;]+)/i);
-				if (m) encoding = m[1];
-			}
-
-			if (encoding === 'utf-8')
-			{
-				let prolog = new TextDecoder('latin1').decode(rawBytes.subarray(0, 200));
-				let m = prolog.match(/encoding=["']([^"']+)["']/i);
-				if (m) encoding = m[1];
-			}
-
-			data = new TextDecoder(encoding).decode(rawBytes);
+			data = HTTP.decodeBody(bytes.toArray(), msg.get_response_headers().get_one('content-type'));
 			parser = createRssParser(data, url);
 		}
 		catch (e)

@@ -27,8 +27,6 @@ import * as GSKeys from '../gskeys.js';
 import * as HTTP from '../http.js';
 import { createRssParser, describeParseFailure } from '../parsers/factory.js';
 
-const USER_AGENT = 'gnome-shell-extension-rss-feed/1.0 (+https://github.com/todevelopers/gnome-shell-extension-rss-feed)';
-
 // seconds before each retry, only for failures that can still turn into a success
 const RETRY_DELAYS = [5, 20];
 
@@ -212,7 +210,7 @@ export class FeedPoller
 			return;
 		}
 
-		message.get_request_headers().replace("User-Agent", USER_AGENT);
+		message.get_request_headers().replace("User-Agent", HTTP.USER_AGENT);
 
 		// a manual refresh must reach the server even when the cached copy is still fresh
 		if (this._forceRevalidate)
@@ -372,23 +370,6 @@ export class FeedPoller
 		if (checksum === knownChecksum)
 			return { notModified : true };
 
-		let rawBytes = bytes.toArray();
-		let encoding = 'utf-8';
-
-		let ctHeader = message.get_response_headers().get_one('content-type');
-		if (ctHeader)
-		{
-			let m = ctHeader.match(/charset=([^\s;]+)/i);
-			if (m) encoding = m[1];
-		}
-
-		if (encoding === 'utf-8')
-		{
-			let prolog = new TextDecoder('latin1').decode(rawBytes.subarray(0, 200));
-			let m = prolog.match(/encoding=["']([^"']+)["']/i);
-			if (m) encoding = m[1];
-		}
-
-		return { data : new TextDecoder(encoding).decode(rawBytes), checksum };
+		return { data : HTTP.decodeBody(bytes.toArray(), message.get_response_headers().get_one('content-type')), checksum };
 	}
 }
