@@ -30,6 +30,20 @@ jobs:
           fi
           echo "version-name \"$actual\" matches tag $tag"
 
+      - name: Verify release notes exist for tag
+        run: |
+          tag="${{ github.ref_name }}"
+          expected="${tag#v}"
+          if ! grep -q "^export const RELEASE_NOTES_VERSION = '$expected';" prefs/releaseNotes.js; then
+            echo "::error::prefs/releaseNotes.js does not have RELEASE_NOTES_VERSION '$expected'. Update the About dialog release notes before tagging."
+            exit 1
+          fi
+          if ! grep -q "^### $tag " CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no \"### $tag\" heading. Add the changelog entry before tagging."
+            exit 1
+          fi
+          echo "Release notes for $tag found"
+
       - name: Build extension zip
         env:
           UUID: rss-feed@gnome-shell-extension.todevelopers.github.com
