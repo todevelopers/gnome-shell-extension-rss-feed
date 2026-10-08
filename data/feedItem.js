@@ -54,7 +54,7 @@ export class FeedItem
 		this.read = true;
 		this.starred = false;
 		this.dismissed = false;
-		this.link = data.link;
+		this.link = Encoder.htmlDecode(data.link);
 		this.publishDate = data.publishDate || new Date().toISOString();
 		this.updateTime = data.updateTime || '';
 		this.desc = buildDesc(data.desc);
@@ -63,7 +63,7 @@ export class FeedItem
 
 	update(data)
 	{
-		this.link = data.link;
+		this.link = Encoder.htmlDecode(data.link);
 		this.publishDate = data.publishDate || this.publishDate;
 		this.updateTime = data.updateTime || '';
 		this.desc = buildDesc(data.desc);
@@ -89,7 +89,8 @@ export class FeedItem
 		item.read = !!data.read;
 		item.starred = !!data.starred;
 		item.dismissed = !!data.dismissed;
-		item.link = data.link;
+		// links stored by older versions still carry the entities of the feed
+		item.link = Encoder.htmlDecode(data.link);
 		item.title = data.title;
 		item.publishDate = data.publishDate;
 		item.updateTime = data.updateTime;

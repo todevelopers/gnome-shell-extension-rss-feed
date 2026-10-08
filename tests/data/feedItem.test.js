@@ -30,6 +30,11 @@ describe('FeedItem', () => {
 			expect(i.link).toBe('http://x/9');
 		});
 
+		it('decodes xml entities in the link', () => {
+			const i = new FeedItem(data({ link: 'https://x/id/4b65&#64;host?a=1&amp;b=2' }));
+			expect(i.link).toBe('https://x/id/4b65@host?a=1&b=2');
+		});
+
 		it('strips html tags from the title', () => {
 			expect(new FeedItem(data({ title: '<b>Bold</b> Title' })).title).toBe('Bold Title');
 		});
@@ -181,6 +186,11 @@ describe('FeedItem', () => {
 			const i = FeedItem.restore(persisted({ title: '5 < 6 and 7 > 3', desc: 'a &amp; b' }));
 			expect(i.title).toBe('5 < 6 and 7 > 3');
 			expect(i.desc).toBe('a &amp; b');
+		});
+
+		it('decodes xml entities in a link stored by an older version', () => {
+			const i = FeedItem.restore(persisted({ link: 'https://x/id/4b65&#64;host' }));
+			expect(i.link).toBe('https://x/id/4b65@host');
 		});
 
 		it('restores the read flag', () => {
