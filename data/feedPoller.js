@@ -30,6 +30,9 @@ import { createRssParser, describeParseFailure } from '../parsers/factory.js';
 // seconds before each retry, only for failures that can still turn into a success
 const RETRY_DELAYS = [5, 20];
 
+// a 4xx other than "too many requests" and "request timeout" answers the same way on every retry
+const isRetryableStatus = (status) => status >= 500 || status === 408 || status === 429;
+
 // Drives the polling: fetches each source over Soup, parses it and merges into the model. Never builds widgets.
 export class FeedPoller
 {
@@ -146,8 +149,10 @@ export class FeedPoller
 			return;
 		}
 
-		let itemsRetained = this._settings.get_int(GSKeys.ITEMS_RETAINED);
-		let markInitialAsNew = this._settings.get_boolean(GSKeys.MARK_INITIAL_AS_NEW);
+		let options = {
+			itemsRetained : this._settings.get_int(GSKeys.ITEMS_RETAINED),
+			markInitialAsNew : this._settings.get_boolean(GSKeys.MARK_INITIAL_AS_NEW),
+		};
 
 		let sources = this._store.getSources();
 		this._total = sources.length;
@@ -165,7 +170,7 @@ export class FeedPoller
 			this._goIdle();
 
 		for (let source of sources)
-			this._fetch(source, itemsRetained, markInitialAsNew);
+			this._fetch(source, options);
 
 		this._scheduleNext();
 	}
@@ -199,7 +204,7 @@ export class FeedPoller
 		}
 	}
 
-	_fetch(source, itemsRetained, markInitialAsNew, attempt = 0)
+	_fetch(source, options, attempt = 0)
 	{
 		let message = Soup.Message.new('GET', HTTP.buildRequestUrl(source.url));
 
@@ -219,7 +224,7 @@ export class FeedPoller
 		let cancellable = this._cancellable;
 
 		this._httpSession.send_and_read_async(message, GLib.PRIORITY_DEFAULT, cancellable,
-			(session, result) =>
+			(_session, result) =>
 			{
 				// an answer that arrives right after a refresh dropped its cycle would count towards the cycle that replaced it
 				if (cancellable.is_cancelled())
@@ -227,54 +232,7 @@ export class FeedPoller
 
 				try
 				{
-					let response = this._readResponse(session, result, message, source.url, this._checksums.get(source));
-
-					if (response.cancelled)
-						return;
-
-					if (response.notModified)
-					{
-						source.setError(null);
-						this._settle(attempt);
-						return;
-					}
-
-					if (response.error)
-					{
-						// the machine dropped offline mid-cycle: a retry cannot succeed and the feed is not at fault
-						if (!this._networkMonitor.network_available)
-						{
-							this._settle(attempt);
-							return;
-						}
-
-						if (response.retryable && attempt < RETRY_DELAYS.length)
-						{
-							this._scheduleRetry(source, itemsRetained, markInitialAsNew, attempt);
-							// keeping the cycle open until a retry answers is what left the header updating for minutes
-							this._settle(attempt);
-						}
-						else
-							this._fail(source, response.error, attempt);
-
-						return;
-					}
-
-					let parser = createRssParser(response.data, source.url);
-					if (!parser)
-					{
-						let reason = describeParseFailure(response.data);
-						console.warn("[rss-feed] " + source.url + ": " + reason);
-						this._fail(source, reason, attempt);
-						return;
-					}
-
-					parser.parse();
-					source.merge(parser, { itemsRetained, markInitialAsNew });
-					source.setError(null);
-					this._checksums.set(source, response.checksum);
-
-					this._settle(attempt);
+					this._handleResponse(source, this._readResponse(result, message, source), options, attempt);
 				}
 				catch (e)
 				{
@@ -285,12 +243,66 @@ export class FeedPoller
 			});
 	}
 
-	_scheduleRetry(source, itemsRetained, markInitialAsNew, attempt)
+	_handleResponse(source, response, options, attempt)
+	{
+		if (response.cancelled)
+			return;
+
+		if (response.notModified)
+		{
+			source.setError(null);
+			this._settle(attempt);
+			return;
+		}
+
+		if (response.error)
+		{
+			this._handleError(source, response, options, attempt);
+			return;
+		}
+
+		let parser = createRssParser(response.data, source.url);
+		if (!parser)
+		{
+			let reason = describeParseFailure(response.data);
+			console.warn("[rss-feed] " + source.url + ": " + reason);
+			this._fail(source, reason, attempt);
+			return;
+		}
+
+		parser.parse();
+		source.merge(parser, options);
+		source.setError(null);
+		this._checksums.set(source, response.checksum);
+
+		this._settle(attempt);
+	}
+
+	_handleError(source, response, options, attempt)
+	{
+		// the machine dropped offline mid-cycle: a retry cannot succeed and the feed is not at fault
+		if (!this._networkMonitor.network_available)
+		{
+			this._settle(attempt);
+			return;
+		}
+
+		if (response.retryable && attempt < RETRY_DELAYS.length)
+		{
+			this._scheduleRetry(source, options, attempt);
+			// keeping the cycle open until a retry answers is what left the header updating for minutes
+			this._settle(attempt);
+		}
+		else
+			this._fail(source, response.error, attempt);
+	}
+
+	_scheduleRetry(source, options, attempt)
 	{
 		let id = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, RETRY_DELAYS[attempt], () =>
 		{
 			this._retries.delete(id);
-			this._fetch(source, itemsRetained, markInitialAsNew, attempt + 1);
+			this._fetch(source, options, attempt + 1);
 			return GLib.SOURCE_REMOVE;
 		});
 
@@ -332,18 +344,18 @@ export class FeedPoller
 			this.onComplete();
 	}
 
-	_readResponse(session, result, message, sourceURL, knownChecksum)
+	_readResponse(result, message, source)
 	{
 		let bytes;
 		try
 		{
-			bytes = session.send_and_read_finish(result);
+			bytes = this._httpSession.send_and_read_finish(result);
 		}
 		catch (e)
 		{
 			if (e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
 				return { cancelled : true };
-			console.error("[rss-feed] HTTP GET " + sourceURL + ": " + e);
+			console.error("[rss-feed] HTTP GET " + source.url + ": " + e);
 			return { error : e.message || "Connection failed", retryable : true };
 		}
 
@@ -356,10 +368,8 @@ export class FeedPoller
 
 		if (!(status >= 200 && status < 300))
 		{
-			console.warn("[rss-feed] HTTP GET " + sourceURL + ": " + status + " " + message.get_reason_phrase());
-			// a 4xx other than "too many requests" and "request timeout" answers the same way on every retry
-			let retryable = status >= 500 || status === 408 || status === 429;
-			return { error : status + " " + message.get_reason_phrase(), retryable };
+			console.warn("[rss-feed] HTTP GET " + source.url + ": " + status + " " + message.get_reason_phrase());
+			return { error : status + " " + message.get_reason_phrase(), retryable : isRetryableStatus(status) };
 		}
 
 		if (!bytes)
@@ -367,7 +377,7 @@ export class FeedPoller
 
 		// most feeds come back with the body they had on the last poll, comparing it spares decoding and parsing it again
 		let checksum = GLib.compute_checksum_for_bytes(GLib.ChecksumType.SHA256, bytes);
-		if (checksum === knownChecksum)
+		if (checksum === this._checksums.get(source))
 			return { notModified : true };
 
 		return { data : HTTP.decodeBody(bytes.toArray(), message.get_response_headers().get_one('content-type')), checksum };
