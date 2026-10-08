@@ -279,6 +279,15 @@ class FeedSource extends GObject.Object
 		this.emit('starred-changed');
 	}
 
+	unstarAll()
+	{
+		let starred = this.items.filter(i => i.starred);
+		for (let item of starred)
+			this.setStarred(item, false);
+
+		return starred.length;
+	}
+
 	dismiss(item)
 	{
 		if (item.dismissed)

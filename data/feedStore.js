@@ -206,6 +206,20 @@ class FeedStore extends GObject.Object
 		return total;
 	}
 
+	starredCount()
+	{
+		return this.starredEntries().length;
+	}
+
+	unstarAll()
+	{
+		let total = 0;
+		for (let source of [...this._sources.values(), ...this._archived.values()])
+			total += source.unstarAll();
+
+		return total;
+	}
+
 	starredEntries()
 	{
 		return collectStarred([...this._sources.values(), ...this._archived.values()]);
