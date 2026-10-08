@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import { parseOpml, buildOpml } from '../opml.js';
+import { parseOpml, buildOpml, selectNewFeeds } from '../opml.js';
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const fixture = name => readFileSync(join(dir, 'fixtures', name), 'utf-8');
@@ -116,6 +116,38 @@ describe('parseOpml', () => {
 
 	it('returns an empty array when the root is not opml', () => {
 		expect(parseOpml('<html><body></body></html>')).toEqual([]);
+	});
+});
+
+describe('selectNewFeeds', () => {
+	const feed = url => ({ url, title: 't', folder: '' });
+
+	it('keeps every feed when none is known yet', () => {
+		let parsed = [feed('https://a.example/rss'), feed('https://b.example/rss')];
+		expect(selectNewFeeds(parsed, [])).toEqual({ feeds: parsed, duplicates: 0 });
+	});
+
+	it('drops the feeds that are already in the list and counts them', () => {
+		let parsed = [feed('https://a.example/rss'), feed('https://b.example/rss'), feed('https://c.example/rss')];
+		expect(selectNewFeeds(parsed, ['https://c.example/rss', 'https://a.example/rss'])).toEqual({
+			feeds: [feed('https://b.example/rss')],
+			duplicates: 2,
+		});
+	});
+
+	it('returns no feeds when all of them are known', () => {
+		let parsed = [feed('https://a.example/rss')];
+		expect(selectNewFeeds(parsed, ['https://a.example/rss', 'https://x.example/rss'])).toEqual({ feeds: [], duplicates: 1 });
+	});
+
+	it('preserves the order of the file', () => {
+		let parsed = [feed('https://c.example/rss'), feed('https://a.example/rss'), feed('https://b.example/rss')];
+		let urls = selectNewFeeds(parsed, ['https://a.example/rss']).feeds.map(f => f.url);
+		expect(urls).toEqual(['https://c.example/rss', 'https://b.example/rss']);
+	});
+
+	it('handles an empty file', () => {
+		expect(selectNewFeeds([], ['https://a.example/rss'])).toEqual({ feeds: [], duplicates: 0 });
 	});
 });
 

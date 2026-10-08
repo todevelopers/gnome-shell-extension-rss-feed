@@ -30,7 +30,7 @@ import Soup from 'gi://Soup';
 import * as GSKeys from '../gskeys.js';
 import * as HTTP from '../http.js';
 import { getInstance } from '../encoder.js';
-import { parseOpml, buildOpml } from '../opml.js';
+import { parseOpml, buildOpml, selectNewFeeds } from '../opml.js';
 import { createRssParser, describeParseFailure } from '../parsers/factory.js';
 import { makeSpinRow, makeSwitchRow, getInitials, urlToInitials } from './prefsWidgets.js';
 
@@ -42,6 +42,18 @@ const MAX_PARALLEL_CHECKS = 5;
 
 // a raw exception message would stretch the status pill across the whole row
 const shortStatus = (text) => text.length > 40 ? text.slice(0, 40) + "…" : text;
+
+const feedCount = (count) => count + (count === 1 ? " feed" : " feeds");
+
+const setStatus = (row, text, cssClass) =>
+{
+	row._statusLabel.set_label(text);
+	row._statusLabel.remove_css_class('status-ok');
+	row._statusLabel.remove_css_class('status-error');
+
+	if (cssClass)
+		row._statusLabel.add_css_class(cssClass);
+};
 
 export function buildSourcesPage(window, settings, aSettings, httpSession)
 {
@@ -150,9 +162,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 		if (pending.some(e => e.url === url))
 			return;
 
-		row._statusLabel.set_label("Checking…");
-		row._statusLabel.remove_css_class('status-ok');
-		row._statusLabel.remove_css_class('status-error');
+		setStatus(row, "Checking…");
 
 		pending.push({ row, url });
 		pumpQueue();
@@ -163,9 +173,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 		let msg = Soup.Message.new('GET', HTTP.buildRequestUrl(url));
 		if (!msg)
 		{
-			row._statusLabel.set_label("Invalid URL");
-			row._statusLabel.remove_css_class('status-ok');
-			row._statusLabel.add_css_class('status-error');
+			setStatus(row, "Invalid URL", 'status-error');
 			finishValidation();
 			return;
 		}
@@ -192,9 +200,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 				catch (e)
 				{
 					// without this the row keeps the "Checking…" label of a check that never reached a verdict
-					row._statusLabel.set_label(shortStatus(e.message || "Error"));
-					row._statusLabel.remove_css_class('status-ok');
-					row._statusLabel.add_css_class('status-error');
+					setStatus(row, shortStatus(e.message || "Error"), 'status-error');
 				}
 				finally
 				{
@@ -218,9 +224,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 				row._statusLabel.set_label("");
 				return;
 			}
-			row._statusLabel.set_label("Error");
-			row._statusLabel.remove_css_class('status-ok');
-			row._statusLabel.add_css_class('status-error');
+			setStatus(row, "Error", 'status-error');
 			return;
 		}
 
@@ -230,17 +234,13 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 		// a 304 carries no body to validate and does not mean the feed is broken
 		if (status === 304)
 		{
-			row._statusLabel.set_label("Not modified");
-			row._statusLabel.remove_css_class('status-error');
-			row._statusLabel.add_css_class('status-ok');
+			setStatus(row, "Not modified", 'status-ok');
 			return;
 		}
 
 		if (!(status >= 200 && status < 300))
 		{
-			row._statusLabel.set_label(status + " " + msg.get_reason_phrase());
-			row._statusLabel.remove_css_class('status-ok');
-			row._statusLabel.add_css_class('status-error');
+			setStatus(row, status + " " + msg.get_reason_phrase(), 'status-error');
 			return;
 		}
 
@@ -253,26 +253,25 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 		}
 		catch (e)
 		{
-			row._statusLabel.set_label(shortStatus(e.message || "Parse error"));
-			row._statusLabel.remove_css_class('status-ok');
-			row._statusLabel.add_css_class('status-error');
+			setStatus(row, shortStatus(e.message || "Parse error"), 'status-error');
 			return;
 		}
 
 		if (parser == null)
 		{
-			row._statusLabel.set_label(describeParseFailure(data));
-			row._statusLabel.remove_css_class('status-ok');
-			row._statusLabel.add_css_class('status-error');
+			setStatus(row, describeParseFailure(data), 'status-error');
 			return;
 		}
 		parser.parse();
-		row._statusLabel.set_label("OK (" + parser._type + ")");
-		row._statusLabel.remove_css_class('status-error');
-		row._statusLabel.add_css_class('status-ok');
+		setStatus(row, "OK (" + parser._type + ")", 'status-ok');
+		applyFeedTitle(row, url, parser.Publisher.Title);
+	};
+
+	const applyFeedTitle = (row, url, publisherTitle) =>
+	{
 		if (!aSettings.get(url, 't'))
 		{
-			let feedTitle = Encoder.htmlDecode(parser.Publisher.Title);
+			let feedTitle = Encoder.htmlDecode(publisherTitle);
 			row.set_title(feedTitle);
 			aSettings.set(url, 't', feedTitle);
 			if (row._titleEntry && !row._titleEntry.get_text().trim())
@@ -284,7 +283,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 			}
 		}
 		if (!aSettings.get(url, 'v'))
-			row._avatarLabel.set_label(getInitials(Encoder.htmlDecode(parser.Publisher.Title)));
+			row._avatarLabel.set_label(getInitials(Encoder.htmlDecode(publisherTitle)));
 	};
 
 	const rowMap = new Map();
@@ -612,6 +611,74 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 			validateUrl(row, url);
 	});
 
+	const importFeeds = (parsed) =>
+	{
+		let existing = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
+		let { feeds : newFeeds, duplicates } = selectNewFeeds(parsed, existing);
+
+		if (!newFeeds.length)
+		{
+			window.add_toast(new Adw.Toast({ title : "No new feeds found in file" }));
+			return;
+		}
+
+		for (let feed of newFeeds)
+		{
+			if (feed.title)
+				aSettings.set(feed.url, 't', feed.title);
+			if (feed.folder)
+				aSettings.set(feed.url, 'f', feed.folder);
+		}
+
+		let newUrls = newFeeds.map(feed => feed.url);
+		settings.set_strv(GSKeys.RSS_FEEDS_LIST, existing.concat(newUrls));
+
+		sourcesGroup.remove(addRow);
+		for (let url of newUrls)
+		{
+			let row = buildSourceRow(url);
+			rowMap.set(url, row);
+			sourcesGroup.add(row);
+		}
+		sourcesGroup.add(addRow);
+
+		let message = "Imported " + feedCount(newFeeds.length);
+		if (duplicates)
+			message += duplicates === 1 ? " (1 duplicate skipped)" : " (" + duplicates + " duplicates skipped)";
+		window.add_toast(new Adw.Toast({ title : message }));
+	};
+
+	const readOpmlFile = (file) =>
+	{
+		file.load_contents_async(null, (f, res) =>
+		{
+			let text;
+			try
+			{
+				let [, contents] = f.load_contents_finish(res);
+				text = new TextDecoder().decode(contents);
+			}
+			catch
+			{
+				window.add_toast(new Adw.Toast({ title : "Could not read file" }));
+				return;
+			}
+
+			let parsed;
+			try
+			{
+				parsed = parseOpml(text);
+			}
+			catch
+			{
+				window.add_toast(new Adw.Toast({ title : "Could not parse OPML file" }));
+				return;
+			}
+
+			importFeeds(parsed);
+		});
+	};
+
 	importButton.connect('clicked', () =>
 	{
 		const filters = new Gio.ListStore({ item_type : Gtk.FileFilter });
@@ -641,76 +708,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 				return;
 			}
 
-			file.load_contents_async(null, (f, res) =>
-			{
-				let text;
-				try
-				{
-					let [, contents] = f.load_contents_finish(res);
-					text = new TextDecoder().decode(contents);
-				}
-				catch
-				{
-					window.add_toast(new Adw.Toast({ title : "Could not read file" }));
-					return;
-				}
-
-				let parsed;
-				try
-				{
-					parsed = parseOpml(text);
-				}
-				catch
-				{
-					window.add_toast(new Adw.Toast({ title : "Could not parse OPML file" }));
-					return;
-				}
-
-				let existing = settings.get_strv(GSKeys.RSS_FEEDS_LIST);
-				let existingSet = new Set(existing);
-				let newFeeds = [];
-				let duplicates = 0;
-				for (let feed of parsed)
-				{
-					if (existingSet.has(feed.url))
-					{
-						duplicates++;
-						continue;
-					}
-					newFeeds.push(feed);
-				}
-
-				if (!newFeeds.length)
-				{
-					window.add_toast(new Adw.Toast({ title : "No new feeds found in file" }));
-					return;
-				}
-
-				for (let feed of newFeeds)
-				{
-					if (feed.title)
-						aSettings.set(feed.url, 't', feed.title);
-					if (feed.folder)
-						aSettings.set(feed.url, 'f', feed.folder);
-				}
-
-				let newUrls = newFeeds.map(feed => feed.url);
-				settings.set_strv(GSKeys.RSS_FEEDS_LIST, existing.concat(newUrls));
-
-				sourcesGroup.remove(addRow);
-				for (let url of newUrls)
-				{
-					let row = buildSourceRow(url);
-					rowMap.set(url, row);
-					sourcesGroup.add(row);
-				}
-				sourcesGroup.add(addRow);
-
-				let message = "Imported " + newFeeds.length + (newFeeds.length === 1 ? " feed" : " feeds");
-				if (duplicates)
-					message += duplicates === 1 ? " (1 duplicate skipped)" : " (" + duplicates + " duplicates skipped)";
-				window.add_toast(new Adw.Toast({ title : message }));
-			});
+			readOpmlFile(file);
 		});
 	});
 
@@ -755,7 +753,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 					window.add_toast(new Adw.Toast({ title : "Could not save file" }));
 					return;
 				}
-				window.add_toast(new Adw.Toast({ title : "Exported " + feeds.length + (feeds.length === 1 ? " feed" : " feeds") }));
+				window.add_toast(new Adw.Toast({ title : "Exported " + feedCount(feeds.length) }));
 			});
 		});
 	});
@@ -768,7 +766,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 
 		const dialog = new Adw.AlertDialog({
 			heading : "Remove all sources?",
-			body : "This removes " + feeds.length + (feeds.length === 1 ? " feed" : " feeds") +
+			body : "This removes " + feedCount(feeds.length) +
 				" and the articles stored for them. Export an OPML file first if you want to keep the list.",
 		});
 		dialog.add_response('cancel', "Cancel");
@@ -796,7 +794,7 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 			rowMap.clear();
 			updateStats();
 
-			window.add_toast(new Adw.Toast({ title : "Removed " + feeds.length + (feeds.length === 1 ? " feed" : " feeds") }));
+			window.add_toast(new Adw.Toast({ title : "Removed " + feedCount(feeds.length) }));
 		});
 
 		dialog.present(window);

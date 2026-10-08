@@ -87,6 +87,14 @@ export function parseOpml(text)
 	return feeds;
 }
 
+export function selectNewFeeds(parsed, existingUrls)
+{
+	let existing = new Set(existingUrls);
+	let feeds = parsed.filter(feed => !existing.has(feed.url));
+
+	return { feeds, duplicates : parsed.length - feeds.length };
+}
+
 function escapeAttribute(value)
 {
 	return value
