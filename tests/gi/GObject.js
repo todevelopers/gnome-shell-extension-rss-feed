@@ -20,7 +20,7 @@ class GObject {
 
 	emit(name, ...args) {
 		for (let handler of this._handlers.filter(h => h.name === name))
-			handler.callback(...args);
+			handler.callback(this, ...args);
 	}
 }
 

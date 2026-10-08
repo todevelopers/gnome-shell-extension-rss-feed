@@ -1,3 +1,35 @@
+import { files } from './GLib.js';
+
+// the async methods return promises right away, so _promisify has nothing to wrap
+class File {
+	constructor(path) {
+		this._path = path;
+	}
+
+	static new_for_path(path) {
+		return new File(path);
+	}
+
+	async load_contents_async() {
+		if (!files.has(this._path))
+			throw new Error('No such file: ' + this._path);
+
+		return [new TextEncoder().encode(files.get(this._path)), null];
+	}
+
+	async replace_contents_bytes_async(bytes) {
+		files.set(this._path, new TextDecoder().decode(bytes.toArray()));
+		return [true, null];
+	}
+
+	async delete_async() {
+		if (!files.delete(this._path))
+			throw new Error('No such file: ' + this._path);
+
+		return true;
+	}
+}
+
 class Cancellable {
 	constructor() {
 		this._cancelled = false;
@@ -43,6 +75,9 @@ export const cancelledError = { message: 'Operation was cancelled', matches: (_d
 
 export default {
 	Cancellable,
+	File,
+	FileCreateFlags: { REPLACE_DESTINATION: 2 },
 	IOErrorEnum,
+	_promisify() {},
 	NetworkMonitor: { get_default: () => networkMonitor },
 };

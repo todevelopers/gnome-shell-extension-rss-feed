@@ -202,7 +202,7 @@ describe('FeedSource merge', () => {
 		let source = makeSource();
 		source.merge(feed(parsedItem('a')), opts);
 		let events = [];
-		source.connectObject('items-added', data => events.push(data), {});
+		source.connectObject('items-added', (_source, data) => events.push(data), {});
 
 		source.merge(feed(parsedItem('b'), parsedItem('a')), opts);
 
