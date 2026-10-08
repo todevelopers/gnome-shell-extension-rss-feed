@@ -23,8 +23,11 @@ import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 import { countUnread } from '../../data/articleState.js';
+import { getInstance } from '../../encoder.js';
 import { ClassicFeedGroup } from './feedGroup.js';
-import { ClassicStarredItem } from './starredItem.js';
+import { TaggedArticleRow } from '../taggedArticleRow.js';
+
+const Encoder = getInstance();
 
 export const ClassicStarredGroup = GObject.registerClass(
 class ClassicStarredGroup extends ClassicFeedGroup
@@ -68,6 +71,12 @@ class ClassicStarredGroup extends ClassicFeedGroup
 			}
 		}
 
+		// the rows take the feed title from outside, they do not follow their source
+		for (let source of new Set(this._sources.values()))
+			source.disconnectObject(this);
+		for (let source of new Set(sources.values()))
+			source.connectObject('meta-changed', () => this._syncUnread(), this);
+
 		this._sources = sources;
 		this.visible = sources.size > 0;
 		this._syncUnread();
@@ -81,12 +90,24 @@ class ClassicStarredGroup extends ClassicFeedGroup
 
 	_createRow(item)
 	{
-		return new ClassicStarredItem(item, this._sources.get(item), this._runner);
+		let source = this._sources.get(item);
+		return new TaggedArticleRow(item, source, this._runner, Encoder.htmlDecode(source.title));
 	}
 
 	_unreadCount()
 	{
 		return countUnread([...this._sources.keys()]);
+	}
+
+	_syncUnread()
+	{
+		this.setUnreadCount(this._unreadCount());
+
+		if (!this._rowByItem)
+			return;
+
+		for (let row of this._rowByItem.values())
+			row.refresh(Encoder.htmlDecode(row.source.title));
 	}
 
 	_reconcile()

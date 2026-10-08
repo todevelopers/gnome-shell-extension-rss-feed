@@ -27,7 +27,7 @@ import { getInstance } from '../../encoder.js';
 import { newestEntries, sectionOf } from '../../data/articleSections.js';
 import { ScrollSection } from '../scrollSection.js';
 import { MinimalSectionHeader } from './sectionHeader.js';
-import { MinimalArticleItem } from './articleItem.js';
+import { TaggedArticleRow } from '../taggedArticleRow.js';
 import { ShowMoreRow } from '../showMoreRow.js';
 
 const Encoder = getInstance();
@@ -258,7 +258,7 @@ export class MinimalSection
 					row.refresh(feedTitle);
 				else
 				{
-					row = new MinimalArticleItem(step.entry.item, step.entry.source, this._runner, feedTitle);
+					row = new TaggedArticleRow(step.entry.item, step.entry.source, this._runner, feedTitle);
 					state.rows.set(step.entry.item, row);
 					state.header.addItem(row);
 					fresh = true;
