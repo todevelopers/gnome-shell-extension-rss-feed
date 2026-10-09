@@ -24,6 +24,15 @@ describe('createRssParser', () => {
 		expect(createRssParser(fixture('feedburner.xml'))).not.toBeNull();
 	});
 
+	it('reads an Atom feed that Feedburner serves', () => {
+		let parser = createRssParser('<feed xmlns="http://www.w3.org/2005/Atom" xmlns:feedburner="http://rssnamespace.org/feedburner/ext/1.0"><title>Chan</title><link href="https://x.com"/>'
+			+ '<entry><id>g1</id><title>Item</title><link href="https://x.com/1"/></entry></feed>');
+		parser.parse();
+		expect(parser.Publisher.Title).toBe('Chan');
+		expect(parser.Items).toHaveLength(1);
+		expect(parser.Items[0].HttpLink).toBe('https://x.com/1');
+	});
+
 	it('returns null for unrecognized XML', () => {
 		expect(createRssParser('<unknown/>')).toBeNull();
 	});

@@ -73,7 +73,11 @@ export class AtomParser extends BaseParser
 			}
 			else if (itemElements[i].tagName == 'link')
 			{
-				item.HttpLink = itemElements[i].attributes['href'] || '';
+				let rel = itemElements[i].attributes['rel'];
+
+				// the article is the alternate link, which is also what a missing rel means; comments and enclosures only stand in when the entry has no other link
+				if (!rel || rel == 'alternate' || !item.HttpLink)
+					item.HttpLink = itemElements[i].attributes['href'] || '';
 			}
 			else if (itemElements[i].tagName == 'description' || itemElements[i].tagName == 'summary')
 			{
@@ -101,6 +105,10 @@ export class AtomParser extends BaseParser
 				item.ID = itemElements[i].children.filter(c => typeof c === 'string').join('');
 			}
 		}
+
+		// published is optional in Atom, updated is the date every entry has
+		if (!item.PublishDate)
+			item.PublishDate = item.UpdateTime;
 
 		if (!this._postprocessItem(item))
 			return;

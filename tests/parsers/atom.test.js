@@ -79,3 +79,38 @@ describe('AtomParser', () => {
 		});
 	});
 });
+
+const entry = inner => {
+	const parser = createRssParser('<feed xmlns="http://www.w3.org/2005/Atom"><title>Chan</title><entry><id>g1</id><title>Item</title>' + inner + '</entry></feed>');
+	parser.parse();
+	return parser.Items[0];
+};
+
+describe('AtomParser entry links', () => {
+	it('takes the alternate link when comments and an enclosure follow it', () => {
+		const item = entry('<link rel="alternate" type="text/html" href="https://x.com/post"/>'
+			+ '<link rel="replies" type="text/html" href="https://x.com/post#comments"/>'
+			+ '<link rel="replies" type="application/atom+xml" href="https://x.com/post/feed/atom/"/>'
+			+ '<link rel="enclosure" href="https://x.com/a.mp3"/>');
+		expect(item.HttpLink).toBe('https://x.com/post');
+	});
+
+	it('takes the alternate link when it comes last', () => {
+		const item = entry('<link rel="replies" href="https://x.com/post#comments"/>'
+			+ '<link rel="self" href="https://x.com/feeds/1"/>'
+			+ '<link rel="alternate" href="https://x.com/post"/>');
+		expect(item.HttpLink).toBe('https://x.com/post');
+	});
+
+	it('falls back to another link when the entry has no alternate one', () => {
+		expect(entry('<link rel="enclosure" href="https://x.com/a.mp3"/>').HttpLink).toBe('https://x.com/a.mp3');
+	});
+});
+
+describe('AtomParser entry dates', () => {
+	it('takes updated as PublishDate when published is missing', () => {
+		const item = entry('<link href="https://x.com/post"/><updated>2024-03-01T10:00:00Z</updated>');
+		expect(item.PublishDate).toBe('2024-03-01T10:00:00Z');
+		expect(item.UpdateTime).toBe('2024-03-01T10:00:00Z');
+	});
+});

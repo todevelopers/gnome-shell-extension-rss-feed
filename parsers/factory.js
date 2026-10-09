@@ -50,9 +50,6 @@ export function createRssParser(rawXml, sourceURL)
 		if (!root)
 			return null;
 
-		if (root.attributes['xmlns:feedburner'] == 'http://rssnamespace.org/feedburner/ext/1.0')
-			return new FeedburnerParser(root);
-
 		let test;
 
 		test = 'rdf:RDF';
@@ -62,6 +59,10 @@ export function createRssParser(rawXml, sourceURL)
 		test = 'feed';
 		if (root.tagName.toLowerCase().slice(0, test.length) == test)
 			return new AtomParser(root);
+
+		// FeedBurner serves Atom with its namespace too, its parser reads only the RSS shape
+		if (root.attributes['xmlns:feedburner'] == 'http://rssnamespace.org/feedburner/ext/1.0')
+			return new FeedburnerParser(root);
 
 		test = 'rss';
 		if (root.tagName.toLowerCase().slice(0, test.length) == test)
