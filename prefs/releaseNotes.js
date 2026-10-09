@@ -1,23 +1,22 @@
-export const RELEASE_NOTES_VERSION = '9.0';
+export const RELEASE_NOTES_VERSION = '10.0';
 
 export const RELEASE_NOTES = `
-<p>Failed feed management, OPML import/export, and a new article storage backend</p>
+<p>Starred articles, configurable article actions, and a compact popup header</p>
 <ul>
-<li>OPML import and export from the Sources preferences page, with folders preserved on import</li>
-<li>Feeds that fail to update are now retried automatically and reported in the menu header as a "N failed" pill that opens the Sources page</li>
-<li>Menu header shows update progress ("Updating... 12/40") while feeds are being fetched, and "Idle" when no sources are configured</li>
-<li>New "Show failed feeds indicator" preference to hide the failed pill</li>
-<li>Sources page gained "Check all sources" and "Remove all sources" buttons, plus a counter showing how many sources are configured and how many of them failed</li>
-<li>Panel menu is fully keyboard operable, with the view scrolling to follow the focused item</li>
-<li>Added GNOME Shell 51 to the supported versions</li>
-<li>HTTP 429 responses no longer break the update with "429 is not a valid value for enumeration Status"</li>
-<li>A source that throws no longer stalls the whole update cycle, nor the validation queue in preferences</li>
-<li>Fixed double-escaped query strings in feed request URLs</li>
-<li>Changing the fetch interval now takes effect immediately instead of after the next poll</li>
-<li>Fixed "object has been already disposed" when expanding "Show more"</li>
-<li>The failed feeds pill no longer stays stale after the failing source is removed</li>
-<li>Fixed focus being lost after clicking "Show more"</li>
-<li>Fixed the mark as read button size and the unread marker in the minimal layout</li>
-<li>Feeds are validated in batches of five on the Sources page, so large lists no longer block the preferences window</li>
+<li>Starred articles, shown in a Starred group (Classic) or a STARRED section (Minimal); they are never removed by the retention limit and survive removing their feed</li>
+<li>Configurable article actions: up to three hover buttons per article and separate actions for the left, middle and right mouse button, set on the new Actions page</li>
+<li>New compact popup header with an overflow menu holding Refresh, Mark all as read, Restore dismissed, Unstar all and Settings</li>
+<li>Articles can be dismissed, and all dismissed articles can be brought back with "Restore dismissed"</li>
+<li>New "Mark this and older as read" action</li>
+<li>Article history: articles that dropped out of a feed stay stored until the per-feed limit is reached, the default limit is now 200</li>
+<li>Actions that leave the popup open confirm themselves with a short message in the header</li>
+<li>About dialog with the version, project links and what's new</li>
+<li>Articles without a title now use the beginning of their description</li>
+<li>Fixed article links containing XML entities</li>
+<li>Feeds with an unclosed br, img or hr tag in the description are no longer rejected</li>
+<li>Feeds with an upper case or quoted charset declaration are decoded correctly</li>
+<li>Removing a source no longer scrolls the Sources page back to the top or downloads all other feeds again</li>
+<li>The header status text no longer disappears after switching the display mode</li>
+<li>A feed whose content did not change since the last check is neither decoded nor parsed again</li>
 </ul>
 `;

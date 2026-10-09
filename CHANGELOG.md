@@ -1,5 +1,30 @@
 ## Changelog
 
+### v10.0 (unreleased beta)
+
+*Starred articles, configurable article actions, and a compact popup header*
+
+* main feature: Starred articles with a Starred group in the Classic layout and a STARRED section in the Minimal layout; starred articles are never removed by the retention limit and stay available when their feed is removed
+* main feature: Configurable article actions: up to three hover buttons per article and separate actions for the left, middle and right mouse button, set on the new Actions preferences page
+* main feature: New compact popup header (400 px wide) with an overflow menu holding Refresh, Mark all as read, Restore dismissed, Unstar all and Settings
+* feature: Articles can be dismissed, and all dismissed articles can be brought back with "Restore dismissed"
+* feature: "Mark this and older as read" action
+* feature: Article history: articles that dropped out of a feed stay stored until the per-feed limit is reached, the default limit is now 200
+* feature: Actions that leave the popup open confirm themselves with a short message in the header status line
+* feature: About dialog in preferences with the version, project links and what's new
+* bugfix: Articles without a title now use the beginning of their description
+* bugfix: Fixed article links containing XML entities ([#35](https://github.com/todevelopers/gnome-shell-extension-rss-feed/issues/35))
+* bugfix: Feeds with an unclosed `<br>`, `<img>` or `<hr>` tag in the description are no longer rejected
+* bugfix: Feeds with an upper case or quoted charset declaration are decoded correctly
+* bugfix: Removing a source no longer scrolls the Sources page back to the top
+* bugfix: The header status text no longer disappears after switching the display mode
+* performance: Removing a source no longer downloads all other feeds again
+* performance: A feed whose content did not change since the last check is neither decoded nor parsed again
+* internal: Added unit tests for the feed poller, sources, store and repository
+* internal: Feed validation and OPML import in preferences share one response decoding with the poller
+
+---
+
 ### v9.0 (29.08.2026)
 
 *Failed feed management, OPML import/export, and a new article storage backend*
