@@ -23,14 +23,20 @@ import { getInstance } from '../encoder.js';
 
 const Encoder = getInstance();
 
+// a tag starts right after its bracket, so "5 < 6 and 7 > 3" stays text; [^<>] also matches a tag broken over several lines
+const TAG = /<[a-zA-Z/!][^<>]*>/g;
+
+// the words on both sides of a line break or of the end of a block must not run together
+const BREAK = /<(?:br|\/(?:p|div|li|h[1-6]|tr|td|blockquote))\b[^<>]*>/gi;
+
 function stripTags(s)
 {
-	return Encoder.htmlDecode(s).replace(/<.*?>/g, "").trim();
+	return s.replace(BREAK, " ").replace(TAG, "");
 }
 
 function buildDesc(s)
 {
-	let desc = stripTags((s || "").replace("<![CDATA[", "").replace("]]>", ""));
+	let desc = stripTags(Encoder.htmlDecode((s || "").replace("<![CDATA[", "").replace("]]>", ""))).trim();
 	if (desc.length > 290)
 		desc = desc.substr(0, 290) + "...";
 	return desc;
@@ -38,7 +44,8 @@ function buildDesc(s)
 
 function buildTitle(title, desc)
 {
-	let result = stripTags(title);
+	// a title is text, brackets that arrive escaped belong to it (Vec<u8>), so markup is removed before the entities are decoded
+	let result = Encoder.htmlDecode(stripTags(title || "")).trim();
 	if (result)
 		return result;
 

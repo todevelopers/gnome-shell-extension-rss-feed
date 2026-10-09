@@ -38,15 +38,31 @@ export function buildRequestUrl(url)
 
 export function decodeBody(rawBytes, contentType)
 {
-	let match = contentType && contentType.match(/charset=([^\s;]+)/i);
+	let match = contentType && contentType.match(/charset=["']?([^\s;"']+)/i);
 	let encoding = match ? match[1] : 'utf-8';
 
-	if (encoding === 'utf-8')
+	if (/^utf-?8$/i.test(encoding))
 	{
-		match = new TextDecoder('latin1').decode(rawBytes.subarray(0, 200)).match(/encoding=["']([^"']+)["']/i);
-		if (match)
-			encoding = match[1];
+		// servers send a utf-8 header whatever the file holds, so it counts only while the bytes agree with it
+		try
+		{
+			return new TextDecoder('utf-8', { fatal : true }).decode(rawBytes);
+		}
+		catch
+		{
+			match = new TextDecoder('latin1').decode(rawBytes.subarray(0, 200)).match(/encoding=["']([^"']+)["']/i);
+			if (match)
+				encoding = match[1];
+		}
 	}
 
-	return new TextDecoder(encoding).decode(rawBytes);
+	// a label the decoder does not know is nearly always a typo on a feed that is utf-8 anyway
+	try
+	{
+		return new TextDecoder(encoding).decode(rawBytes);
+	}
+	catch
+	{
+		return new TextDecoder().decode(rawBytes);
+	}
 }

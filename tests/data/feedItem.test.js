@@ -47,6 +47,16 @@ describe('FeedItem', () => {
 			expect(new FeedItem(data({ title: '   spaced   ' })).title).toBe('spaced');
 		});
 
+		it('keeps escaped angle brackets of the title as text', () => {
+			expect(new FeedItem(data({ title: 'How to use the &lt;details&gt; element' })).title).toBe('How to use the <details> element');
+			expect(new FeedItem(data({ title: 'Arc&lt;Mutex&lt;T&gt;&gt; explained' })).title).toBe('Arc<Mutex<T>> explained');
+			expect(new FeedItem(data({ title: 'Use &amp;lt;br&amp;gt; for breaks' })).title).toBe('Use <br> for breaks');
+		});
+
+		it('shows escaped markup of the title as it is', () => {
+			expect(new FeedItem(data({ title: '&lt;b&gt;Breaking&lt;/b&gt; news' })).title).toBe('<b>Breaking</b> news');
+		});
+
 		it('falls back to the description when the title is empty', () => {
 			const i = new FeedItem(data({ title: '', desc: 'First line\n\nsecond   line' }));
 			expect(i.title).toBe('First line second line');
@@ -81,6 +91,23 @@ describe('FeedItem', () => {
 
 		it('strips tags and trims', () => {
 			expect(new FeedItem(data({ desc: '<p>hi <b>there</b></p>' })).desc).toBe('hi there');
+		});
+
+		it('strips escaped tags too', () => {
+			expect(new FeedItem(data({ desc: '&lt;p&gt;hi &lt;b&gt;there&lt;/b&gt;&lt;/p&gt;' })).desc).toBe('hi there');
+		});
+
+		it('strips a tag broken over several lines', () => {
+			expect(new FeedItem(data({ desc: '<a\nhref="http://x/1">link</a> text' })).desc).toBe('link text');
+		});
+
+		it('keeps a comparison written with angle brackets', () => {
+			expect(new FeedItem(data({ desc: 'if a &lt; b then c &gt; d' })).desc).toBe('if a < b then c > d');
+		});
+
+		it('keeps the words apart where a block or a line ends', () => {
+			expect(new FeedItem(data({ desc: '<p>First sentence.</p><p>Second sentence.</p>' })).desc).toBe('First sentence. Second sentence.');
+			expect(new FeedItem(data({ desc: 'Line one<br/>Line two' })).desc).toBe('Line one Line two');
 		});
 
 		it('returns empty string for empty or missing description', () => {

@@ -8,6 +8,7 @@ import { requests, sessions, caches, respond, fail, resetSoup } from '../gi/Soup
 const rss = (title, prolog = '') => prolog + '<rss version="2.0"><channel><title>' + title + '</title><link>https://x.com</link><description>d</description>' +
 	'<item><guid>g1</guid><title>Item</title><link>https://x.com/1</link><description>d</description></item></channel></rss>';
 
+// č, š and ž in a row are E8 B9 BE, which is valid utf-8 as well, so the samples keep ascii between them
 const LATIN2 = { 'č': 0xE8, 'š': 0xB9, 'ž': 0xBE };
 const latin2 = text => Uint8Array.from(text, c => LATIN2[c] ?? c.charCodeAt(0));
 
@@ -520,28 +521,22 @@ describe('FeedPoller', () => {
 		};
 
 		it('decodes utf-8 by default', () => {
-			expect(title({ body: rss('čšž') })).toBe('čšž');
+			expect(title({ body: rss('čas šum žaba') })).toBe('čas šum žaba');
 		});
 
 		it('takes the charset from the content-type header', () => {
-			expect(title({ body: latin2(rss('čšž')), contentType: 'application/rss+xml; charset=iso-8859-2' })).toBe('čšž');
+			expect(title({ body: latin2(rss('čas šum žaba')), contentType: 'application/rss+xml; charset=iso-8859-2' })).toBe('čas šum žaba');
 		});
 
 		it('takes the encoding from the xml prolog when the header names none', () => {
 			const prolog = '<?xml version="1.0" encoding="iso-8859-2"?>';
-			expect(title({ body: latin2(rss('čšž', prolog)), contentType: 'application/rss+xml' })).toBe('čšž');
+			expect(title({ body: latin2(rss('čas šum žaba', prolog)), contentType: 'application/rss+xml' })).toBe('čas šum žaba');
 			resetSoup();
-			expect(title({ body: latin2(rss('čšž', prolog)) })).toBe('čšž');
+			expect(title({ body: latin2(rss('čas šum žaba', prolog)) })).toBe('čas šum žaba');
 		});
 
-		it('reports an encoding it does not know', () => {
-			const { poller, sources } = setup();
-			poller.start();
-			respond(requests[0], { body: rss('Feed A'), contentType: 'text/xml; charset=no-such-charset' });
-
-			expect(sources[0].merge).not.toHaveBeenCalled();
-			expect(sources[0].setError.mock.calls).toEqual([['Unexpected error']]);
-			expect(poller.onComplete).toHaveBeenCalledTimes(1);
+		it('reads a feed whose header names an encoding it does not know', () => {
+			expect(title({ body: rss('čas šum žaba'), contentType: 'text/xml; charset=no-such-charset' })).toBe('čas šum žaba');
 		});
 	});
 });
