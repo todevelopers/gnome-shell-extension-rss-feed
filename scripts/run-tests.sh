@@ -3,8 +3,8 @@ set -euo pipefail
 
 UUID="rss-feed@gnome-shell-extension.todevelopers.github.com"
 INDICATOR="Main.panel.statusArea.rssFeedMenu"
-THEME="dark"
-RUN_TIMEOUT=180
+THEMES="dark light"
+RUN_TIMEOUT=240
 SESSION_PID=""
 
 fail() {
@@ -18,15 +18,16 @@ say() {
 }
 
 check() {
-    local id=$1 desc=$2 result=PASS msg
+    local id=$1 desc=$2 msg
     shift 2
-    msg=$("$@" 2>&1) || result=FAIL
+    LAST=PASS
+    msg=$("$@" 2>&1) || LAST=FAIL
     msg=$(echo "$msg" | tr '\t\n' '  ')
-    say "[$id] $desc ... $result"
-    if [ "$result" = FAIL ] && [ -n "$msg" ]; then
+    say "[$THEME $id] $desc ... $LAST"
+    if [ "$LAST" = FAIL ] && [ -n "$msg" ]; then
         say "        $msg"
     fi
-    printf '%s\t%s\t%s\t%s\n' "$id" "$result" "$desc" "$msg" >> "$OUT/results.tsv"
+    printf '%s\t%s\t%s\t%s\t%s\n' "$THEME" "$id" "$LAST" "$desc" "$msg" >> "$OUT/results.tsv"
 }
 
 find_extension() {
@@ -43,18 +44,20 @@ find_extension() {
 prepare_profile() {
     local ext
 
-    export HOME="$TMP/home"
+    export PROFILE="$TMP/$THEME"
+    export HOME="$PROFILE/home"
     export XDG_CONFIG_HOME="$HOME/.config"
     export XDG_DATA_HOME="$HOME/.local/share"
     export XDG_CACHE_HOME="$HOME/.cache"
     export XDG_STATE_HOME="$HOME/.local/state"
-    export XDG_RUNTIME_DIR="$TMP/runtime"
+    export XDG_RUNTIME_DIR="$PROFILE/runtime"
     # gvfsd would mount FUSE inside the runtime dir and block its removal
     export GVFS_DISABLE_FUSE=1
     unset DISPLAY WAYLAND_DISPLAY XAUTHORITY
 
     ext="$XDG_DATA_HOME/gnome-shell/extensions/$UUID"
-    mkdir -p "$XDG_CONFIG_HOME" "$XDG_CACHE_HOME" "$XDG_STATE_HOME" "$ext"
+    # Ubuntu's desktop icons log a JS error when ~/Desktop is missing
+    mkdir -p "$XDG_CONFIG_HOME" "$XDG_CACHE_HOME" "$XDG_STATE_HOME" "$HOME/Desktop" "$ext"
     mkdir -m 700 "$XDG_RUNTIME_DIR"
     cp -r "$EXT_DIR/." "$ext/"
     glib-compile-schemas "$ext/schemas"
@@ -72,6 +75,36 @@ seed_settings() {
         [ "$(gsettings get org.gnome.shell enabled-extensions)" = "['$UUID']" ]
 }
 
+# on the real system bus the shell registers with GDM, polkit and logind on behalf of the desktop session
+start_system_bus() {
+    local socket="$XDG_RUNTIME_DIR/system-bus"
+    local deadline=$((SECONDS + 5))
+    dbus-daemon --session --nofork --address="unix:path=$socket" >> "$OUT/full.log" 2>&1 &
+    BUS_PID=$!
+    while [ ! -S "$socket" ] && [ "$SECONDS" -lt "$deadline" ]; do
+        sleep 0.1
+    done
+    export DBUS_SYSTEM_BUS_ADDRESS="unix:path=$socket"
+}
+
+start_shell() {
+    # shellcheck disable=SC2086
+    gnome-shell $SHELL_ARGS >> "$OUT/full.log" 2>&1 &
+    SHELL_PID=$!
+}
+
+stop_shell() {
+    local deadline=$((SECONDS + 10))
+    [ -n "$SHELL_PID" ] || return 0
+    if kill "$SHELL_PID" 2> /dev/null; then
+        while kill -0 "$SHELL_PID" 2> /dev/null && [ "$SECONDS" -lt "$deadline" ]; do
+            sleep 0.2
+        done
+        kill -9 "$SHELL_PID" 2> /dev/null || true
+    fi
+    SHELL_PID=""
+}
+
 gvariant_string() {
     local s=${1//\\/\\\\}
     printf '"%s"' "${s//\"/\\\"}"
@@ -80,6 +113,15 @@ gvariant_string() {
 shell_eval() {
     timeout 15 gdbus call --session --dest org.gnome.Shell --object-path /org/gnome/Shell \
         --method org.gnome.Shell.Eval "$(gvariant_string "$1")"
+}
+
+eval_true() {
+    local answer
+    answer=$(shell_eval "$1" 2>&1) || true
+    if [ "$answer" != "(true, 'true')" ]; then
+        echo "$answer"
+        return 1
+    fi
 }
 
 wait_for() {
@@ -100,6 +142,10 @@ wait_for() {
     return 1
 }
 
+shell_ready() {
+    wait_for "1 + 1 === 2" 30 && wait_for "Main.layoutManager._startingUp === false" 30
+}
+
 extension_enabled() {
     if wait_for "Main.extensionManager.lookup('$UUID')?.state === 1" 20; then
         return 0
@@ -113,12 +159,37 @@ hide_overview() {
         wait_for "!Main.overview.visible && !Main.overview.animationInProgress" 10
 }
 
-open_popup() {
-    shell_eval "$INDICATOR.menu.open()" > /dev/null && wait_for "$INDICATOR.menu.isOpen" 5
+create_input_devices() {
+    local js='(() => {
+        const {Clutter} = imports.gi;
+        const backend = Clutter.get_default_backend ? Clutter.get_default_backend() : global.stage.context.get_backend();
+        const seat = backend.get_default_seat();
+        const pointer = seat.create_virtual_device(Clutter.InputDeviceType.POINTER_DEVICE);
+        const keyboard = seat.create_virtual_device(Clutter.InputDeviceType.KEYBOARD_DEVICE);
+        globalThis.e2e = {
+            click(actor, button = Clutter.BUTTON_PRIMARY) {
+                const [x, y] = actor.get_transformed_position();
+                const [w, h] = actor.get_transformed_size();
+                pointer.notify_absolute_motion(GLib.get_monotonic_time(), x + w / 2, y + h / 2);
+                pointer.notify_button(GLib.get_monotonic_time(), button, Clutter.ButtonState.PRESSED);
+                pointer.notify_button(GLib.get_monotonic_time(), button, Clutter.ButtonState.RELEASED);
+            },
+            key(keyval) {
+                keyboard.notify_keyval(GLib.get_monotonic_time(), keyval, Clutter.KeyState.PRESSED);
+                keyboard.notify_keyval(GLib.get_monotonic_time(), keyval, Clutter.KeyState.RELEASED);
+            },
+        };
+        return true;
+    })()'
+    eval_true "${js//$'\n'/ }"
 }
 
-close_popup() {
-    shell_eval "$INDICATOR.menu.close()" > /dev/null && wait_for "!$INDICATOR.menu.isOpen" 5
+click_indicator() {
+    eval_true "(e2e.click($INDICATOR), true)" && wait_for "$INDICATOR.menu.isOpen" 5
+}
+
+press_escape() {
+    eval_true "(e2e.key(imports.gi.Clutter.KEY_Escape), true)" && wait_for "!$INDICATOR.menu.isOpen" 5
 }
 
 screenshot() {
@@ -140,42 +211,9 @@ screenshot() {
     fi
 }
 
-stop_shell() {
-    local deadline=$((SECONDS + 10))
-    [ -n "$SHELL_PID" ] || return 0
-    kill "$SHELL_PID" 2> /dev/null || return 0
-    while kill -0 "$SHELL_PID" 2> /dev/null && [ "$SECONDS" -lt "$deadline" ]; do
-        sleep 0.2
-    done
-    kill -9 "$SHELL_PID" 2> /dev/null || true
-}
-
-session() {
-    SHELL_PID=""
-    trap stop_shell EXIT
-
-    check 00-01 "isolated GSettings profile accepts the test settings" seed_settings
-
-    # shellcheck disable=SC2086
-    gnome-shell $SHELL_ARGS >> "$OUT/full.log" 2>&1 &
-    SHELL_PID=$!
-
-    check 00-02 "headless gnome-shell answers Eval" wait_for "1 + 1 === 2" 60
-    check 00-03 "shell startup finished" wait_for "Main.layoutManager._startingUp === false" 60
-    check 00-04 "extension is enabled without error" extension_enabled
-    check 00-05 "panel indicator is on the panel" wait_for "$INDICATOR?.mapped === true" 10
-    check 00-06 "overview closes" hide_overview
-    check 00-07 "screenshot: top panel shows the RSS icon" screenshot 00-07_panel
-    check 00-08 "popup opens" open_popup
-    check 00-09 "screenshot: popup shows the header with status Idle" screenshot 00-09_popup-open
-    check 00-10 "popup closes" close_popup
-
-    touch "$TMP/session-done"
-}
-
 log_is_clean() {
     local errors
-    errors=$(grep -v '^\[e2e\]' "$OUT/full.log" | grep 'rss-feed' |
+    errors=$(tail -n "+$LOG_START" "$OUT/full.log" | grep -v '^\[e2e\]' | grep 'rss-feed' |
         grep -E 'ERROR|CRITICAL|WARNING|already disposed|\.js:[0-9]' | head -n 20) || true
     if [ -n "$errors" ]; then
         echo "$errors"
@@ -183,8 +221,43 @@ log_is_clean() {
     fi
 }
 
+session() {
+    SHELL_PID=""
+    BUS_PID=""
+    LOG_START=$(($(wc -l < "$OUT/full.log") + 1))
+    trap 'stop_shell; kill "$BUS_PID" 2> /dev/null || true' EXIT
+
+    check 00-01 "isolated GSettings profile accepts the test settings" seed_settings
+
+    start_system_bus
+    start_shell
+    check 00-02 "headless gnome-shell starts on a private system bus" shell_ready
+    if [ "$LAST" = FAIL ]; then
+        stop_shell
+        unset DBUS_SYSTEM_BUS_ADDRESS
+        start_shell
+        check 00-03 "headless gnome-shell starts on the real system bus" shell_ready
+    fi
+    if [ "$LAST" = FAIL ]; then
+        return 0
+    fi
+
+    check 00-04 "extension is enabled without error" extension_enabled
+    check 00-05 "panel indicator is on the panel" wait_for "$INDICATOR?.mapped === true" 10
+    check 00-06 "overview closes" hide_overview
+    check 00-07 "screenshot: top panel shows the RSS icon" screenshot 00-07_panel
+    check 00-08 "virtual pointer and keyboard are created" create_input_devices
+    check 00-09 "real click on the panel icon opens the popup" click_indicator
+    check 00-10 "screenshot: open popup with an empty feed list" screenshot 00-10_popup-open
+    check 00-11 "Escape key closes the popup" press_escape
+
+    stop_shell
+    check 00-12 "shell log has no rss-feed errors" log_is_clean
+    touch "$PROFILE/session-done"
+}
+
 write_report() {
-    local id result desc msg
+    local theme id result desc msg
     {
         echo "# RSS Feed e2e run $STAMP"
         echo
@@ -193,15 +266,16 @@ write_report() {
         echo "- Distro: $DISTRO"
         echo "- Shell: $SHELL_VERSION, session mode ${GNOME_SHELL_SESSION_MODE:-user}"
         echo "- Shell flags: $SHELL_ARGS"
+        echo "- System bus: private (step 00-03 is listed only when the shell needed the real one)"
         echo "- Extension: $EXT_VERSION from $EXT_DIR"
-        echo "- Theme: $THEME, animations off"
+        echo "- Themes: $THEMES, animations off"
         echo
         echo "## Results"
         echo
-        echo "| Step | Result | Check | Message |"
-        echo "| --- | --- | --- | --- |"
-        while IFS=$'\t' read -r id result desc msg; do
-            echo "| $id | $result | $desc | ${msg//|/\\|} |"
+        echo "| Theme | Step | Result | Check | Message |"
+        echo "| --- | --- | --- | --- | --- |"
+        while IFS=$'\t' read -r theme id result desc msg; do
+            echo "| $theme | $id | $result | $desc | ${msg//|/\\|} |"
         done < "$OUT/results.tsv"
         echo
         echo "## Shell log (filtered)"
@@ -212,18 +286,23 @@ write_report() {
     } > "$OUT/report.md"
 }
 
-cleanup() {
+kill_session() {
     if [ -n "$SESSION_PID" ] && kill -TERM -- "-$SESSION_PID" 2> /dev/null; then
         sleep 2
         kill -KILL -- "-$SESSION_PID" 2> /dev/null || true
     fi
+    SESSION_PID=""
+}
+
+cleanup() {
+    kill_session
     rm -rf "$TMP"
 }
 
 main() {
     local cmd status=0
 
-    for cmd in gnome-shell gdbus gsettings dbus-run-session glib-compile-schemas setsid timeout tar; do
+    for cmd in gnome-shell gdbus gsettings dbus-run-session dbus-daemon glib-compile-schemas setsid timeout tar; do
         command -v "$cmd" > /dev/null || fail "$cmd not found"
     done
 
@@ -250,19 +329,23 @@ main() {
     say "Extension $EXT_VERSION at $EXT_DIR"
     say "$SHELL_VERSION on $DISTRO"
 
-    prepare_profile
-    export UUID INDICATOR THEME OUT TMP SHELL_ARGS SHELL_MAJOR
+    export UUID INDICATOR OUT SHELL_ARGS SHELL_MAJOR
+    for THEME in $THEMES; do
+        export THEME
+        prepare_profile
 
-    # piped through curl there is no script file to run again inside the session, so the functions go in as text
-    setsid timeout -k 5 "$RUN_TIMEOUT" dbus-run-session -- bash -c "$(declare -f); set -euo pipefail; session" &
-    SESSION_PID=$!
-    wait "$SESSION_PID" || say "session ended with status $?"
+        # piped through curl there is no script file to run again inside the session, so the functions go in as text
+        setsid timeout -k 5 "$RUN_TIMEOUT" dbus-run-session -- bash -c "$(declare -f); set -euo pipefail; session" &
+        SESSION_PID=$!
+        wait "$SESSION_PID" || say "$THEME session ended with status $?"
+        kill_session
 
-    check 00-11 "shell log has no rss-feed errors" log_is_clean
-    if [ ! -f "$TMP/session-done" ]; then
-        say "session did not finish (crash or ${RUN_TIMEOUT}s timeout)"
-        status=1
-    fi
+        if [ ! -f "$PROFILE/session-done" ]; then
+            say "$THEME session did not run to the end"
+            status=1
+        fi
+    done
+
     if grep -q "$(printf '\tFAIL\t')" "$OUT/results.tsv"; then
         status=1
     fi
