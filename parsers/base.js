@@ -76,6 +76,10 @@ export class BaseParser
 			}
 		}
 
+		// some feeds give an item no link besides its guid, which is then the address of the article
+		if (!item.HttpLink && /^https?:\/\//.test(item.ID))
+			item.HttpLink = item.ID;
+
 		return 1;
 	}
 }

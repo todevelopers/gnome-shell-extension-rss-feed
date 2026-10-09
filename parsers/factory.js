@@ -60,6 +60,10 @@ export function createRssParser(rawXml, sourceURL)
 		if (root.tagName.toLowerCase().slice(0, test.length) == test)
 			return new AtomParser(root);
 
+		// the two parsers below read the channel, without one they have nothing to parse and would throw
+		if (!root.children.some(c => typeof c === 'object'))
+			return null;
+
 		// FeedBurner serves Atom with its namespace too, its parser reads only the RSS shape
 		if (root.attributes['xmlns:feedburner'] == 'http://rssnamespace.org/feedburner/ext/1.0')
 			return new FeedburnerParser(root);

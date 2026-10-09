@@ -37,6 +37,11 @@ describe('createRssParser', () => {
 		expect(createRssParser('<unknown/>')).toBeNull();
 	});
 
+	it('returns null for an rss element without a channel', () => {
+		expect(createRssParser('<rss version="2.0"></rss>')).toBeNull();
+		expect(describeParseFailure('<rss version="2.0"></rss>')).toBe('Not a feed');
+	});
+
 	it('strips XML declaration before parsing', () => {
 		const xml = '<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>X</title><link>https://x.com</link><description>x</description><item><guid>g</guid><title>t</title><link>https://x.com/1</link><description>d</description></item></channel></rss>';
 		expect(createRssParser(xml)).not.toBeNull();

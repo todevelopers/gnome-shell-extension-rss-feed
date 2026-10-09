@@ -197,4 +197,19 @@ describe('Encoder.htmlDecode', () => {
 		});
 	});
 
+	describe('numeric entity above U+10FFFF', () => {
+		it('is left unchanged', () => {
+			expect(Encoder.htmlDecode('x &#1114112; y')).toBe('x &#1114112; y');
+			expect(Encoder.htmlDecode('x &#xFFFFFFFF; y')).toBe('x &#xFFFFFFFF; y');
+		});
+
+		it('does not stop the entities around it', () => {
+			expect(Encoder.htmlDecode('&amp; &#99999999; &lt;')).toBe('& &#99999999; <');
+		});
+
+		it('still decodes the last code point there is', () => {
+			expect(Encoder.htmlDecode('&#x10FFFF;')).toBe('\u{10FFFF}');
+		});
+	});
+
 });

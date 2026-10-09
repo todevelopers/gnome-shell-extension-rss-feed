@@ -72,6 +72,9 @@ const ENTITIES = {
 	spades: '♠', clubs: '♣', hearts: '♥', diams: '♦',
 };
 
+// String.fromCodePoint throws above U+10FFFF and one such entity would fail the whole feed, so it stays as it is like an unknown name
+const fromCodePoint = (code, entity) => code > 0x10FFFF ? entity : String.fromCodePoint(code);
+
 const Encoder = {
 	htmlDecode(s) {
 		if (!s || /^\s+$/.test(s)) return '';
@@ -79,8 +82,8 @@ const Encoder = {
 		do {
 			prev = s;
 			s = s
-				.replace(/&#x([0-9a-fA-F]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
-				.replace(/&#([0-9]+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
+				.replace(/&#x([0-9a-fA-F]+);/gi, (m, h) => fromCodePoint(parseInt(h, 16), m))
+				.replace(/&#([0-9]+);/g, (m, d) => fromCodePoint(parseInt(d, 10), m))
 				.replace(/&([a-zA-Z][a-zA-Z0-9]*);/g, (m, name) => ENTITIES[name] ?? m);
 		} while (s !== prev);
 		return s;

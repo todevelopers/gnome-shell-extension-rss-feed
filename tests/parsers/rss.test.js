@@ -101,4 +101,24 @@ describe('RssParser', () => {
 			expect(parser.Items[0].PublishDate).toBe('');
 		});
 	});
+
+	describe('item without a link', () => {
+		const item = inner => {
+			const parser = createRssParser('<rss version="2.0"><channel><title>Chan</title><item><title>Item</title>' + inner + '</item></channel></rss>');
+			parser.parse();
+			return parser.Items[0];
+		};
+
+		it('takes a guid that is an address as the link', () => {
+			expect(item('<guid>https://x.com/post</guid>').HttpLink).toBe('https://x.com/post');
+		});
+
+		it('stays without a link when the guid is no address', () => {
+			expect(item('<guid>post-1</guid>').HttpLink).toBe('');
+		});
+
+		it('keeps its own link when it has one besides the guid', () => {
+			expect(item('<guid>https://x.com/?p=1</guid><link>https://x.com/post</link>').HttpLink).toBe('https://x.com/post');
+		});
+	});
 });

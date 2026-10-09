@@ -75,6 +75,7 @@ export function relativeTime(dateStr)
 	if (!dateStr) return '';
 
 	let diff = (Date.now() - new Date(dateStr).getTime()) / 60000;
+	if (isNaN(diff)) return '';
 	if (diff < 60) return Math.round(Math.max(1, diff)) + 'm';
 	if (diff < 1440) return Math.round(diff / 60) + 'h';
 	if (diff < 20160) return Math.round(diff / 1440) + 'd';
