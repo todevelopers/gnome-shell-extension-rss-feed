@@ -14,3 +14,4 @@ CLAUDE.md         export-ignore
 .claude/          export-ignore
 promo/            export-ignore
 *.sh              text eol=lf
+*.py              text eol=lf
