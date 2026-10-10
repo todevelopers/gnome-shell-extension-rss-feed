@@ -26,7 +26,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # a manual run and a push to the same branch must not cancel each other
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -158,7 +159,8 @@ jobs:
           name: e2e-gnome-46
           path: ${{ steps.stats.outputs.dir }}
       - name: Publish badge
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/master'
+        # a cancelled run has only part of the results
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
         uses: schneegans/dynamic-badges-action@v1.7.0
         with:
           auth: ${{ secrets.GIST_SECRET }}
