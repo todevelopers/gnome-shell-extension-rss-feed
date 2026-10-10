@@ -107,7 +107,33 @@
 	}
 
 	const get = (role, name, root, timeout = 5000) => waitFor('the ' + label(role, name) + ' in the preferences window', () => find(role, name, root ?? app), timeout);
-	const row = (title, root) => get(null, title, root);
+
+	// since libadwaita 1.6 a spin row is a presentational widget, and GTK leaves such a widget out of the tree together with everything
+	// inside it; a hit test still answers with what lies under a point, so the lists are searched for the title label of the row
+	function hitRow(title, root)
+	{
+		for (let list of findAll('list', undefined, root))
+		{
+			let e = list.get_extents(Atspi.CoordType.WINDOW);
+
+			for (let y = e.y + 6; y < e.y + e.height; y += 8)
+			{
+				let node = Atspi.Component.prototype.get_accessible_at_point.call(list, e.x + 24, y, Atspi.CoordType.WINDOW);
+				if (node?.get_name() !== title)
+					continue;
+
+				// the widget right below the list holds the whole row
+				for (let parent = node.get_parent(); parent && parent.get_role_name() !== 'list'; parent = node.get_parent())
+					node = parent;
+
+				return node;
+			}
+		}
+
+		return null;
+	}
+
+	const row = (title, root) => waitFor('the widget "' + title + '" in the preferences window', () => find(null, title, root ?? app) ?? hitRow(title, root ?? app));
 	const has = (node, state) => node.get_state_set().contains(Atspi.StateType[state]);
 	const read = node => Atspi.Text.prototype.get_text.call(node, 0, -1);
 	const value = node => Atspi.Value.prototype.get_current_value.call(node);
