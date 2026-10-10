@@ -2,8 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { planNotifications } from '../../data/notificationPolicy.js';
 
 const item = (id, over = {}) => ({ id, title: 't-' + id, desc: '', link: 'http://x/' + id, ...over });
-const added = (id, over = {}) => ({ item: item(id, over), update: false });
-const updated = (id, over = {}) => ({ item: item(id, over), update: true });
+const added = (id, over = {}) => ({ item: item(id, over) });
 const payload = (items, initial = false) => ({ items, initial });
 const ctx = (over = {}) => ({ enabled: true, mute: false, locked: false, notifOnLockScreen: false, limit: 5, liveIds: [], ...over });
 const ids = list => list.map(x => x.id);
@@ -44,11 +43,6 @@ describe('planNotifications', () => {
 			expect(r.toShow[0]).toEqual({ id: 'a', title: 'Hello', body: 'World', url: 'http://h' });
 		});
 
-		it('prefixes updated items with UPDATE:', () => {
-			const r = planNotifications(payload([updated('a', { title: 'Hello' })]), ctx());
-			expect(r.toShow[0].title).toBe('UPDATE: Hello');
-		});
-
 		it('falls back to the title when there is no description', () => {
 			const r = planNotifications(payload([added('a', { title: 'Hello', desc: '' })]), ctx());
 			expect(r.toShow[0].body).toBe('Hello');
@@ -56,10 +50,10 @@ describe('planNotifications', () => {
 	});
 
 	describe('dedup', () => {
-		it('replaces a notification for an item it already raised', () => {
-			const r = planNotifications(payload([updated('a', { title: 'New' })]), ctx({ liveIds: ['a'] }));
+		it('replaces the notification of an article that another feed already raised', () => {
+			const r = planNotifications(payload([added('a', { title: 'New' })]), ctx({ liveIds: ['a'] }));
 			expect(ids(r.toShow)).toEqual(['a']);
-			expect(r.toShow[0].title).toBe('UPDATE: New');
+			expect(r.toShow[0].title).toBe('New');
 			expect(r.toDismiss).toEqual(['a']);
 		});
 
@@ -77,14 +71,21 @@ describe('planNotifications', () => {
 			expect(r.toDismiss).toEqual(['a']);
 		});
 
+		// a payload lists its items newest first, the way FeedSource.merge emits them
 		it('keeps only the newest items when a batch overflows an empty tray', () => {
-			const r = planNotifications(payload([added('p'), added('q'), added('r')]), ctx({ limit: 2 }));
+			const r = planNotifications(payload([added('r'), added('q'), added('p')]), ctx({ limit: 2 }));
 			expect(ids(r.toShow)).toEqual(['q', 'r']);
 			expect(r.toDismiss).toEqual([]);
 		});
 
-		it('shows every item when the batch fits', () => {
-			const r = planNotifications(payload([added('p'), added('q')]), ctx({ limit: 5 }));
+		it('drops the old notifications before the oldest items of the batch', () => {
+			const r = planNotifications(payload([added('r'), added('q'), added('p')]), ctx({ limit: 2, liveIds: ['a'] }));
+			expect(ids(r.toShow)).toEqual(['q', 'r']);
+			expect(r.toDismiss).toEqual(['a']);
+		});
+
+		it('shows every item when the batch fits, the newest last', () => {
+			const r = planNotifications(payload([added('q'), added('p')]), ctx({ limit: 5 }));
 			expect(ids(r.toShow)).toEqual(['p', 'q']);
 			expect(r.toDismiss).toEqual([]);
 		});
