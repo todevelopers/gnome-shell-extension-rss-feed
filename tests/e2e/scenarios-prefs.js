@@ -888,11 +888,18 @@
 		}, 45000))
 			return;
 
+		// the driver can lose the window when the file chooser closes; it reads the tree anew then and the page has to be found again
+		async function confirm()
+		{
+			if (await p.confirmFile())
+				page = await p.page('Sources');
+		}
+
 		async function importFile(name)
 		{
 			await p.press(await p.get(p.BUTTON, 'Import OPML…', page));
 			await p.chooseFile(file(name));
-			await p.confirmFile();
+			await confirm();
 		}
 
 		let ready = await step('19-01', 'Import OPML… imports a file with folders preserved and skips duplicates', async () =>
@@ -903,7 +910,7 @@
 			await p.press(await p.get(p.BUTTON, 'Import OPML…', page));
 			await p.chooseFile(file('import.opml'));
 			await p.shot('import-dialog', 'File chooser Import OPML over the preferences window, the path of import.opml typed into its location entry. The chooser belongs to GTK, not to the extension.');
-			await p.confirmFile();
+			await confirm();
 
 			await p.toast('Imported 2 feeds (1 duplicate skipped)');
 			same(feeds().map(short), ['rss2', 'atom', 'feedburner', 'rdf'], 'feeds in the settings');
@@ -955,7 +962,7 @@
 		{
 			await p.press(await p.get(p.BUTTON, 'Export OPML…', page));
 			await p.chooseFile(file('export.opml'), true);
-			await p.confirmFile();
+			await confirm();
 			await p.toast('Exported 4 feeds', 15000);
 
 			let text = t.readText(file('export.opml'));
