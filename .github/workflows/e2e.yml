@@ -77,19 +77,16 @@ jobs:
             failed=$(awk -F'\t' '$4 == "FAIL"' "$dir/results.tsv" | wc -l)
           fi
           total=$((passed + failed))
-          message="$passed/$total"
           if [ "$failed" -eq 0 ] && [ "$OUTCOME" = success ]; then
             emoji="✅"; alert="NOTE"; status_text="passed"; color="brightgreen"
+            message="$passed passing"
           elif [ "$failed" -eq 0 ]; then
             # the script stopped early or a session was killed, so the counts say nothing
             emoji="❌"; alert="CAUTION"; status_text="did not finish"; color="red"
             message="did not finish"
-          elif [ "$failed" -le 5 ]; then
-            emoji="❌"; alert="CAUTION"; status_text="failed"; color="yellow"
-          elif [ "$failed" -le 20 ]; then
-            emoji="❌"; alert="CAUTION"; status_text="failed"; color="orange"
           else
             emoji="❌"; alert="CAUTION"; status_text="failed"; color="red"
+            message="$failed failed"
           fi
           {
             echo "dir=$dir"
