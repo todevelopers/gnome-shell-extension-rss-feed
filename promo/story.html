@@ -171,6 +171,8 @@ svg { display: block; }
 .acts { display: none; gap: 2px; flex: none; }
 .acts span { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; opacity: 0.55; }
 .acts span.hot { opacity: 1; color: #f9f06b; }
+#fly { position: absolute; left: 0; right: 0; top: 0; background: #47474b; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45); z-index: 5; }
+#fly span { color: #f9f06b; flex: none; }
 .sechdr { padding: 8px 8px 7px; margin-top: 4px; border-bottom: 1px solid rgba(127, 127, 127, 0.2); border-radius: 10px 10px 0 0; }
 .seclabel { flex: 1; font-size: 10px; font-weight: 700; letter-spacing: 0.07em; opacity: 0.65; }
 .mart { flex-direction: column; align-items: stretch; gap: 3px; padding: 7px 8px; }
@@ -201,7 +203,7 @@ svg { display: block; }
 #tty p { font-size: 19px; font-weight: 600; opacity: 0.85; margin-top: 4px; }
 #cta { margin-top: 22px; display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 800; }
 #cta img { width: 44px; height: 44px; border-radius: 10px; }
-#cta span { margin-left: 6px; font-size: 17px; padding: 9px 16px; border-radius: 13px; background: #241f31; color: #fff; }
+#cta #ego { width: auto; height: 78px; border-radius: 0; margin-left: 14px; }
 #confetti { position: absolute; inset: 0; }
 #confetti i { position: absolute; left: 0; top: 0; width: 10px; height: 16px; border-radius: 3px; }
 #outro > :not(#confetti) { position: relative; }
@@ -320,7 +322,7 @@ svg { display: block; }
 						<div class="arow"><div class="at"><b>Right click</b></div><span class="aval">Copy link<span data-i="down" data-s="12"></span></span></div>
 					</div>
 				</div>
-				<div id="toast">Imported 36 feeds</div>
+				<div id="toast">Imported 40 feeds</div>
 			</div>
 		</div>
 	</div>
@@ -416,7 +418,7 @@ svg { display: block; }
 		<div id="tnum"><span id="tval">0</span><span id="tplus">+</span></div>
 		<div class="dl">downloads since the 2026 revival</div>
 		<div id="tty"><h2>Thank you!</h2><p>For every install, issue and feature request</p></div>
-		<div id="cta"><img src="logo.png" alt=""><b>RSS Feed</b><span>extensions.gnome.org</span></div>
+		<div id="cta"><img src="logo.png" alt=""><b>RSS Feed</b><img id="ego" src="get-it-on-ego.svg" alt="Get it on GNOME Extensions"></div>
 	</div>
 </div>
 
@@ -497,6 +499,8 @@ const A = 1.6, B = 7.2, C = 12.8, D = 18.0, E = 23.0, F = 26.4, G = 30.0, H = 34
 const OUTRO = 6.0;
 const DURATION = END + OUTRO;
 const EVO_B = B + 0.5, NIGHT = C + 1.2, EVO_C = D + 0.35;
+// the article gets its star, then moves over to the Starred group
+const STAR_AT = H + 2.4, MOVE = H + 2.75;
 const GAP_DAYS = 2463;
 const INK_LIGHT = '#ffffff', INK_DARK = '#241f31';
 
@@ -546,8 +550,8 @@ const STICKERS = [
 	[G + 1.4, H - 0.2, 'OPML import and export', 110, 40, -3, 'y'],
 	[G + 3.1, H - 0.2, 'broken feeds get flagged', 700, 420, 4],
 	[H + 1.2, END - 0.1, 'a whole new Actions page', 110, 40, -2],
-	[H + 2.0, H + 3.1, 'hover buttons', 640, 318, 5],
-	[H + 3.2, END - 0.1, 'starred articles', 636, 120, -6, 'y'],
+	[H + 1.8, H + 2.9, 'hover buttons', 640, 318, 5],
+	[H + 3.0, END - 0.1, 'starred articles', 636, 120, -6, 'y'],
 ].map((s, i) => {
 	const el = document.createElement('div');
 	el.className = 'sticker' + (s[6] ? ' ' + s[6] : '');
@@ -558,7 +562,7 @@ const STICKERS = [
 
 const PALETTE = ['#62a0ea', '#57e389', '#f8e45c', '#ffa348', '#ed333b', '#c061cb'];
 // [time, x, y, size]
-const POOFS = [[A + 0.2, 350, 320, 0.7], [A + 0.55, 1020, 200, 0.7], [EVO_B, 350, 320, 1], [EVO_B, 1020, 220, 1], [D, 640, 441, 0.45], [EVO_C, 350, 290, 1.15], [EVO_C, 1020, 220, 1.15], [H + 2.9, 1176, 286, 0.5]].map(p => {
+const POOFS = [[A + 0.2, 350, 320, 0.7], [A + 0.55, 1020, 200, 0.7], [EVO_B, 350, 320, 1], [EVO_B, 1020, 220, 1], [D, 640, 441, 0.45], [EVO_C, 350, 290, 1.15], [EVO_C, 1020, 220, 1.15], [STAR_AT, 1176, 286, 0.5]].map(p => {
 	const els = [];
 	for (let i = 0; i < 13; i++) {
 		const el = document.createElement('i');
@@ -604,7 +608,7 @@ const BIGSTARS = [[612, 250, 54, -12, 0.0], [820, 470, 40, 14, 0.15], [700, 86, 
 	el.className = 'bigstar';
 	el.innerHTML = '<svg width="' + s[2] + '" height="' + s[2] + '" viewBox="-1 -1 18 18"><path d="' + STAR + '" fill="#f9f06b" stroke="#241f31" stroke-width="1.3" stroke-linejoin="round"/></svg>';
 	$('stars').appendChild(el);
-	return { el, x: s[0], y: s[1], rot: s[3], at: H + 3.0 + s[4] };
+	return { el, x: s[0], y: s[1], rot: s[3], at: STAR_AT + 0.1 + s[4] };
 });
 const CONFETTI = [];
 for (let i = 0; i < 96; i++) {
@@ -629,12 +633,14 @@ const FEEDS = [
 ];
 const FILLER = ['Faster Thumbnails', 'New Toggles', 'Better Search', 'Fresh Wallpapers', 'Tiny Fixes', 'Calmer Colors', 'Bigger Buttons', 'Quick Settings'];
 const art = (a, extra) => '<div class="item art"' + (extra || '') + '><div class="atitle ' + (a[2] ? 'read' : 'unread') + '">' + a[0] + '</div>';
-let classicHtml = '<div class="hwrap" id="w_st"><div class="grp"><div class="item feed"><div class="avatar">' + icon('star', 14) + '</div><div class="ftitle">Starred</div><div class="gcount" id="stCount">2</div><div class="arrow">' + icon('chev', 16) + '</div></div></div></div>';
+const mrow = (a, cls) => '<div class="item mart"><div class="mtitle ' + cls + '">' + a[0] + '</div><div class="meta"><span class="tag">' + a[1] + '</span><span class="atime">' + a[2] + '</span></div></div>';
+let classicHtml = '<div class="hwrap" id="w_st"><div class="grp" id="g_st"><div class="item feed"><div class="avatar">' + icon('star', 14) + '</div><div class="ftitle">Starred</div><div class="gcount" id="stCount">1</div><div class="arrow" id="a_st">' + icon('chev', 16) + '</div></div>'
+	+ '<div class="hwrap" id="st_arts" style="height: 0"><div><div id="st_new">' + mrow(['#250 Sharper Icons', 'This Week in GNOME', '1w'], 'unread') + '</div>' + mrow(['Building adaptive layouts with libadwaita', 'Planet GNOME', '3h'], 'read') + '</div></div></div></div>';
 for (let f of FEEDS) {
-	classicHtml += '<div class="grp' + (f.arts ? ' open' : '') + '"><div class="item feed"><div class="avatar">' + f.av + '</div><div class="ftitle">' + f.title + '</div>'
-		+ '<div class="count">' + f.count + '</div><div class="arrow"' + (f.arts ? ' style="transform: rotate(90deg)"' : '') + '>' + icon('chev', 16) + '</div></div>';
+	classicHtml += '<div class="grp' + (f.arts ? ' open" id="g_open' : '') + '"><div class="item feed"><div class="avatar">' + f.av + '</div><div class="ftitle">' + f.title + '</div>'
+		+ '<div class="count">' + f.count + '</div><div class="arrow"' + (f.arts ? ' id="a_open" style="transform: rotate(90deg)"' : '') + '>' + icon('chev', 16) + '</div></div>';
 	if (f.arts) {
-		classicHtml += '<div class="arts"><div id="artsNormal">';
+		classicHtml += '<div class="arts" id="artsBox"><div id="artsNormal">';
 		f.arts.forEach((a, i) => {
 			classicHtml += art(a, i === 1 ? ' id="art1"' : '')
 				+ (i === 1 ? '<div class="acts" id="acts"><span id="actStar"></span><span>' + icon('mail', 14) + '</span><span>' + icon('link', 14) + '</span></div>' : '')
@@ -647,17 +653,18 @@ for (let f of FEEDS) {
 	}
 	classicHtml += '</div>';
 }
+classicHtml += '<div class="item art fly" id="fly"><div class="atitle unread">#250 Sharper Icons</div><span>' + icon('star', 14) + '</span></div>';
 $('classic').innerHTML = classicHtml;
 const MIN_UNREAD = [['#251 Smoother Scrolling', 'This Week in GNOME', '2h'], ['Building adaptive layouts with libadwaita', 'Planet GNOME', '3h'], ['A closer look at the new Quick Settings', 'GNOME Shell &amp; Mutter', '1d']];
 const MIN_READ = [['Ten GNOME extensions worth a try', 'OMG! Ubuntu', '2d'], ['Profiling GNOME Shell with Sysprof', 'Planet GNOME', '3d']];
-const mrow = (a, cls) => '<div class="item mart"><div class="mtitle ' + cls + '">' + a[0] + '</div><div class="meta"><span class="tag">' + a[1] + '</span><span class="atime">' + a[2] + '</span></div></div>';
 $('minimal').innerHTML = '<div class="item sechdr"><span class="seclabel">UNREAD</span>' + icon('down', 16) + '</div>' + MIN_UNREAD.map(a => mrow(a, 'unread')).join('')
 	+ '<div class="item sechdr"><span class="seclabel">READ</span>' + icon('down', 16) + '</div>' + MIN_READ.map(a => mrow(a, 'read')).join('');
 
 const SOURCES = [['PG', 'Planet GNOME', 'https://planet.gnome.org/atom.xml'], ['TW', 'This Week in GNOME', 'https://thisweek.gnome.org/index.xml'], ['GS', 'GNOME Shell &amp; Mutter', 'https://blogs.gnome.org/shell-dev/feed/'],
 	['OU', 'OMG! Ubuntu', 'https://www.omgubuntu.co.uk/feed'], ['IF', 'It\'s FOSS', 'https://itsfoss.com/feed/'], ['BE', 'blog.example.com', 'https://blog.example.com/feed.xml']];
 $('srcList').innerHTML = SOURCES.map((s, i) => '<div class="hwrap" id="sw' + i + '"><div class="arow"><span class="savatar">' + s[0] + '</span><div class="at"><b>' + s[1] + '</b><small>' + s[2] + '</small></div>'
-	+ '<span class="pill' + (i === 5 ? ' err' : '') + '">' + (i === 5 ? '404' : 'OK') + '</span><span style="opacity: 0.7">' + icon('bell', 16) + '</span><span style="color: #ff7b63">' + icon('trash', 16) + '</span></div></div>').join('');
+	+ '<span class="pill' + (i === 5 ? ' err' : '') + '">' + (i === 5 ? '404' : 'OK') + '</span><span style="opacity: 0.7">' + icon('bell', 16) + '</span><span style="color: #ff7b63">' + icon('trash', 16) + '</span></div></div>').join('')
+	+ '<div class="arow" style="border-bottom: none"><div class="at" style="opacity: 0.55">New RSS source URL</div></div>';
 
 fillIcons(document);
 
@@ -668,7 +675,7 @@ fillIcons(document);
 	copy.removeAttribute('id');
 	copy.className = '';
 	copy.style.width = l[2] + 'px';
-	copy.querySelectorAll('.minimal, .speed, .oarrow').forEach(e => e.remove());
+	copy.querySelectorAll('.minimal, .speed, .oarrow, .fly').forEach(e => e.remove());
 	copy.querySelectorAll('.classic').forEach(e => { e.style.position = 'static'; });
 	copy.querySelectorAll('.arts').forEach(e => { e.style.height = 'auto'; });
 	copy.querySelectorAll('.hold').forEach(e => { e.style.display = 'none'; });
@@ -687,6 +694,9 @@ function measure() {
 	NAT.oitem = $('wANew').firstElementChild.offsetHeight;
 	NAT.feed = $('w_st').offsetHeight;
 	NAT.classic = $('classic').offsetHeight - NAT.feed;
+	NAT.stArts = $('st_arts').firstElementChild.offsetHeight;
+	NAT.flyFrom = $('artsBox').offsetTop + $('art1').offsetTop;
+	NAT.flyTo = $('st_arts').offsetTop;
 	NAT.minimal = $('minimal').offsetHeight;
 	NAT.speed = $('speed').offsetHeight;
 	NAT.tabAct = $('tabAct').offsetWidth;
@@ -895,7 +905,7 @@ function accentAt(t) {
 	return c.map(Math.round);
 }
 
-const PAGES = [[0, 'gen'], [EVO_C + 2.7, 'src'], [F + 0.9, 'not'], [G + 0.2, 'src'], [H + 0.9, 'act']];
+const PAGES = [[0, 'gen'], [F + 0.9, 'not'], [G + 0.2, 'src'], [H + 0.9, 'act']];
 function renderModern(t) {
 	const scr = $('screen').style;
 	const lk = eio(seg(t, E + 0.5, E + 1.1)) * (1 - eio(seg(t, F, F + 0.5)));
@@ -931,9 +941,21 @@ function renderModern(t) {
 	$('classic').style.transform = 'translateX(' + (-24 * mm) + 'px)';
 	$('minimal').style.transform = 'translateX(' + (24 * (1 - mm)) + 'px)';
 	const starK = eio(seg(t, H + 0.6, H + 0.95));
-	setH($('w_st'), NAT.feed * starK);
+	const moveK = eio(seg(t, MOVE + 0.05, MOVE + 0.5));
+	setH($('st_arts'), NAT.stArts * moveK);
+	setH($('artsBox'), 108 * (1 - moveK));
+	$('g_st').classList.toggle('open', moveK > 0);
+	$('g_open').classList.toggle('open', moveK < 1);
+	$('a_st').style.transform = 'rotate(' + (90 * moveK) + 'deg)';
+	$('a_open').style.transform = 'rotate(' + (90 * (1 - moveK)) + 'deg)';
+	setH($('w_st'), (NAT.feed + NAT.stArts * moveK) * starK);
 	$('w_st').style.opacity = starK;
-	setH($('mbody'), lerp(NAT.classic + NAT.feed * starK, NAT.minimal, mm));
+	setH($('mbody'), lerp(NAT.classic + NAT.feed * starK + (NAT.stArts - 108) * moveK, NAT.minimal, mm));
+	const flyK = seg(t, MOVE, MOVE + 0.55);
+	const fly = $('fly');
+	fly.style.visibility = flyK > 0 && flyK < 1 ? 'visible' : 'hidden';
+	fly.style.transform = 'translateY(' + lerp(NAT.flyFrom, NAT.flyTo, eio(flyK)).toFixed(1) + 'px) scale(' + (1 + 0.04 * Math.sin(Math.PI * flyK)).toFixed(3) + ')';
+	$('st_new').style.opacity = seg(flyK, 0.8, 1);
 
 	$('swGroup').classList.toggle('on', t >= F + 1.6);
 	const nIn = spring(t - F - 2.0), nOut = ein(seg(t, G - 0.1, G + 0.2));
@@ -952,11 +974,11 @@ function renderModern(t) {
 	file.style.transform = 'translate(' + lerp(40, 300, eio(fk)).toFixed(1) + 'px,' + (lerp(600, 290, eio(fk)) - 150 * Math.sin(Math.PI * fk)).toFixed(1) + 'px) rotate(' + (-14 + 28 * fk).toFixed(1) + 'deg) scale(' + (1 - 0.6 * ein(fk)).toFixed(3) + ')';
 	file.style.opacity = 1 - seg(fk, 0.85, 1);
 	SOURCES.forEach((s, i) => {
-		const k = i < 4 ? 1 : eio(seg(t, G + 1.2 + (i - 4) * 0.12, G + 1.5 + (i - 4) * 0.12));
+		const k = eio(seg(t, G + 1.2 + i * 0.1, G + 1.5 + i * 0.1));
 		setH($('sw' + i), NAT.arow * k);
 		$('sw' + i).style.opacity = k;
 	});
-	$('srcCount').textContent = Math.round(lerp(4, 40, eout(seg(t, G + 1.2, G + 2.0)))) + ' sources';
+	$('srcCount').textContent = Math.round(lerp(0, 40, eout(seg(t, G + 1.2, G + 2.0)))) + ' sources';
 	const toolK = eio(seg(t, G + 0.1, G + 0.5));
 	$('tools').style.width = (132 * toolK) + 'px';
 	$('tools').style.opacity = toolK;
@@ -964,11 +986,11 @@ function renderModern(t) {
 	fade($('toast'), clamp(tk, 0, 1));
 	$('toast').style.transform = 'translate(-50%, ' + (30 * (1 - tk)).toFixed(1) + 'px)';
 
-	const starred = t >= H + 2.9;
+	const starred = t >= STAR_AT;
 	let sub = 'Updated at 16:20';
 	if (t >= G + 1.6 && t < G + 3.0)
 		sub = 'Updating… ' + Math.floor(seg(t, G + 1.65, G + 2.95) * 40.999) + '/40';
-	else if (starred && t < H + 4.3)
+	else if (starred && t < STAR_AT + 1.6)
 		sub = 'Article starred';
 	$('cSub').textContent = sub;
 	const fp = seg(t, G + 3.0, G + 3.3) * (1 - seg(t, H + 0.2, H + 0.4));
@@ -983,14 +1005,14 @@ function renderModern(t) {
 	$('hNew').style.width = (30 * hk) + 'px';
 	$('hNew').style.opacity = hk;
 	$('hNew').style.marginLeft = (-10 * (1 - hk)) + 'px';
-	const hovering = t >= H + 2.0 && t < END;
+	const hovering = t >= H + 1.7 && t < MOVE + 0.1;
 	$('art1').classList.toggle('hover', hovering);
 	$('acts').style.display = hovering ? 'flex' : 'none';
 	$('actStar').innerHTML = icon(starred ? 'star' : 'starOff', 14);
 	$('actStar').classList.toggle('hot', starred);
-	$('actStar').style.transform = 'scale(' + pulse(seg(t, H + 2.9, H + 3.25)) * (starred ? 1.15 : 1) + ')';
-	$('stCount').textContent = starred ? 3 : 2;
-	$('stCount').style.transform = 'scale(' + pulse(seg(t, H + 2.95, H + 3.3)) + ')';
+	$('actStar').style.transform = 'scale(' + pulse(seg(t, STAR_AT, STAR_AT + 0.35)) * (starred ? 1.15 : 1) + ')';
+	$('stCount').textContent = t >= MOVE + 0.5 ? 2 : 1;
+	$('stCount').style.transform = 'scale(' + pulse(seg(t, MOVE + 0.5, MOVE + 0.85)) + ')';
 }
 
 function renderOutro(t) {
@@ -1034,7 +1056,7 @@ function render(t) {
 
 window.renderAt = render;
 window.DURATION = DURATION;
-window.ready = document.fonts.ready.then(() => { measure(); render(0); return true; });
+window.ready = Promise.all([document.fonts.ready, $('ego').decode().catch(() => {})]).then(() => { measure(); render(0); return true; });
 
 if (!location.search.includes('capture')) {
 	window.ready.then(() => {
