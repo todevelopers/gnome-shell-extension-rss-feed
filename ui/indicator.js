@@ -54,7 +54,6 @@ class RssIndicator extends PanelMenu.Button
 
 		let button = new St.BoxLayout(
 		{
-			vertical : false,
 			style_class : 'panel-status-menu-box'
 		});
 
@@ -128,6 +127,22 @@ class RssIndicator extends PanelMenu.Button
 
 			return Clutter.EVENT_PROPAGATE;
 		}, this);
+
+		// since GNOME 51 the menu manager closes the popup on Escape from a capture action, which runs before captured-event
+		if (Clutter.KeyController)
+		{
+			let keyController = new Clutter.KeyController();
+			keyController.connect('key-press', () =>
+			{
+				if (!this._activeConfirm || keyController.get_key()[1] !== Clutter.KEY_Escape)
+					return Clutter.EVENT_PROPAGATE;
+
+				this._activeConfirm.exitConfirm();
+				this._activeConfirm = null;
+				return Clutter.EVENT_STOP;
+			});
+			this.menu.actor.add_action_full('rss-confirm-key-controller', Clutter.EventPhase.CAPTURE, keyController);
+		}
 
 		this._header = new RssHeader({
 			onReload : () => this.onReload?.(),

@@ -52,7 +52,9 @@ class RssHeader extends PopupMenu.PopupBaseMenuItem
 		});
 		this.add_child(iconBox);
 
-		let titleBox = new St.BoxLayout({ vertical : true, x_expand : true });
+		// St.BoxLayout lost `vertical` in GNOME 51 and has `orientation` only since 48, the layout manager works on all of them
+		let titleBox = new St.BoxLayout({ x_expand : true });
+		titleBox.layout_manager.orientation = Clutter.Orientation.VERTICAL;
 		// title and status keep the dimmed look; St CSS has no opacity, so it is set on the actors
 		titleBox.add_child(new St.Label({ text : 'RSS Feed', style_class : 'rss-header-title', opacity : 128 }));
 
