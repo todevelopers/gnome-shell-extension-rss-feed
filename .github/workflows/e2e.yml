@@ -85,12 +85,11 @@ jobs:
           ls "$dir"
       # TEMPORARY: what else fails on GNOME 51 once the installed copy stops using St.BoxLayout:vertical
       - name: Patch the installed copy
-        if: matrix.gnome == '51'
         run: |
           cd "$E2E_HOME/.local/share/gnome-shell/extensions/$UUID"
           sed -i '/vertical : false,/d' ui/indicator.js
-          sed -i 's/vertical : true, x_expand : true/orientation : Clutter.Orientation.VERTICAL, x_expand : true/' ui/header.js
-          sed -i 's/vertical: true, x_expand: true/orientation: Clutter.Orientation.VERTICAL, x_expand: true/' ui/taggedArticleRow.js
+          sed -i 's/let titleBox = new St.BoxLayout({ vertical : true, x_expand : true });/let titleBox = new St.BoxLayout({ x_expand : true }); titleBox.layout_manager.orientation = Clutter.Orientation.VERTICAL;/' ui/header.js
+          sed -i 's/let contentBox = new St.BoxLayout({ vertical: true, x_expand: true });/let contentBox = new St.BoxLayout({ x_expand: true }); contentBox.layout_manager.orientation = Clutter.Orientation.VERTICAL;/' ui/taggedArticleRow.js
           grep -n -E 'vertical|VERTICAL' ui/indicator.js ui/header.js ui/taggedArticleRow.js || true
       - name: Run the suite
         id: suite
