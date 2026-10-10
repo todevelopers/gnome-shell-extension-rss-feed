@@ -3,13 +3,47 @@ name: E2E
 on:
   push:
     branches: [master]
-    paths-ignore:
-      - '**.md'
-      - 'promo/**'
+    # only what ends up in the package (`git archive`, see .gitattributes) can change the result, plus the suite and this workflow;
+    # a later pattern wins over an earlier one
+    paths:
+      - '**'
+      - '!.github/**'
+      - '!.claude/**'
+      - '!promo/**'
+      - '!scripts/**'
+      - '!tests/**'
+      - '!.gitignore'
+      - '!.gitattributes'
+      - '!.eslintrc.json'
+      - '!package.json'
+      - '!package-lock.json'
+      - '!vitest.config.js'
+      - '!LICENSE'
+      - 'scripts/run-tests.sh'
+      - 'tests/e2e/**'
+      - '.github/workflows/e2e.yml'
+      - '!**.md'
   pull_request:
-    paths-ignore:
-      - '**.md'
-      - 'promo/**'
+    # only what ends up in the package (`git archive`, see .gitattributes) can change the result, plus the suite and this workflow;
+    # a later pattern wins over an earlier one
+    paths:
+      - '**'
+      - '!.github/**'
+      - '!.claude/**'
+      - '!promo/**'
+      - '!scripts/**'
+      - '!tests/**'
+      - '!.gitignore'
+      - '!.gitattributes'
+      - '!.eslintrc.json'
+      - '!package.json'
+      - '!package-lock.json'
+      - '!vitest.config.js'
+      - '!LICENSE'
+      - 'scripts/run-tests.sh'
+      - 'tests/e2e/**'
+      - '.github/workflows/e2e.yml'
+      - '!**.md'
   workflow_dispatch:
     inputs:
       only:
