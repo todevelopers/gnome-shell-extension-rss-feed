@@ -49,7 +49,8 @@ def with_state(state, base, feed, prefix, items):
             'title': '%s new %d' % (prefix, index),
             'link': '%s/articles/%s/new-%d' % (base, feed, index),
             'desc': 'Description of a new article.',
-            'age': 20,
+            # a higher number is a newer article, and all of them are newer than the fixed ones
+            'age': max(5, 60 - index),
         })
     titles = state.get('titles', {})
     for item in items:

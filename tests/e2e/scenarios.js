@@ -1461,7 +1461,7 @@
 			check(live()[0] === first, 'the notification was replaced by a new one');
 		});
 
-		await step('08-08', 'Notification limit is respected', async () =>
+		await step('08-08', 'Notification limit is respected: over the limit the oldest notifications go and the newest articles keep theirs', async () =>
 		{
 			try
 			{
@@ -1470,7 +1470,8 @@
 				await waitFor('the notifications of the new articles', () => live().some(n => /^RSS article new/.test(n.title)), 5000);
 				await sleep(500);
 				same(live().length, 3, 'notifications in the tray with a limit of 3 after five more articles');
-				return 'left in the tray: ' + titles().join(', ');
+				// the feed lists its articles newest first: new 8 is the newest of the five, new 4 the oldest
+				same(titles(), ['RSS article new 6', 'RSS article new 7', 'RSS article new 8'], 'notifications left in the tray');
 			}
 			finally
 			{
