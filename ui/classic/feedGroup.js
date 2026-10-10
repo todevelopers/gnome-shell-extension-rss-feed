@@ -311,6 +311,8 @@ class ClassicFeedGroup extends PopupMenu.PopupSubMenuMenuItem
 	{
 		if (this._showMoreRow)
 		{
+			// the menus above the submenu keep their active item past its destroy and deactivate it on the next focus change
+			this._showMoreRow.active = false;
 			this._showMoreRow.destroy();
 			this._showMoreRow = null;
 		}

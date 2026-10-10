@@ -52,9 +52,11 @@ export default class RssFeedExtension extends Extension
 				if (this._repository.sync(this._store))
 					this._poller.refresh();
 			},
+			// an import writes both keys, and the sync of the first one to arrive already adds the new sources
 			'changed::' + GSKeys.RSS_FEEDS_SETTINGS, () =>
 			{
-				this._repository.sync(this._store);
+				if (this._repository.sync(this._store))
+					this._poller.refresh();
 			},
 			'changed::' + GSKeys.DISPLAY_MODE, () => this._syncIndicator(),
 			this

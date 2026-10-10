@@ -17,6 +17,10 @@
 * bugfix: Feeds with an unclosed `<br>`, `<img>` or `<hr>` tag in the description are no longer rejected
 * bugfix: Feeds with an upper case or quoted charset declaration are decoded correctly
 * bugfix: Removing a source no longer scrolls the Sources page back to the top
+* bugfix: Feeds added by an OPML import are fetched right away instead of waiting for the next update
+* bugfix: Source titles and URLs containing `&` or `<` are shown correctly on the Sources page
+* bugfix: Lower case letters typed into the Avatar field of a source no longer end up in reverse order
+* bugfix: The avatar of a renamed source no longer switches to the initials of the feed's own title after a check
 * bugfix: The header status text no longer disappears after switching the display mode
 * performance: Removing a source no longer downloads all other feeds again
 * performance: A feed whose content did not change since the last check is neither decoded nor parsed again
