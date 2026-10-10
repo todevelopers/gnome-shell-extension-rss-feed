@@ -83,6 +83,15 @@ jobs:
           # inside a container the checkout belongs to another user than the one running git
           git -c safe.directory="$PWD" archive HEAD | tar -x -C "$dir"
           ls "$dir"
+      # TEMPORARY: what else fails on GNOME 51 once the installed copy stops using St.BoxLayout:vertical
+      - name: Patch the installed copy
+        if: matrix.gnome == '51'
+        run: |
+          cd "$E2E_HOME/.local/share/gnome-shell/extensions/$UUID"
+          sed -i '/vertical : false,/d' ui/indicator.js
+          sed -i 's/vertical : true, x_expand : true/orientation : Clutter.Orientation.VERTICAL, x_expand : true/' ui/header.js
+          sed -i 's/vertical: true, x_expand: true/orientation: Clutter.Orientation.VERTICAL, x_expand: true/' ui/taggedArticleRow.js
+          grep -n -E 'vertical|VERTICAL' ui/indicator.js ui/header.js ui/taggedArticleRow.js || true
       - name: Run the suite
         id: suite
         timeout-minutes: 15
