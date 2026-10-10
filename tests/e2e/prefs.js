@@ -5,7 +5,7 @@
 // Rows, text entries and drag handles get real pointer and key events, their reported positions are right.
 (() =>
 {
-	const { Atspi, Clutter, GLib, Meta } = imports.gi;
+	const { Atspi, Clutter, Gio, GLib, Meta } = imports.gi;
 
 	const t = globalThis.e2e;
 	const { sleep, waitFor, check } = t;
@@ -432,6 +432,11 @@
 		window.delete(global.get_current_time());
 		await waitFor('the preferences window to close', () => !win(), 10000);
 		app = null;
+
+		// the process behind the window leaves two seconds after its last window; a window opened sooner comes from the same process,
+		// and at-spi 2.54 (GNOME 47) has thrown the tree of that process away by then
+		await waitFor('the preferences process to leave the bus', () => !Gio.DBus.session.call_sync('org.freedesktop.DBus', '/org/freedesktop/DBus',
+			'org.freedesktop.DBus', 'NameHasOwner', new GLib.Variant('(s)', [WM_CLASS]), null, Gio.DBusCallFlags.NONE, 1000, null).deepUnpack()[0], 10000);
 	}
 
 	// the tree of a failed step shows which names and roles this GTK version really has
