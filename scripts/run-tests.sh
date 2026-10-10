@@ -5,11 +5,12 @@ REPO="todevelopers/gnome-shell-extension-rss-feed"
 BRANCH="master"
 UUID="rss-feed@gnome-shell-extension.todevelopers.github.com"
 INDICATOR="Main.panel.statusArea.rssFeedMenu"
-HARNESS_FILES="driver.js scenarios.js feeds.py"
+HARNESS_SCRIPTS="driver.js prefs.js scenarios.js scenarios-prefs.js"
+HARNESS_FILES="$HARNESS_SCRIPTS feeds.py"
 THEMES="dark light"
-SCENARIOS="smoke lifecycle panel header classic minimal feeds"
-SCENARIO_TIMEOUT=280
-RUN_TIMEOUT=420
+SCENARIOS="smoke lifecycle panel header classic minimal feeds prefs sources actions opml"
+SCENARIO_TIMEOUT=360
+RUN_TIMEOUT=500
 SESSION_PID=""
 FEEDS_PID=""
 
@@ -87,12 +88,19 @@ prepare_profile() {
     export XDG_RUNTIME_DIR="$PROFILE/runtime"
     # gvfsd would mount FUSE inside the runtime dir and block its removal
     export GVFS_DISABLE_FUSE=1
+    # without the settings portal libadwaita reads the colour scheme from GSettings only when told so
+    export ADW_DISABLE_PORTAL=1
     unset DISPLAY WAYLAND_DISPLAY XAUTHORITY
 
     ext="$XDG_DATA_HOME/gnome-shell/extensions/$UUID"
     # Ubuntu's desktop icons log a JS error when ~/Desktop is missing
-    mkdir -p "$XDG_CONFIG_HOME" "$XDG_CACHE_HOME" "$XDG_STATE_HOME" "$XDG_DATA_HOME/applications" "$HOME/Desktop" "$ext"
+    mkdir -p "$XDG_CONFIG_HOME" "$XDG_CACHE_HOME" "$XDG_STATE_HOME" "$XDG_DATA_HOME/applications" "$XDG_DATA_HOME/dbus-1/services" \
+        "$HOME/Desktop" "$ext"
     mkdir -m 700 "$XDG_RUNTIME_DIR"
+    # the desktop portal brings a file chooser that differs between distros and a FUSE mount in the runtime dir;
+    # with the service masked GTK uses its built-in file chooser and reads its settings from GSettings
+    printf '%s\n' '[D-BUS Service]' 'Name=org.freedesktop.portal.Desktop' 'Exec=/bin/false' \
+        > "$XDG_DATA_HOME/dbus-1/services/org.freedesktop.portal.Desktop.service"
     cp -r "$EXT_DIR/." "$ext/"
     glib-compile-schemas "$ext/schemas"
     # without GDM a fresh profile gets a "Screen Lock disabled" banner over the panel
@@ -115,6 +123,7 @@ seed_settings() {
         gsettings set org.gnome.desktop.session idle-delay 0 &&
         gsettings set org.gnome.desktop.background picture-options "'none'" &&
         gsettings set org.gnome.desktop.background primary-color "'#5b6770'" &&
+        gsettings set org.gnome.desktop.input-sources sources "[('xkb', 'us')]" &&
         [ "$(gsettings get org.gnome.shell enabled-extensions)" = "['$UUID']" ]
 }
 
@@ -209,11 +218,18 @@ hide_overview() {
 
 # the files are plain scripts read and evaluated inside the shell, so Main and the gi imports of the Eval call are in scope
 load_driver() {
-    local config="{out: '$OUT', theme: '$THEME', scenario: '$SCENARIO', major: $SHELL_MAJOR, uuid: '$UUID', base: '$FEED_BASE'"
-    config="$config, urlLog: '$PROFILE/opened-urls', feedState: '$TMP/feed-state.json'}"
-    eval_true "(eval(new TextDecoder().decode(GLib.file_get_contents('$HARNESS/driver.js')[1])), true)" &&
-        eval_true "e2e.init($config)" &&
-        eval_true "(eval(new TextDecoder().decode(GLib.file_get_contents('$HARNESS/scenarios.js')[1])), true)"
+    local file config="{out: '$OUT', theme: '$THEME', scenario: '$SCENARIO', major: $SHELL_MAJOR, uuid: '$UUID', base: '$FEED_BASE'"
+    config="$config, profile: '$PROFILE', feedState: '$TMP/feed-state.json'}"
+    for file in $HARNESS_SCRIPTS; do
+        if ! eval_true "(eval(new TextDecoder().decode(GLib.file_get_contents('$HARNESS/$file')[1])), true)"; then
+            echo "while loading $file"
+            return 1
+        fi
+        # the other files build on a driver that has its configuration
+        if [ "$file" = driver.js ]; then
+            eval_true "e2e.init($config)" || return 1
+        fi
+    done
 }
 
 run_scenario() {
@@ -236,7 +252,8 @@ scenario_finished() {
 
 log_is_clean() {
     local errors
-    errors=$(tail -n "+$LOG_START" "$OUT/full.log" | grep -v -E '^\[(e2e|feeds)\]|/(404|garbage)\.xml' |
+    # the feeds that the scenarios break on purpose are the expected HTTP failures
+    errors=$(tail -n "+$LOG_START" "$OUT/full.log" | grep -v -E "^\[(e2e|feeds)\]|/(404|garbage|gone[0-9]+)\.xml|for URL 'not a url'" |
         grep -E 'already disposed|rss-feed.*(ERROR|CRITICAL|WARNING|\.js:[0-9])|(ERROR|CRITICAL|WARNING).*rss-feed' | head -n 20) || true
     if [ -n "$errors" ]; then
         echo "$errors"
@@ -321,9 +338,9 @@ write_report() {
         echo
         echo "## Not automated"
         echo
-        echo "- Preferences window (checklist sections 6, 18, 19): a separate GTK process"
         echo "- Lock screen (11), log out and in, Shell restart (parts of 1)"
-        echo "- Not covered yet: notifications (8), display modes (9), cleanup (12), starred (16), dismiss and restore (17)"
+        echo "- Not covered yet: notifications (8), cleanup (12), starred (16), dismiss and restore (17)"
+        echo "- Preferences: the file chooser is the one built into GTK (the desktop portal is masked), the colour scheme comes from GSettings"
         echo
         echo "## Shell log (filtered)"
         echo
@@ -342,7 +359,12 @@ kill_session() {
 }
 
 run_session() {
+    local start=$PWD
+
     prepare_profile
+
+    # the file chooser of the preferences window opens in the working directory, which must not be a real one
+    cd "$HOME"
 
     # piped through curl there is no script file to run again inside the session, so the functions go in as text;
     # the session bus and the services it starts are noisy, their output belongs in the log and not between the steps
@@ -350,6 +372,7 @@ run_session() {
     SESSION_PID=$!
     wait "$SESSION_PID" || say "$THEME $SCENARIO session ended with status $?"
     kill_session
+    cd "$start"
 
     [ -f "$PROFILE/session-done" ]
 }
@@ -381,7 +404,7 @@ main() {
         esac
     done
 
-    for cmd in gnome-shell gdbus gsettings dbus-run-session dbus-daemon glib-compile-schemas python3 curl setsid timeout tar; do
+    for cmd in gnome-shell gjs gdbus gsettings dbus-run-session dbus-daemon glib-compile-schemas python3 curl setsid timeout tar; do
         command -v "$cmd" > /dev/null || fail "$cmd not found"
     done
 
@@ -411,7 +434,7 @@ main() {
     fetch_harness
     start_feeds
 
-    export UUID INDICATOR OUT TMP SHELL_ARGS SHELL_MAJOR HARNESS FEED_BASE SCENARIO_TIMEOUT
+    export UUID INDICATOR OUT TMP SHELL_ARGS SHELL_MAJOR HARNESS HARNESS_SCRIPTS FEED_BASE SCENARIO_TIMEOUT
     for THEME in $THEMES; do
         for SCENARIO in $SCENARIOS; do
             export THEME SCENARIO

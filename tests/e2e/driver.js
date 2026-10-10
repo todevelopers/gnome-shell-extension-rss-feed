@@ -11,6 +11,7 @@ globalThis.e2e = (() =>
 	let keyboard = null;
 	let current = null;
 	let failShots = 0;
+	const failureNotes = [];
 
 	function init(config)
 	{
@@ -71,6 +72,18 @@ globalThis.e2e = (() =>
 		let b = JSON.stringify(expected);
 		if (a !== b)
 			throw new Error(what + ': expected ' + b + ', got ' + a);
+	}
+
+	// same() for a value that needs a moment to arrive; when the time is up the message names the value it got instead
+	async function eventually(read, expected, what, timeout = 5000)
+	{
+		let actual;
+
+		await waitFor(what, async () =>
+		{
+			actual = await read();
+			return JSON.stringify(actual) === JSON.stringify(expected);
+		}, timeout).catch(() => same(actual, expected, what + ' after ' + timeout + ' ms'));
 	}
 
 	const ext = () => Main.extensionManager.lookup(cfg.uuid);
@@ -220,6 +233,64 @@ globalThis.e2e = (() =>
 		await sleep(150);
 	}
 
+	// keys reach the focused window of another process as well; the keyboard layout of the test profile is us
+	async function type(text)
+	{
+		for (let ch of text)
+		{
+			let keyval = Clutter.unicode_to_keysym(ch.codePointAt(0));
+			keyboard.notify_keyval(now(), keyval, Clutter.KeyState.PRESSED);
+			await sleep(12);
+			keyboard.notify_keyval(now(), keyval, Clutter.KeyState.RELEASED);
+			await sleep(25);
+		}
+
+		await sleep(150);
+	}
+
+	async function chord(modifier, keyval)
+	{
+		keyboard.notify_keyval(now(), modifier, Clutter.KeyState.PRESSED);
+		await sleep(30);
+		keyboard.notify_keyval(now(), keyval, Clutter.KeyState.PRESSED);
+		await sleep(30);
+		keyboard.notify_keyval(now(), keyval, Clutter.KeyState.RELEASED);
+		await sleep(30);
+		keyboard.notify_keyval(now(), modifier, Clutter.KeyState.RELEASED);
+		await sleep(150);
+	}
+
+	async function drag(from, to)
+	{
+		await moveTo(from.x, from.y);
+		pointer.notify_button(now(), Clutter.BUTTON_PRIMARY, Clutter.ButtonState.PRESSED);
+		await sleep(200);
+
+		for (let i = 1; i <= 20; i++)
+		{
+			pointer.notify_absolute_motion(now(), from.x + (to.x - from.x) * i / 20, from.y + (to.y - from.y) * i / 20);
+			await sleep(40);
+		}
+
+		await sleep(300);
+		pointer.notify_button(now(), Clutter.BUTTON_PRIMARY, Clutter.ButtonState.RELEASED);
+		await sleep(400);
+	}
+
+	// positive clicks scroll down
+	async function wheel(clicks)
+	{
+		let direction = clicks > 0 ? Clutter.ScrollDirection.DOWN : Clutter.ScrollDirection.UP;
+
+		for (let i = 0; i < Math.abs(clicks); i++)
+		{
+			pointer.notify_discrete_scroll(now(), direction, Clutter.ScrollSource.WHEEL);
+			await sleep(80);
+		}
+
+		await sleep(250);
+	}
+
 	async function openPopup()
 	{
 		if (ind().menu.isOpen)
@@ -289,7 +360,7 @@ globalThis.e2e = (() =>
 		}
 	}
 
-	const openedUrls = () => readText(cfg.urlLog).split('\n').filter(Boolean);
+	const openedUrls = () => readText(cfg.profile + '/opened-urls').split('\n').filter(Boolean);
 	const logCount = needle => readText(cfg.out + '/full.log').split(needle).length - 1;
 
 	function append(path, line)
@@ -411,6 +482,9 @@ globalThis.e2e = (() =>
 				let file = 'g' + cfg.major + '_' + cfg.theme + '_' + id + '_FAILED.png';
 				await capture(file, null).then(() => current.shots.push({ file, look: 'Whole screen at the moment the step failed.' })).catch(() => {});
 			}
+
+			for (let note of failureNotes)
+				message += await note(id).catch(() => '');
 		}
 
 		if (timer)
@@ -431,13 +505,14 @@ globalThis.e2e = (() =>
 	}
 
 	return {
-		scenarios, init, run, step, shot, sleep, waitFor, check, same,
+		scenarios, init, run, step, shot, sleep, waitFor, check, same, eventually,
 		config: () => cfg,
+		onFailure: note => failureNotes.push(note),
 		ext, obj, ind, header, store, status, source, group, titleOf, classicRows, minimalRows,
-		setValue, setFeeds, setup, refresh, setFeedState,
+		setValue, setFeeds, setup, refresh, setFeedState, feedUrl,
 		bounds, area, panelStrip,
-		moveTo, hover, clickAt, click, key,
+		moveTo, hover, clickAt, click, key, type, chord, drag, wheel,
 		openPopup, closePopup, expand, hoverRow, pressButton,
-		clipboard, setClipboard, openedUrls, logCount,
+		clipboard, setClipboard, readText, openedUrls, logCount,
 	};
 })();
