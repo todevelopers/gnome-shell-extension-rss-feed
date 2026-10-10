@@ -31,9 +31,10 @@ export function planNotifications(payload, ctx)
 	let known = new Set(ctx.liveIds);
 	let live = ctx.liveIds.slice();
 
-	for (let { item, update } of payload.items)
+	// the payload is newest first, the tray is kept oldest first so that the limit drops the oldest
+	for (let { item } of payload.items.slice().reverse())
 	{
-		// a feed editing an item it already notified about replaces the old banner, not stacks on it
+		// two feeds can carry the same article, its notification is replaced, not stacked
 		if (known.has(item.id))
 		{
 			live.splice(live.indexOf(item.id), 1);
@@ -43,7 +44,7 @@ export function planNotifications(payload, ctx)
 		live.push(item.id);
 		toShow.push({
 			id : item.id,
-			title : update ? 'UPDATE: ' + item.title : item.title,
+			title : item.title,
 			body : item.desc || item.title,
 			url : item.link,
 		});
