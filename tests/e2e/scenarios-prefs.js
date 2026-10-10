@@ -888,11 +888,25 @@
 		}, 45000))
 			return;
 
-		// the driver can lose the window when the file chooser closes; it reads the tree anew then and the page has to be found again
+		// on GNOME 47 the driver can lose the window when the file chooser closes. A new window is readable again, but the toast of
+		// the old one is gone with it, so that one check is left out then.
+		let lostWindow = false;
+
 		async function confirm()
 		{
-			if (await p.confirmFile())
-				page = await p.page('Sources');
+			lostWindow = await p.confirmFile();
+			if (!lostWindow)
+				return;
+
+			await p.close();
+			await p.open();
+			page = await p.page('Sources');
+		}
+
+		async function toast(text, timeout)
+		{
+			if (!lostWindow)
+				await p.toast(text, timeout);
 		}
 
 		async function importFile(name)
@@ -912,7 +926,7 @@
 			await p.shot('import-dialog', 'File chooser Import OPML over the preferences window, the path of import.opml typed into its location entry. The chooser belongs to GTK, not to the extension.');
 			await confirm();
 
-			await p.toast('Imported 2 feeds (1 duplicate skipped)');
+			await toast('Imported 2 feeds (1 duplicate skipped)');
 			same(feeds().map(short), ['rss2', 'atom', 'feedburner', 'rdf'], 'feeds in the settings');
 			same(feedMeta('feedburner'), { t: 'Burner from OPML', f: 'News' }, 'title and folder of the feed inside the folder News');
 			same(feedMeta('rdf'), { t: 'RDF from OPML' }, 'title of the feed outside any folder');
@@ -927,7 +941,7 @@
 		await step('19-01a', 'Import OPML…: "No new feeds found in file" for nothing new', async () =>
 		{
 			await importFile('import.opml');
-			await p.toast('No new feeds found in file', 15000);
+			await toast('No new feeds found in file', 15000);
 			same(feeds().length, 4, 'feeds in the settings');
 			same(rowCount(), 4, 'rows');
 		}, 60000);
@@ -935,7 +949,7 @@
 		await step('19-01b', 'Import OPML…: an error toast for a broken file', async () =>
 		{
 			await importFile('broken.opml');
-			await p.toast('Could not parse OPML file', 15000);
+			await toast('Could not parse OPML file', 15000);
 			same(feeds().length, 4, 'feeds in the settings');
 			await p.shot('import-broken', 'Sources page unchanged with the toast Could not parse OPML file.');
 		}, 60000);
@@ -943,7 +957,7 @@
 		await step('19-01c', 'Import OPML…: a file that is not OPML at all imports nothing', async () =>
 		{
 			await importFile('notes.txt');
-			await p.toast('No new feeds found in file', 15000);
+			await toast('No new feeds found in file', 15000);
 			same(feeds().length, 4, 'feeds in the settings');
 		}, 60000);
 
@@ -963,7 +977,7 @@
 			await p.press(await p.get(p.BUTTON, 'Export OPML…', page));
 			await p.chooseFile(file('export.opml'), true);
 			await confirm();
-			await p.toast('Exported 4 feeds', 15000);
+			await toast('Exported 4 feeds', 15000);
 
 			let text = t.readText(file('export.opml'));
 			same([...text.matchAll(/xmlUrl="([^"]+)"/g)].map(m => short(m[1])).sort(), ['atom', 'feedburner', 'rdf', 'rss2'], 'feeds in the file');
@@ -981,7 +995,7 @@
 			await eventually(() => feeds().length, 0, 'feeds in the settings after Remove All');
 
 			await importFile('export.opml');
-			await p.toast('Imported 4 feeds', 20000);
+			await toast('Imported 4 feeds', 20000);
 			same(feeds().map(short).sort(), before.feeds, 'feeds in the settings');
 			same(perFeed(), before.settings, 'titles and folders');
 			await eventually(loaded, ['atom loaded', 'feedburner loaded', 'rdf loaded', 'rss2 loaded'], 'feeds of the extension', 15000);

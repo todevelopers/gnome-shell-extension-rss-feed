@@ -332,9 +332,8 @@
 	}
 
 	// at-spi 2.54 (GNOME 47) sometimes throws the whole application away when one of its windows closes and answers "The application no
-	// longer exists" from then on, although the window is fine; only a new start of the library reads it again, and every node from
-	// before is dead then
-	function revive()
+	// longer exists" from then on, although the window is fine. A new start of the library does not help, only a new window does.
+	function lost()
 	{
 		try
 		{
@@ -343,14 +342,12 @@
 		}
 		catch
 		{
-			console.log('e2e: the accessibility library lost the preferences window and is started again');
-			Atspi.exit();
-			attach();
+			console.log('e2e: the accessibility library lost the preferences window');
 			return true;
 		}
 	}
 
-	// true when the tree had to be read anew, so the caller has to look its widgets up again
+	// true when the window can no longer be read: the caller has to close it and open a new one
 	async function confirmFile()
 	{
 		await t.key(Clutter.KEY_Return);
@@ -359,11 +356,8 @@
 
 		for (let i = 0; i < (t.config().major === 47 ? 5 : 1); i++)
 		{
-			if (revive())
-			{
-				await waitFor('the preferences window in the accessibility tree again', () => find('page tab'), 10000);
+			if (lost())
 				return true;
-			}
 
 			await sleep(200);
 		}
