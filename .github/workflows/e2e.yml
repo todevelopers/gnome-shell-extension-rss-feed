@@ -22,9 +22,9 @@ on:
         options: [both, dark, light]
         default: both
       gnome:
-        description: GNOME version (50-ubuntu is Ubuntu 26.04, the plain numbers above 46 are Fedora)
+        description: GNOME version (46 and 50 on Ubuntu LTS, the others on Fedora)
         type: choice
-        options: ['46', '47', '48', '49', '50', 50-ubuntu, '51', all]
+        options: ['46', '47', '48', '49', '50', '51', all]
         default: '46'
 
 permissions:
@@ -39,15 +39,15 @@ jobs:
   test:
     name: GNOME Shell ${{ matrix.gnome }}, ${{ matrix.theme }}
     # the GNOME version of the image is the point, so no ubuntu-latest
-    runs-on: ${{ matrix.gnome == '50-ubuntu' && 'ubuntu-26.04' || 'ubuntu-24.04' }}
-    # the two Ubuntu targets use the Shell of the runner itself, the others come from the Fedora release that ships them
-    container: ${{ fromJSON('{"46":"","47":"quay.io/fedora/fedora:41","48":"quay.io/fedora/fedora:42","49":"quay.io/fedora/fedora:43","50":"quay.io/fedora/fedora:44","50-ubuntu":"","51":"quay.io/fedora/fedora:45"}')[matrix.gnome] }}
+    runs-on: ${{ matrix.gnome == '50' && 'ubuntu-26.04' || 'ubuntu-24.04' }}
+    # 46 and 50 are the Shell of an Ubuntu LTS runner itself, the others come from the Fedora release that ships them
+    container: ${{ fromJSON('{"46":"","47":"quay.io/fedora/fedora:41","48":"quay.io/fedora/fedora:42","49":"quay.io/fedora/fedora:43","50":"","51":"quay.io/fedora/fedora:45"}')[matrix.gnome] }}
     timeout-minutes: 20
     strategy:
       # one red job must not cancel the others
       fail-fast: false
       matrix:
-        gnome: ${{ fromJSON(inputs.gnome == 'all' && '["46", "47", "48", "49", "50", "50-ubuntu", "51"]' || format('["{0}"]', inputs.gnome || '46')) }}
+        gnome: ${{ fromJSON(inputs.gnome == 'all' && '["46", "47", "48", "49", "50", "51"]' || format('["{0}"]', inputs.gnome || '46')) }}
         theme: ${{ fromJSON(inputs.theme == 'dark' && '["dark"]' || inputs.theme == 'light' && '["light"]' || '["dark", "light"]') }}
     defaults:
       run:
