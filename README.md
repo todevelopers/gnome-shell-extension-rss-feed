@@ -6,6 +6,7 @@
 
 [![CI](https://github.com/todevelopers/gnome-shell-extension-rss-feed/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/todevelopers/gnome-shell-extension-rss-feed/actions/workflows/ci.yml)
 [![vitest](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tommy-gun/87195eb23e76eae80cd14a6d80e56072/raw/vitest.json&cacheSeconds=0)](https://github.com/todevelopers/gnome-shell-extension-rss-feed/actions/workflows/ci.yml?query=branch%3Amaster)
+[![e2e](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tommy-gun/87195eb23e76eae80cd14a6d80e56072/raw/e2e.json&cacheSeconds=0)](https://github.com/todevelopers/gnome-shell-extension-rss-feed/actions/workflows/e2e.yml?query=branch%3Amaster)
 [![CodeScene Average Code Health](https://codescene.io/projects/85597/status-badges/average-code-health)](https://codescene.io/projects/85597)
 [![GitHub Release](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tommy-gun/87195eb23e76eae80cd14a6d80e56072/raw/release.json&cacheSeconds=0)](https://github.com/todevelopers/gnome-shell-extension-rss-feed/releases/latest)
 [![GNOME](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tommy-gun/87195eb23e76eae80cd14a6d80e56072/raw/gnome.json&cacheSeconds=0)](https://extensions.gnome.org/extension/948/)
