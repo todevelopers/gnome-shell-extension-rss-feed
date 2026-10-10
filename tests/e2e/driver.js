@@ -202,6 +202,10 @@ globalThis.e2e = (() =>
 	{
 		pointer.notify_absolute_motion(now(), x, y);
 		await sleep(120);
+
+		// a click somewhere else would test something else: on GNOME 49 and 50 a motion sometimes ends in the top left corner
+		let [px, py] = global.get_pointer();
+		check(Math.abs(px - x) <= 1 && Math.abs(py - y) <= 1, 'the pointer was sent to ' + Math.round(x) + ',' + Math.round(y) + ' and is at ' + px + ',' + py);
 	}
 
 	async function hover(actor, fx = 0.5, fy = 0.5)
