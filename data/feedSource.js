@@ -177,7 +177,7 @@ class FeedSource extends GObject.Object
 			{
 				item.read = false;
 				this.unreadCount++;
-				notify.push({ item, update: false });
+				notify.push({ item });
 			}
 			added.push(item);
 		}
