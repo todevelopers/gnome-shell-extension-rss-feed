@@ -283,7 +283,10 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 			}
 		}
 		if (!aSettings.get(url, 'v'))
-			row._avatarLabel.set_label(getInitials(Encoder.htmlDecode(publisherTitle)));
+		{
+			let title = aSettings.get(url, 't');
+			row._avatarLabel.set_label(title ? getInitials(title) : urlToInitials(url));
+		}
 	};
 
 	const rowMap = new Map();
@@ -348,10 +351,10 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 		});
 		avatarLabel.add_css_class('source-avatar');
 
-		const row = new Adw.ExpanderRow({
-			title : storedTitle || url.replace(/^https?:\/\//, '').split('/')[0],
-			subtitle : url,
-		});
+		// title and subtitle given to the constructor are still parsed as markup
+		const row = new Adw.ExpanderRow({ use_markup : false });
+		row.set_title(storedTitle || url.replace(/^https?:\/\//, '').split('/')[0]);
+		row.set_subtitle(url);
 		row.add_prefix(dragHandle);
 		row.add_prefix(avatarLabel);
 
@@ -400,8 +403,9 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 			let neighbor = row.get_next_sibling();
 			if (!neighbor || neighbor === addRow)
 				neighbor = row.get_prev_sibling();
+			// grab_focus() of an expander row does not reach its header before libadwaita 1.8
 			if (neighbor)
-				neighbor.grab_focus();
+				neighbor.child_focus(Gtk.DirectionType.TAB_FORWARD);
 
 			sourcesGroup.remove(row);
 			rowMap.delete(state.url);
@@ -415,16 +419,24 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 		const avatarEntry = new Adw.EntryRow({ title : 'Avatar' });
 		avatarEntry.set_text(storedAvatar || (storedTitle ? getInitials(storedTitle) : urlToInitials(url)));
 		let _avatarUpdating = false;
+		let _avatarFixId = 0;
 		avatarEntry.connect('changed', () =>
 		{
 			if (_avatarUpdating) return;
 			let raw = avatarEntry.get_text();
 			let val = raw.replace(/\s/g, '').toUpperCase().slice(0, 2);
-			if (val !== raw)
+			// rewriting the text while the key press is still being handled makes GTK warn and leaves the caret at the start
+			if (val !== raw && !_avatarFixId)
 			{
-				_avatarUpdating = true;
-				avatarEntry.set_text(val);
-				_avatarUpdating = false;
+				_avatarFixId = GLib.idle_add(GLib.PRIORITY_DEFAULT, () =>
+				{
+					_avatarFixId = 0;
+					_avatarUpdating = true;
+					avatarEntry.set_text(avatarEntry.get_text().replace(/\s/g, '').toUpperCase().slice(0, 2));
+					_avatarUpdating = false;
+					avatarEntry.set_position(-1);
+					return GLib.SOURCE_REMOVE;
+				});
 			}
 			if (val.length > 0)
 			{
@@ -436,6 +448,15 @@ export function buildSourcesPage(window, settings, aSettings, httpSession)
 				let t = aSettings.get(state.url, 't');
 				avatarLabel.set_label(t ? getInitials(t) : urlToInitials(state.url));
 				aSettings.set(state.url, 'v', undefined);
+			}
+		});
+
+		avatarEntry.connect('destroy', () =>
+		{
+			if (_avatarFixId)
+			{
+				GLib.source_remove(_avatarFixId);
+				_avatarFixId = 0;
 			}
 		});
 
