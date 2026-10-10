@@ -397,8 +397,7 @@
 
 	async function open(opener = () => t.obj().openPreferences())
 	{
-		let fresh = !win();
-		if (fresh)
+		if (!win())
 			await opener();
 
 		let window = await waitFor('the preferences window', win, 20000);
@@ -420,11 +419,6 @@
 		}, 10000);
 
 		await focus(window);
-
-		// on GNOME 49 and 50 a new window does not get the first press of the virtual pointer (the second one arrives, whatever happens
-		// in between), so that press goes to the empty bottom corner of the window
-		if (fresh)
-			await t.clickAt(frame.x + 24, frame.y + frame.h - 24);
 
 		await park();
 		await sleep(400);

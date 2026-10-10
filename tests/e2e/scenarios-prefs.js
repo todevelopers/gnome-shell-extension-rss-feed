@@ -1006,4 +1006,59 @@
 			await eventually(() => t.source('latin2')?.items.length, 3, 'articles loaded for the feed that arrived while the Shell was busy', 10000);
 		}, 45000);
 	};
+	// TEMPORARY probe: what makes the first click into the preferences window arrive on GNOME 49 and 50?
+	const probe = (name, prime) =>
+	{
+		t.scenarios[name] = async () =>
+		{
+			await step('99-' + name, 'probe ' + name, async () =>
+			{
+				await t.setup(['rss2']);
+				await p.open();
+				let page = await p.page('Sources');
+				let entry = await p.get('text', 'New RSS source URL', page);
+				let frame = p.win().get_frame_rect();
+				let notes = [];
+
+				await prime(entry, frame, page);
+				notes.push('after priming: focused=' + p.has(entry, 'FOCUSED'));
+				await p.clickOn(entry, 0.2, 0.5);
+				await sleep(400);
+				notes.push('after one click on the entry: focused=' + p.has(entry, 'FOCUSED'));
+
+				await p.close();
+				return notes.join(' | ');
+			}, 90000);
+		};
+	};
+
+	probe('probeA', async (_entry, frame) =>
+	{
+		await t.clickAt(frame.x + 24, frame.y + frame.height - 24);
+		await p.park();
+	});
+	probe('probeB', async (_entry, frame) => t.clickAt(frame.x + 24, frame.y + frame.height - 24));
+	probe('probeC', async (_entry, frame) =>
+	{
+		await t.clickAt(frame.x + 24, frame.y + 20);
+		await p.park();
+	});
+	probe('probeD', async entry =>
+	{
+		await p.clickOn(entry, 0.2, 0.5);
+		await sleep(400);
+		await t.key(Clutter.KEY_Escape);
+		await p.park();
+	});
+	probe('probeE', async (_entry, _frame, page) =>
+	{
+		await p.clickOn(await p.get('label', 'Initial unread', page));
+		await p.park();
+	});
+	probe('probeF', async (_entry, frame) =>
+	{
+		await t.clickAt(frame.x + 24, frame.y + frame.height - 24);
+		await t.clickAt(frame.x + 24, frame.y + frame.height - 24);
+		await p.park();
+	});
 })();
