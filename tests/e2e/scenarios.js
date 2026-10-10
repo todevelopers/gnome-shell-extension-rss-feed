@@ -1053,4 +1053,601 @@
 			await t.closePopup();
 		});
 	};
+
+	t.scenarios.starred = async () =>
+	{
+		const rss = () => t.source('rss2');
+		const atom = () => t.source('atom');
+		const group = () => t.ind()._starredGroup;
+		const rows = () => t.classicRows(group());
+		const star = (source, index) => t.store().toggleStar(source, source.items[index]);
+		const count = badge => badge.visible ? badge._label.text : '';
+		const described = () => rows().map(row => t.titleOf(row) + ' / ' + row._sourceTag.text);
+		const archived = () => t.store().getArchived().map(source => source.url.replace(t.config().base + '/', ''));
+
+		if (!await step('16-00', 'setup: two feeds in the Classic layout, nothing starred', async () =>
+		{
+			await t.setup(['rss2', 'atom']);
+			same(t.store().starredCount(), 0, 'starred articles');
+		}, 45000))
+			return;
+
+		await step('16-01', 'Classic: a Starred group appears (hidden when nothing is starred) with a correct unread count', async () =>
+		{
+			await t.openPopup();
+			check(!group().visible, 'the Starred group is visible with nothing starred');
+
+			t.store().markRead(rss(), rss().items[1]);
+			star(rss(), 0);
+			star(rss(), 1);
+			star(atom(), 0);
+			await waitFor('the Starred group to appear', () => group().visible);
+			same(group().label.text, 'Starred', 'title of the group');
+			same(count(group()._countBadge), '2', 'unread count of the Starred group (two of the three starred articles are unread)');
+			await away();
+			await shot('group', 'Classic layout: a group Starred with a star icon and the count 2, together with the groups Mock RSS and Mock Atom.');
+		});
+
+		await step('16-02', 'Classic: starred rows show the feed name and look like the Minimal rows', async () =>
+		{
+			await t.expand(group(), 3);
+			same(rows().map(row => row.constructor.name), ['TaggedArticleRow', 'TaggedArticleRow', 'TaggedArticleRow'], 'kind of the starred rows');
+			same(described(), ['RSS article 01 / Mock RSS', 'RSS article 02 / Mock RSS', 'Atom entry 01 / Mock Atom'], 'titles and feed names of the starred rows');
+			await away();
+			await shot('rows', 'Starred group expanded: three rows, each with the article title and under it a tag with the feed name and the time; RSS article 02 is read (no dot).');
+		});
+
+		await step('16-04', 'Unstarring removes the article from the Starred view', async () =>
+		{
+			let row = rows()[0];
+			let target = row._item;
+			await t.pressButton(row, 'star');
+			check(!target.starred, 'the article is still starred');
+			same(t.status(), 'Article unstarred', 'flash message');
+			await waitFor('the row to leave the Starred group', () => rows().length === 2 && !rows().some(r => r._item === target), 4000);
+			same(count(group()._countBadge), '1', 'unread count of the Starred group');
+			check(t.ind().menu.isOpen, 'the popup closed');
+		});
+
+		await step('16-11', 'Expanding / collapsing the Classic Starred group works, also after closing and reopening the menu', async () =>
+		{
+			await away();
+			await click(group(), LEFT, 0.4, 0.5);
+			await waitFor('the Starred group to collapse', () => !group().menu.isOpen);
+			await click(group(), LEFT, 0.4, 0.5);
+			await waitFor('the Starred group to expand again', () => group().menu.isOpen && rows().length === 2);
+
+			await t.closePopup();
+			await t.openPopup();
+			let reopened = group().menu.isOpen ? 'expanded' : 'collapsed';
+			await t.expand(group(), 2);
+			same(rows().length, 2, 'starred rows after the menu was reopened');
+			await away();
+			await click(group(), LEFT, 0.4, 0.5);
+			await waitFor('the Starred group to collapse after the menu was reopened', () => !group().menu.isOpen);
+			return 'after reopening the menu the group was ' + reopened;
+		});
+
+		await step('16-10', 'Mark all as read / mark older as read include starred articles', async () =>
+		{
+			star(rss(), 5);
+			let older = rss().items[5];
+			check(!older.read, 'RSS article 06 is read before the test');
+
+			t.store().markOlderRead(rss(), rss().items[3]);
+			check(older.read, 'mark older as read skipped the starred RSS article 06');
+
+			let unreadStarred = atom().items[0];
+			check(unreadStarred.starred && !unreadStarred.read, 'Atom entry 01 is not an unread starred article before the test');
+			t.store().markAllSeen();
+			check(unreadStarred.read, 'mark all as read skipped the starred Atom entry 01');
+			same(count(group()._countBadge), '', 'unread count of the Starred group');
+			same(t.store().starredCount(), 3, 'starred articles');
+		});
+
+		await step('16-05', 'Unstar all (N) in the ⋮ menu unstars everything', async () =>
+		{
+			await openOverflow();
+			check(overflowLabels().includes('Unstar all (3)'), 'the ⋮ menu has no Unstar all (3): ' + overflowLabels().join(', '));
+			await click(overflowItem('Unstar all'));
+			same(t.store().starredCount(), 0, 'starred articles');
+			same(t.status(), '3 articles unstarred', 'flash message');
+			await waitFor('the Starred group to hide', () => !group().visible);
+		});
+
+		await step('16-03', 'Minimal: STARRED section appears; unread starred articles are listed only in STARRED (intended)', async () =>
+		{
+			const state = () => t.ind()._minimal._state;
+			let first = rss().items[2];
+			let second = rss().items[3];
+
+			try
+			{
+				t.setValue('layout-mode', 'minimal');
+				await t.openPopup();
+				t.store().markUnread(rss(), first);
+				t.store().markUnread(rss(), second);
+				t.store().toggleStar(rss(), first);
+				await waitFor('the article in the STARRED section', () => state().starred.header && state().starred.rows.has(first), 5000);
+
+				check(!state().unread.rows.has(first), 'the unread starred article is listed in UNREAD as well');
+				check(state().unread.rows.has(second), 'the other unread article is missing in UNREAD');
+				same([state().starred.header._count.text, state().unread.header._count.text], ['1', '1'], 'counts of STARRED and UNREAD');
+				await away();
+				await shot('minimal', 'Minimal layout: STARRED (1) with RSS article 03, UNREAD (1) with RSS article 04 only, then READ.');
+			}
+			finally
+			{
+				t.setValue('layout-mode', 'classic');
+			}
+		});
+
+		await step('16-07', 'Starred articles survive a disable and enable of the extension (stands in for a Shell restart)', async () =>
+		{
+			await t.closePopup();
+			same(t.store().starredEntries().map(entry => entry.item.title), ['RSS article 03'], 'starred articles before the disable');
+
+			Main.extensionManager.disableExtension(uuid());
+			await waitFor('the extension to be disabled', () => t.ext().state !== 1, 10000);
+			Main.extensionManager.enableExtension(uuid());
+			await waitFor('the extension to be enabled', () => t.ext().state === 1 && t.ind() && t.store(), 15000);
+			await waitFor('both feeds to be back', () => t.store().getSources().length === 2 && t.store().getSources().every(s => s.items.length > 0), 15000);
+
+			same(t.store().starredEntries().map(entry => entry.item.title), ['RSS article 03'], 'starred articles after the enable');
+			check(group().visible, 'the Starred group is hidden after the enable');
+		}, 60000);
+
+		await step('16-08', 'Remove a feed that has starred articles: the starred articles stay (shown with the stored feed title)', async () =>
+		{
+			await t.setFeeds(['atom']);
+			await waitFor('Mock RSS to leave the list', () => !t.source('rss2'));
+			same(t.store().starredEntries().map(entry => entry.item.title), ['RSS article 03'], 'starred articles after the feed was removed');
+			same(archived(), ['rss2.xml'], 'removed feeds that are kept for their starred articles');
+
+			await t.openPopup();
+			check(!t.group('rss2'), 'the menu still has a group for the removed feed');
+			await t.expand(group(), 1);
+			same(described(), ['RSS article 03 / Mock RSS'], 'title and feed name of the starred row');
+			await away();
+			await shot('removed-feed', 'Only Mock Atom is left as a feed; the Starred group still shows RSS article 03 with the tag Mock RSS.');
+		}, 45000);
+
+		await step('16-09', 'Add the same URL again: the starred articles return to the feed; unstarring the last starred article of a removed feed makes it disappear', async () =>
+		{
+			await t.setFeeds(['atom', 'rss2']);
+			await waitFor('Mock RSS to be loaded again', () => rss() && rss().items.length === 10, 15000);
+			same(archived(), [], 'removed feeds that are kept after the feed was added again');
+			same(rss().items.filter(item => item.starred).map(item => item.title), ['RSS article 03'], 'starred articles of Mock RSS');
+			same(t.store().starredCount(), 1, 'starred articles');
+
+			await t.setFeeds(['atom']);
+			await waitFor('Mock RSS to leave the list', () => !t.source('rss2'));
+			same(archived(), ['rss2.xml'], 'removed feeds that are kept for their starred articles');
+
+			let entry = t.store().starredEntries()[0];
+			t.store().toggleStar(entry.source, entry.item);
+			same(t.store().starredCount(), 0, 'starred articles');
+			same(archived(), [], 'removed feeds that are kept after their last starred article was unstarred');
+			await waitFor('the Starred group to hide', () => !group().visible);
+		}, 60000);
+	};
+
+	t.scenarios.dismiss = async () =>
+	{
+		const rss = () => t.source('rss2');
+		const titles = () => rss().items.filter(item => item.dismissed).map(item => item.title);
+		const shown = () => t.classicRows(t.group('rss2')).map(t.titleOf);
+
+		if (!await step('17-00', 'setup: one feed with ten unread articles', async () =>
+		{
+			await t.setup(['rss2']);
+			same(t.store().totalUnread, 10, 'unread articles');
+		}, 45000))
+			return;
+
+		await step('17-01', 'A dismissed article stays hidden after refresh and after a disable and enable (a feed that still publishes it does not bring it back)', async () =>
+		{
+			t.store().dismiss(rss(), rss().items[0]);
+			same(titles(), ['RSS article 01'], 'dismissed articles');
+			same(t.store().totalUnread, 9, 'unread articles');
+
+			await t.openPopup();
+			await t.expand(t.group('rss2'), 9);
+			same(shown(), numbered('RSS article', 10).slice(1), 'rows of the feed group');
+			await t.closePopup();
+
+			await t.refresh();
+			same(titles(), ['RSS article 01'], 'dismissed articles after a refresh');
+			same(rss().items.length, 10, 'articles of the feed after a refresh');
+
+			Main.extensionManager.disableExtension(uuid());
+			await waitFor('the extension to be disabled', () => t.ext().state !== 1, 10000);
+			Main.extensionManager.enableExtension(uuid());
+			await waitFor('the extension to be enabled', () => t.ext().state === 1 && t.ind() && t.store(), 15000);
+			await waitFor('the feed to be back', () => rss() && rss().items.length === 10, 15000);
+
+			same(titles(), ['RSS article 01'], 'dismissed articles after the enable');
+			same(t.store().totalUnread, 9, 'unread articles after the enable');
+			await t.openPopup();
+			await t.expand(t.group('rss2'), 9);
+			same(shown(), numbered('RSS article', 10).slice(1), 'rows of the feed group after the enable');
+		}, 90000);
+
+		await step('17-02', 'Dismissing a starred article unstars it first', async () =>
+		{
+			let item = rss().items[1];
+			t.store().toggleStar(rss(), item);
+			same(t.store().starredCount(), 1, 'starred articles before the dismiss');
+
+			t.store().dismiss(rss(), item);
+			check(item.dismissed, 'the article is not dismissed');
+			check(!item.starred, 'the dismissed article is still starred');
+			same(t.store().starredCount(), 0, 'starred articles after the dismiss');
+			check(!t.ind()._starredGroup.visible, 'the Starred group is still visible');
+		});
+
+		await step('17-04', 'Mark all as read / mark older as read skip dismissed articles', async () =>
+		{
+			let first = rss().items[0];
+			let second = rss().items[1];
+			check(!first.read && !second.read, 'the two dismissed articles are read before the test');
+
+			t.store().markOlderRead(rss(), rss().items[0]);
+			same([first.read, second.read], [false, false], 'read state of the dismissed articles after mark older as read');
+			same(t.store().totalUnread, 0, 'unread articles after mark older as read');
+
+			t.store().markUnread(rss(), rss().items[2]);
+			t.store().markAllSeen();
+			same([first.read, second.read], [false, false], 'read state of the dismissed articles after mark all as read');
+			same(t.store().totalUnread, 0, 'unread articles after mark all as read');
+		});
+
+		await step('17-03', 'Restore dismissed (N) brings all dismissed articles back in their previous read state (unread stays unread)', async () =>
+		{
+			t.store().dismiss(rss(), rss().items[2]);
+			same(titles(), ['RSS article 01', 'RSS article 02', 'RSS article 03'], 'dismissed articles');
+
+			await openOverflow();
+			check(overflowLabels().includes('Restore dismissed (3)'), 'the ⋮ menu has no Restore dismissed (3): ' + overflowLabels().join(', '));
+			await click(overflowItem('Restore dismissed'));
+			same(t.status(), '3 articles restored', 'flash message');
+			same(titles(), [], 'dismissed articles after the restore');
+			same(rss().items.slice(0, 3).map(item => item.read), [false, false, true], 'read state of the restored articles');
+			same(t.store().totalUnread, 2, 'unread articles after the restore');
+		});
+
+		await step('17-03a', 'The restored articles are back in the open feed group, without a Show more row for ten articles', async () =>
+		{
+			await t.openPopup();
+			await t.expand(t.group('rss2'), 7);
+			await away();
+			await shot('restored', 'Mock RSS expanded with all ten articles again; the first two are unread, the third is read. No Show more row.');
+			same(shown(), numbered('RSS article', 10), 'rows of the feed group after the restore (Visible articles is ' + t.obj()._settings.get_int('items-visible') + ')');
+		});
+	};
+
+	t.scenarios.notifications = async () =>
+	{
+		const rss = () => t.source('rss2');
+		const dateMenu = () => Main.panel.statusArea.dateMenu;
+		const live = () => Main.messageTray.getSources().flatMap(source => source.notifications.filter(n => n._rssItem));
+		const traySources = () => Main.messageTray.getSources().filter(source => source.notifications.some(n => n._rssItem)).map(source => source.title).sort();
+		const titles = () => live().map(n => n.title).sort();
+		const byTitle = title => live().find(n => n.title === title);
+		const act = (notification, label) => notification.actions.find(a => a.label === label).activate();
+		const extra = { rss2: 0, atom: 0 };
+		let copyError = null;
+
+		// every call adds articles the feed did not have before: "RSS article new 1", "new 2" and so on
+		async function publish(feed, count)
+		{
+			extra[feed] += count;
+			t.setFeedState({ extra });
+			await t.refresh();
+		}
+
+		async function clearTray()
+		{
+			t.store().markAllSeen();
+			await waitFor('the tray to be empty', () => live().length === 0, 5000);
+		}
+
+		async function shotOfTray(slug, look)
+		{
+			dateMenu().menu.open();
+			await sleep(600);
+			await shot(slug, look, t.area(dateMenu()._messageList));
+			dateMenu().menu.close();
+			await sleep(300);
+		}
+
+		// the message list groups notifications by their source since GNOME 48
+		function groups()
+		{
+			let view = dateMenu()._messageList._messageView;
+			if (!view?._notificationSourceToGroup)
+				return null;
+
+			return [...view._notificationSourceToGroup.keys()].filter(source => source.notifications.some(n => n._rssItem)).map(source => source.title).sort();
+		}
+
+		if (!await step('08-00', 'setup: two feeds, notifications on; the first load of a feed raises no notification', async () =>
+		{
+			await t.setup(['rss2', 'atom'], { 'display-mode': 'notifications-and-widget' });
+			same(t.store().totalUnread, 15, 'unread articles');
+			same(live().length, 0, 'notifications after the first load');
+		}, 45000))
+			return;
+
+		await step('08-01', 'New articles produce desktop notifications', async () =>
+		{
+			await publish('rss2', 2);
+			await waitFor('two notifications', () => live().length === 2, 5000);
+			same(titles(), ['RSS article new 1', 'RSS article new 2'], 'titles of the notifications');
+			same(live().map(n => n.body), ['Description of a new article.', 'Description of a new article.'], 'bodies of the notifications');
+			same(traySources(), ['RSS Feed'], 'sources in the tray (Group by RSS Source is off by default)');
+			await shotOfTray('tray', 'Notification list of the date menu with two notifications, RSS article new 1 and new 2, each with a round avatar with the initials MR that is readable in this theme.');
+		});
+
+		await step('08-02', 'Notification actions are Open, Copy URL and Mark as read', async () =>
+		{
+			same(byTitle('RSS article new 1').actions.map(a => a.label), ['Open', 'Copy URL', 'Mark as read'], 'actions of a notification');
+		});
+
+		await step('08-05', 'Copy URL puts the link on the clipboard', async () =>
+		{
+			let notification = byTitle('RSS article new 1');
+			await t.setClipboard('nothing yet');
+
+			// the banner of this notification is still on the screen, the way it is when a user presses the button on it
+			try
+			{
+				act(notification, 'Copy URL');
+			}
+			catch (e)
+			{
+				copyError = e;
+			}
+
+			await waitFor('the link on the clipboard', async () => await t.clipboard() === notification._rssItem.link, 3000);
+			check(!notification._rssItem.read, 'Copy URL marked the article as read');
+			same(live().length, 2, 'notifications after Copy URL');
+		});
+
+		await step('08-05a', 'Copy URL does not throw while the banner of the notification is shown', async () =>
+		{
+			check(!copyError, 'the action threw after it had copied the link: ' + copyError?.message);
+		});
+
+		await step('08-04', 'Open opens the link and marks the item read', async () =>
+		{
+			let notification = byTitle('RSS article new 1');
+			let item = notification._rssItem;
+			let before = t.openedUrls().length;
+			act(notification, 'Open');
+			await opened(before, item.link);
+			check(item.read, 'the opened article is still unread');
+			await waitFor('the notification of the opened article to go', () => live().length === 1, 5000);
+		});
+
+		await step('08-06', 'Mark as read dismisses the notification and clears unread', async () =>
+		{
+			let notification = byTitle('RSS article new 2');
+			let item = notification._rssItem;
+			let unread = t.store().totalUnread;
+			act(notification, 'Mark as read');
+			check(item.read, 'the article is still unread');
+			same(t.store().totalUnread, unread - 1, 'unread articles');
+			await waitFor('the notification to go', () => live().length === 0, 5000);
+		});
+
+		await step('08-03', 'Dismissing an article also removes its notification from the tray', async () =>
+		{
+			await publish('rss2', 1);
+			await waitFor('the notification of the new article', () => live().length === 1, 5000);
+			let item = byTitle('RSS article new 3')._rssItem;
+			t.store().dismiss(rss(), item);
+			await waitFor('the notification of the dismissed article to go', () => live().length === 0, 5000);
+		});
+
+		await step('08-07', 'A refresh that brings known articles with new dates raises no second notification (there is no UPDATE: notification any more)', async () =>
+		{
+			await publish('atom', 1);
+			await waitFor('the notification of the new article', () => live().length === 1, 5000);
+			let first = live()[0];
+			await t.refresh();
+			await sleep(800);
+			same(titles(), ['Atom entry new 1'], 'notifications after one more refresh');
+			check(live()[0] === first, 'the notification was replaced by a new one');
+		});
+
+		await step('08-08', 'Notification limit is respected: over the limit the oldest notifications go and the newest articles keep theirs', async () =>
+		{
+			try
+			{
+				t.setValue('notification-limit', 3);
+				await publish('rss2', 5);
+				await waitFor('the notifications of the new articles', () => live().some(n => /^RSS article new/.test(n.title)), 5000);
+				await sleep(500);
+				same(live().length, 3, 'notifications in the tray with a limit of 3 after five more articles');
+				// the feed lists its articles newest first: new 8 is the newest of the five, new 4 the oldest
+				same(titles(), ['RSS article new 6', 'RSS article new 7', 'RSS article new 8'], 'notifications left in the tray');
+			}
+			finally
+			{
+				t.setValue('notification-limit', 25);
+			}
+		});
+
+		await step('08-10', 'Group by source ON: one tray source per feed (and one group per feed in the message list on GNOME 48+)', async () =>
+		{
+			await clearTray();
+			t.setValue('group-notifications-by-source', true);
+			await publish('rss2', 1);
+			await publish('atom', 1);
+			await waitFor('two notifications', () => live().length === 2, 5000);
+			same(traySources(), ['Mock Atom', 'Mock RSS'], 'sources in the tray');
+
+			let found = groups();
+			if (t.config().major >= 48)
+				same(found, ['Mock Atom', 'Mock RSS'], 'groups in the message list');
+			else
+				check(found === null, 'this Shell version has groups in the message list: ' + JSON.stringify(found));
+
+			await shotOfTray('grouped', 'Notification list with one notification of Mock RSS and one of Mock Atom; on GNOME 48 and newer each sits in its own group with the feed name as header.');
+			return found ? 'groups: ' + found.join(', ') : 'no groups in the message list of GNOME ' + t.config().major;
+		});
+
+		await step('08-11', 'Group by source OFF: notifications pool under one "RSS Feed" source', async () =>
+		{
+			await clearTray();
+			t.setValue('group-notifications-by-source', false);
+			await publish('rss2', 1);
+			await publish('atom', 1);
+			await waitFor('two notifications', () => live().length === 2, 5000);
+			same(traySources(), ['RSS Feed'], 'sources in the tray');
+
+			let found = groups();
+			if (t.config().major >= 48)
+				same(found, ['RSS Feed'], 'groups in the message list');
+
+			await shotOfTray('pooled', 'Notification list with both notifications under one RSS Feed source.');
+		});
+
+		await step('09-03n', 'widget-only: new articles raise no notification', async () =>
+		{
+			await clearTray();
+			t.setValue('display-mode', 'widget-only');
+			let unread = t.store().totalUnread;
+			await publish('rss2', 1);
+			await sleep(800);
+			same(t.store().totalUnread, unread + 1, 'unread articles');
+			same(live().length, 0, 'notifications in widget-only');
+		});
+
+		await step('09-02n', 'notifications-only: no panel icon, notifications still fire', async () =>
+		{
+			try
+			{
+				t.setValue('display-mode', 'notifications-only');
+				await waitFor('the panel icon to go', () => !t.ind(), 5000);
+				await publish('atom', 1);
+				await waitFor('the notification of the new article', () => live().length === 1, 5000);
+			}
+			finally
+			{
+				t.setValue('display-mode', 'notifications-and-widget');
+				await waitFor('the panel icon to come back', () => t.ind(), 5000);
+			}
+		});
+
+		await step('12-01', 'With cleanup on disable ON (default): disabling clears RSS notifications from the tray', async () =>
+		{
+			same(t.obj()._settings.get_boolean('notifications-cleanup'), true, 'notifications-cleanup');
+			await publish('rss2', 1);
+			await waitFor('two notifications before the disable', () => live().length === 2, 5000);
+
+			Main.extensionManager.disableExtension(uuid());
+			await waitFor('the extension to be disabled', () => t.ext().state !== 1, 10000);
+			await sleep(500);
+			same(live().length, 0, 'RSS notifications in the tray after the disable');
+
+			Main.extensionManager.enableExtension(uuid());
+			await waitFor('the extension to be enabled', () => t.ext().state === 1 && t.ind() && t.store(), 15000);
+			await waitFor('both feeds to be back', () => t.store().getSources().length === 2 && t.store().getSources().every(s => s.items.length > 0), 15000);
+		}, 60000);
+
+		await step('12-02', 'With cleanup OFF: disabling leaves notifications in the tray', async () =>
+		{
+			t.setValue('notifications-cleanup', false);
+			await publish('rss2', 1);
+			await publish('atom', 1);
+			await waitFor('two notifications before the disable', () => live().length === 2, 5000);
+
+			Main.extensionManager.disableExtension(uuid());
+			await waitFor('the extension to be disabled', () => t.ext().state !== 1, 10000);
+			await sleep(500);
+			same(live().length, 2, 'RSS notifications in the tray after the disable');
+			await shotOfTray('leftover', 'The extension is disabled (no RSS icon in the panel) and its two notifications are still in the list.');
+		}, 60000);
+
+		await step('12-03', 'After disable with cleanup OFF, the actions of a leftover notification do not throw (Open still works; Mark as read is a safe no-op)', async () =>
+		{
+			let errors = t.logCount('JS ERROR');
+			let [first, second] = live();
+			let before = t.openedUrls().length;
+
+			act(first, 'Open');
+			await opened(before, first._rssItem.link);
+			act(second, 'Mark as read');
+			await sleep(500);
+			same(t.logCount('JS ERROR') - errors, 0, 'new JS ERROR lines in the Shell log');
+
+			for (let notification of live())
+				notification.destroy();
+
+			Main.extensionManager.enableExtension(uuid());
+			await waitFor('the extension to be enabled', () => t.ext().state === 1 && t.ind() && t.store(), 15000);
+			t.setValue('notifications-cleanup', true);
+		}, 60000);
+	};
+
+	t.scenarios.appearance = async () =>
+	{
+		const major = t.config().major;
+		const rgb = actor =>
+		{
+			let color = actor.get_theme_node().get_background_color();
+			return [color.red, color.green, color.blue];
+		};
+
+		if (!await step('10-00', 'setup: one feed with unread articles', () => t.setup(['rss2']), 45000))
+			return;
+
+		if (major < 47)
+		{
+			await step('10-03', 'Count pills are neutral gray on GNOME 46 (no loud blue clashing with Yaru)', async () =>
+			{
+				await t.openPopup();
+				same(rgb(t.header()._badge), [0x5f, 0x63, 0x68], 'background of the unread badge in the header');
+				same(rgb(t.group('rss2')._countBadge), [0x5f, 0x63, 0x68], 'background of the count pill of a feed');
+				await away();
+				await shot('pills', 'Header badge and the count pill of Mock RSS are both the same neutral gray.');
+			});
+
+			return;
+		}
+
+		await step('10-02', 'Count pills use the system accent on GNOME 47+ and follow a change of it', async () =>
+		{
+			const accent = () =>
+			{
+				let [color] = St.ThemeContext.get_for_stage(global.stage).get_accent_color();
+				return [color.red, color.green, color.blue];
+			};
+			let desktop = new imports.gi.Gio.Settings({ schema_id: 'org.gnome.desktop.interface' });
+
+			await t.openPopup();
+			let blue = accent();
+			same(rgb(t.header()._badge), blue, 'background of the unread badge in the header (the system accent)');
+			same(rgb(t.group('rss2')._countBadge), blue, 'background of the count pill of a feed (the system accent)');
+			await away();
+			await shot('pills', 'Header badge and the count pill of Mock RSS in the default accent colour, blue.');
+
+			try
+			{
+				desktop.set_string('accent-color', 'green');
+				await waitFor('the Shell to take the new accent', () => JSON.stringify(accent()) !== JSON.stringify(blue), 5000);
+				let green = accent();
+				await waitFor('the pills to take the new accent', () => JSON.stringify(rgb(t.header()._badge)) === JSON.stringify(green), 5000).catch(() => {});
+				same(rgb(t.header()._badge), green, 'background of the unread badge after the accent changed to green');
+				same(rgb(t.group('rss2')._countBadge), green, 'background of the count pill of a feed after the accent changed to green');
+				await shot('pills-green', 'The same two pills, now green.');
+			}
+			finally
+			{
+				desktop.reset('accent-color');
+			}
+		});
+	};
 })();
