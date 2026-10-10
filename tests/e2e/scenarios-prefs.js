@@ -1006,45 +1006,4 @@
 			await eventually(() => t.source('latin2')?.items.length, 3, 'articles loaded for the feed that arrived while the Shell was busy', 10000);
 		}, 45000);
 	};
-	// TEMPORARY probe: what does the first click into the preferences window need on GNOME 49 and 50?
-	const probe = (name, before) =>
-	{
-		t.scenarios[name] = async () =>
-		{
-			await step('99-' + name, 'probe ' + name, async () =>
-			{
-				await t.setup(['rss2']);
-				await p.open();
-				let page = await p.page('Sources');
-				let entry = await p.get('text', 'New RSS source URL', page);
-				let notes = [];
-				let state = () => 'focused=' + p.has(entry, 'FOCUSED') + ' window=' + (global.display.focus_window?.get_title() ?? 'none') +
-					' pointer=' + global.get_pointer().slice(0, 2).join(',');
-
-				await before(entry);
-				notes.push('before: ' + state());
-
-				for (let i = 1; i <= 3; i++)
-				{
-					await p.clickOn(entry, 0.2, 0.5);
-					await sleep(400);
-					notes.push('click ' + i + ': ' + state());
-				}
-
-				await p.close();
-				return notes.join(' | ');
-			}, 90000);
-		};
-	};
-
-	probe('probeA', async () => {});
-	probe('probeB', async () => p.shot('probe', 'probe'));
-	probe('probeC', async () => key(Clutter.KEY_Shift_L));
-	probe('probeD', async () => sleep(6000));
-	probe('probeE', async entry =>
-	{
-		let r = p.rect(entry);
-		await t.moveTo(r.x + 40, r.y + 10);
-		await sleep(2000);
-	});
 })();

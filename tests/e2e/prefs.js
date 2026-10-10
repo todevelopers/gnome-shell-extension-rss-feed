@@ -179,6 +179,10 @@
 		let what = 'the ' + node.get_role_name() + ' "' + node.get_name() + '"';
 		check(r.w > 0 && r.h > 0, what + ' has no size');
 		check(x > frame.x && x < frame.x + frame.width && y > frame.y && y < frame.y + frame.height, what + ' is outside the visible part of the window');
+		// the pointer comes from its parking place outside the window; it moves inside the window once before the motion that ends in the click
+		await t.moveTo(x - 4, y - 4);
+		global.stage.queue_redraw();
+		await sleep(100);
 		await t.clickAt(x, y);
 	}
 
