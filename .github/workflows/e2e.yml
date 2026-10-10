@@ -48,6 +48,10 @@ jobs:
       matrix:
         gnome: ${{ fromJSON(format('[{0}]', inputs.gnome || '46')) }}
         theme: ${{ fromJSON(inputs.theme == 'dark' && '["dark"]' || inputs.theme == 'light' && '["light"]' || '["dark", "light"]') }}
+    defaults:
+      run:
+        # a container job would use sh
+        shell: bash
     env:
       UUID: rss-feed@gnome-shell-extension.todevelopers.github.com
       # the same place on the runner and inside a container, where the suite runs as another user
@@ -74,7 +78,8 @@ jobs:
         run: |
           dir="$E2E_HOME/.local/share/gnome-shell/extensions/$UUID"
           mkdir -p "$dir"
-          git archive HEAD | tar -x -C "$dir"
+          # inside a container the checkout belongs to another user than the one running git
+          git -c safe.directory="$PWD" archive HEAD | tar -x -C "$dir"
           ls "$dir"
       - name: Run the suite
         id: suite
@@ -97,7 +102,7 @@ jobs:
         env:
           OUTCOME: ${{ steps.suite.outcome }}
         run: |
-          dir=$(find "$E2E_HOME/rss-feed-e2e" -mindepth 1 -maxdepth 1 -type d 2> /dev/null | sort | tail -n 1)
+          dir=$(find "$E2E_HOME/rss-feed-e2e" -mindepth 1 -maxdepth 1 -type d 2> /dev/null | sort | tail -n 1) || true
           passed=0
           failed=0
           if [ -f "$dir/results.tsv" ]; then
