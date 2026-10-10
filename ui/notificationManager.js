@@ -147,9 +147,6 @@ export class NotificationManager
 		notification.addAction('Copy URL', () =>
 		{
 			St.Clipboard.get_default().set_text(St.ClipboardType.CLIPBOARD, spec.url);
-
-			if (Main.messageTray._banner)
-				Main.messageTray._banner.emit('done-displaying');
 		});
 
 		notification.addAction('Mark as read', () =>
