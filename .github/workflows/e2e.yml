@@ -56,7 +56,7 @@ jobs:
         id: suite
         timeout-minutes: 45
         env:
-          ONLY: ${{ inputs.only || 'smoke' }}
+          ONLY: ${{ inputs.only || 'prefs' }}
           THEME: ${{ inputs.theme || 'dark' }}
         run: |
           args=()
