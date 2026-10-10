@@ -82,7 +82,7 @@ jobs:
 
       - name: Compute supported GNOME version
         id: gnome
-        run: echo "version=$(jq -r '.["shell-version"] | map(tonumber) | max' metadata.json)" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(jq -r '.["shell-version"] | map(tonumber) | "\(min) - \(max)"' metadata.json)" >> "$GITHUB_OUTPUT"
 
       - name: Wait for gist API
         run: sleep 3

@@ -5,7 +5,7 @@
 // Rows, text entries and drag handles get real pointer and key events, their reported positions are right.
 (() =>
 {
-	const { Atspi, Clutter, GLib, Meta } = imports.gi;
+	const { Atspi, Clutter, Gio, GLib, Meta } = imports.gi;
 
 	const t = globalThis.e2e;
 	const { sleep, waitFor, check } = t;
@@ -107,7 +107,33 @@
 	}
 
 	const get = (role, name, root, timeout = 5000) => waitFor('the ' + label(role, name) + ' in the preferences window', () => find(role, name, root ?? app), timeout);
-	const row = (title, root) => get(null, title, root);
+
+	// since libadwaita 1.6 a spin row is a presentational widget, and GTK leaves such a widget out of the tree together with everything
+	// inside it; a hit test still answers with what lies under a point, so the lists are searched for the title label of the row
+	function hitRow(title, root)
+	{
+		for (let list of findAll('list', undefined, root))
+		{
+			let e = list.get_extents(Atspi.CoordType.WINDOW);
+
+			for (let y = e.y + 6; y < e.y + e.height; y += 8)
+			{
+				let node = Atspi.Component.prototype.get_accessible_at_point.call(list, e.x + 24, y, Atspi.CoordType.WINDOW);
+				if (node?.get_name() !== title)
+					continue;
+
+				// the widget right below the list holds the whole row
+				for (let parent = node.get_parent(); parent && parent.get_role_name() !== 'list'; parent = node.get_parent())
+					node = parent;
+
+				return node;
+			}
+		}
+
+		return null;
+	}
+
+	const row = (title, root) => waitFor('the widget "' + title + '" in the preferences window', () => find(null, title, root ?? app) ?? hitRow(title, root ?? app));
 	const has = (node, state) => node.get_state_set().contains(Atspi.StateType[state]);
 	const read = node => Atspi.Text.prototype.get_text.call(node, 0, -1);
 	const value = node => Atspi.Value.prototype.get_current_value.call(node);
@@ -406,6 +432,11 @@
 		window.delete(global.get_current_time());
 		await waitFor('the preferences window to close', () => !win(), 10000);
 		app = null;
+
+		// the process behind the window leaves two seconds after its last window; a window opened sooner comes from the same process,
+		// and at-spi 2.54 (GNOME 47) has thrown the tree of that process away by then
+		await waitFor('the preferences process to leave the bus', () => !Gio.DBus.session.call_sync('org.freedesktop.DBus', '/org/freedesktop/DBus',
+			'org.freedesktop.DBus', 'NameHasOwner', new GLib.Variant('(s)', [WM_CLASS]), null, Gio.DBusCallFlags.NONE, 1000, null).deepUnpack()[0], 10000);
 	}
 
 	// the tree of a failed step shows which names and roles this GTK version really has

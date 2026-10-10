@@ -198,10 +198,27 @@ globalThis.e2e = (() =>
 
 	const now = () => GLib.get_monotonic_time();
 
+	// on GNOME 49 and 50 the first motion of the virtual pointer can lose one axis (1814,16 arrives as 0,16 or as 1814,0) and a click
+	// there would test something else, so the motion is repeated until the pointer says it arrived
 	async function moveTo(x, y)
 	{
-		pointer.notify_absolute_motion(now(), x, y);
-		await sleep(120);
+		let px, py;
+
+		for (let motions = 1; motions <= 5; motions++)
+		{
+			pointer.notify_absolute_motion(now(), x, y);
+			await sleep(120);
+
+			[px, py] = global.get_pointer();
+			if (Math.abs(px - x) <= 1 && Math.abs(py - y) <= 1)
+			{
+				if (motions > 1)
+					console.log('e2e: the pointer needed ' + motions + ' motions to reach ' + Math.round(x) + ',' + Math.round(y));
+				return;
+			}
+		}
+
+		throw new Error('the pointer was sent to ' + Math.round(x) + ',' + Math.round(y) + ' and is at ' + px + ',' + py);
 	}
 
 	async function hover(actor, fx = 0.5, fy = 0.5)

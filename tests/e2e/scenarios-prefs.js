@@ -353,7 +353,8 @@
 			check(!labels.some(text => /website/i.test(text)), 'the ⋮ menu has a Website entry: ' + labels.join(', '));
 			await key(Clutter.KEY_Escape);
 
-			let logo = t.header().get_first_child();
+			// the first child of a menu item is its hidden ornament, not the logo
+			let logo = t.header().get_children().find(child => child.has_style_class_name('rss-header-icon'));
 			check(!(logo instanceof St.Button) && !logo.reactive, 'the logo reacts to the pointer');
 			let before = t.openedUrls().length;
 			await click(logo);
