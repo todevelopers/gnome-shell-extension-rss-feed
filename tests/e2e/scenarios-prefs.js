@@ -1006,47 +1006,4 @@
 			await eventually(() => t.source('latin2')?.items.length, 3, 'articles loaded for the feed that arrived while the Shell was busy', 10000);
 		}, 45000);
 	};
-	// TEMPORARY probe: what makes the first click into the preferences window arrive on GNOME 49 and 50?
-	const probe = (name, prime) =>
-	{
-		t.scenarios[name] = async () =>
-		{
-			await step('99-' + name, 'probe ' + name, async () =>
-			{
-				await t.setup(['rss2']);
-				await p.open();
-				let page = await p.page('Sources');
-				let entry = await p.get('text', 'New RSS source URL', page);
-				let frame = p.win().get_frame_rect();
-				let notes = [];
-
-				await prime(entry, frame, page);
-				notes.push('after priming: focused=' + p.has(entry, 'FOCUSED'));
-				await p.clickOn(entry, 0.2, 0.5);
-				await sleep(400);
-				notes.push('after one click on the entry: focused=' + p.has(entry, 'FOCUSED'));
-
-				await p.close();
-				return notes.join(' | ');
-			}, 90000);
-		};
-	};
-
-	probe('probeG', async (_entry, frame) =>
-	{
-		await t.clickAt(frame.x + 30, frame.y + 300);
-		await p.park();
-	});
-	probe('probeH', async (_entry, _frame, page) =>
-	{
-		await p.clickOn(await p.get('label', 'RSS Sources', page));
-		await p.park();
-	});
-	probe('probeI', async (_entry, _frame, page) =>
-	{
-		let before = bool('mark-initial-as-new');
-		await p.clickOn(await p.get('label', 'Initial unread', page));
-		await sleep(500);
-		check(false, 'Initial unread before the click on its label: ' + before + ', after: ' + bool('mark-initial-as-new'));
-	});
 })();
