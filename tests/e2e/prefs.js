@@ -233,7 +233,7 @@
 		await t.type(text);
 
 		if (verify)
-			await waitFor('the entry to hold "' + text + '"', () => read(node) === text, 3000);
+			await t.eventually(() => read(node), text, 'text of the entry', 3000);
 	}
 
 	async function spin(title, number, root)
@@ -397,7 +397,8 @@
 
 	async function open(opener = () => t.obj().openPreferences())
 	{
-		if (!win())
+		let fresh = !win();
+		if (fresh)
 			await opener();
 
 		let window = await waitFor('the preferences window', win, 20000);
@@ -419,6 +420,12 @@
 		}, 10000);
 
 		await focus(window);
+
+		// on GNOME 49 and 50 the first press that lands in the page of a new window is lost (a switch row does not switch), so it goes
+		// to the empty margin beside the rows; a press on the header bar or near the bottom edge does not count
+		if (fresh)
+			await t.clickAt(frame.x + 30, frame.y + 300);
+
 		await park();
 		await sleep(400);
 	}
