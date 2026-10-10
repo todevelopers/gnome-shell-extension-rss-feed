@@ -1,0 +1,173 @@
+name: E2E
+
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - '**.md'
+      - 'promo/**'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'promo/**'
+  workflow_dispatch:
+    inputs:
+      only:
+        description: Scenarios separated by commas (empty runs all of them)
+        required: false
+        default: ''
+      theme:
+        description: Colour scheme
+        type: choice
+        options: [both, dark, light]
+        default: both
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gnome-46:
+    name: GNOME Shell 46
+    # the GNOME version of the image is the point, so no ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      UUID: rss-feed@gnome-shell-extension.todevelopers.github.com
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install GNOME Shell
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            gnome-shell gjs at-spi2-core dconf-gsettings-backend dconf-service dbus-daemon libglib2.0-bin \
+            libgl1-mesa-dri librsvg2-common adwaita-icon-theme fonts-cantarell
+          gnome-shell --version
+      - name: Install the extension
+        run: |
+          dir="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/$UUID"
+          mkdir -p "$dir"
+          git archive HEAD | tar -x -C "$dir"
+          ls "$dir"
+      - name: Run the suite
+        id: suite
+        timeout-minutes: 45
+        env:
+          ONLY: ${{ inputs.only || 'smoke' }}
+          THEME: ${{ inputs.theme || 'dark' }}
+        run: |
+          args=()
+          [ -z "$ONLY" ] || args+=(--only "$ONLY")
+          [ -z "$THEME" ] || args+=(--theme "$THEME")
+          bash scripts/run-tests.sh "${args[@]}"
+      - name: Compute stats
+        id: stats
+        if: always()
+        env:
+          OUTCOME: ${{ steps.suite.outcome }}
+        run: |
+          dir=$(find "$HOME/rss-feed-e2e" -mindepth 1 -maxdepth 1 -type d 2> /dev/null | sort | tail -n 1)
+          passed=0
+          failed=0
+          if [ -f "$dir/results.tsv" ]; then
+            passed=$(awk -F'\t' '$4 == "PASS"' "$dir/results.tsv" | wc -l)
+            failed=$(awk -F'\t' '$4 == "FAIL"' "$dir/results.tsv" | wc -l)
+          fi
+          total=$((passed + failed))
+          message="$passed/$total"
+          if [ "$failed" -eq 0 ] && [ "$OUTCOME" = success ]; then
+            emoji="✅"; alert="NOTE"; status_text="passed"; color="brightgreen"
+          elif [ "$failed" -eq 0 ]; then
+            # the script stopped early or a session was killed, so the counts say nothing
+            emoji="❌"; alert="CAUTION"; status_text="did not finish"; color="red"
+            message="did not finish"
+          elif [ "$failed" -le 5 ]; then
+            emoji="❌"; alert="CAUTION"; status_text="failed"; color="yellow"
+          elif [ "$failed" -le 20 ]; then
+            emoji="❌"; alert="CAUTION"; status_text="failed"; color="orange"
+          else
+            emoji="❌"; alert="CAUTION"; status_text="failed"; color="red"
+          fi
+          {
+            echo "dir=$dir"
+            echo "passed=$passed"
+            echo "failed=$failed"
+            echo "total=$total"
+            echo "emoji=$emoji"
+            echo "alert=$alert"
+            echo "status_text=$status_text"
+            echo "color=$color"
+            echo "message=$message"
+          } >> "$GITHUB_OUTPUT"
+      - name: Print failed steps
+        if: always() && steps.stats.outputs.failed != '0'
+        env:
+          DIR: ${{ steps.stats.outputs.dir }}
+        run: |
+          awk -F'\t' '$4 == "FAIL" {printf "%s %s %s: %s\n    %s\n", $1, $2, $3, $5, $6}' "$DIR/results.tsv"
+      - name: Print the end of full.log
+        if: always() && steps.suite.outcome == 'failure' && steps.stats.outputs.dir != ''
+        env:
+          DIR: ${{ steps.stats.outputs.dir }}
+        run: tail -n 200 "$DIR/full.log"
+      - name: Write summary
+        if: always()
+        env:
+          DIR: ${{ steps.stats.outputs.dir }}
+          EMOJI: ${{ steps.stats.outputs.emoji }}
+          ALERT: ${{ steps.stats.outputs.alert }}
+          STATUS: ${{ steps.stats.outputs.status_text }}
+          PASSED: ${{ steps.stats.outputs.passed }}
+          FAILED: ${{ steps.stats.outputs.failed }}
+          TOTAL: ${{ steps.stats.outputs.total }}
+        run: |
+          {
+            echo "## $EMOJI End-to-end tests"
+            echo ""
+            echo "> [!$ALERT]"
+            echo "> Status: $STATUS, $TOTAL steps ($PASSED passed, $FAILED failed)"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ ! -f "$DIR/report.md" ]; then
+            echo "The script wrote no report, see the job log and full.log in the artifact." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          section() {
+            awk -v heading="## $1" '$0 == heading {on = 1; next} /^## / {on = 0} on' "$DIR/report.md"
+          }
+
+          {
+            echo "### Environment"
+            section "Environment"
+            if [ "$FAILED" -gt 0 ]; then
+              echo "### Failed steps ($FAILED)"
+              section "Failed steps"
+            fi
+            echo "<details><summary>All steps (click to expand)</summary>"
+            section "All steps"
+            echo "</details>"
+            echo ""
+            echo "---"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload output
+        if: always() && steps.stats.outputs.dir != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-gnome-46
+          path: ${{ steps.stats.outputs.dir }}
+      - name: Publish badge
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: 87195eb23e76eae80cd14a6d80e56072
+          filename: e2e.json
+          label: e2e
+          message: ${{ steps.stats.outputs.message }}
+          color: ${{ steps.stats.outputs.color }}
+          cacheSeconds: 0
