@@ -21,6 +21,10 @@ on:
         type: choice
         options: [both, dark, light]
         default: both
+      gnome:
+        description: GNOME versions separated by commas, 46 to 51 (empty runs 46)
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -31,46 +35,74 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  gnome-46:
-    name: GNOME Shell 46
+  test:
+    name: GNOME Shell ${{ matrix.gnome }}, ${{ matrix.theme }}
     # the GNOME version of the image is the point, so no ubuntu-latest
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    # 46 is the Shell of the runner itself, the newer ones come from the Fedora release that ships them
+    container: ${{ fromJSON('{"46":"","47":"quay.io/fedora/fedora:41","48":"quay.io/fedora/fedora:42","49":"quay.io/fedora/fedora:43","50":"quay.io/fedora/fedora:44","51":"quay.io/fedora/fedora:45"}')[format('{0}', matrix.gnome)] }}
+    timeout-minutes: 20
+    strategy:
+      # one red job must not cancel the others
+      fail-fast: false
+      matrix:
+        gnome: ${{ fromJSON(format('[{0}]', inputs.gnome || '46')) }}
+        theme: ${{ fromJSON(inputs.theme == 'dark' && '["dark"]' || inputs.theme == 'light' && '["light"]' || '["dark", "light"]') }}
+    defaults:
+      run:
+        # a container job would use sh
+        shell: bash
     env:
       UUID: rss-feed@gnome-shell-extension.todevelopers.github.com
+      # the same place on the runner and inside a container, where the suite runs as another user
+      E2E_HOME: /tmp/e2e-home
     steps:
-      - uses: actions/checkout@v4
+      # before the checkout, which needs git inside a container to leave a repository behind
       - name: Install GNOME Shell
         run: |
-          sudo apt-get update
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-            gnome-shell gjs at-spi2-core dconf-gsettings-backend dconf-service dbus-daemon libglib2.0-bin \
-            libgl1-mesa-dri librsvg2-common adwaita-icon-theme fonts-cantarell
+          if command -v apt-get > /dev/null; then
+            sudo apt-get update
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+              gnome-shell gjs at-spi2-core dconf-gsettings-backend dconf-service dbus-daemon libglib2.0-bin \
+              libgl1-mesa-dri librsvg2-common adwaita-icon-theme fonts-cantarell
+          else
+            dnf install -y --setopt=install_weak_deps=False --skip-unavailable \
+              gnome-shell gjs at-spi2-core dconf dbus-daemon glib2 mesa-dri-drivers librsvg2 adwaita-icon-theme \
+              adwaita-sans-fonts abattis-cantarell-vf-fonts git python3 curl tar util-linux findutils gawk
+            # a container job is root, the Shell is tested as a normal user
+            useradd -m tester
+          fi
           gnome-shell --version
+      - uses: actions/checkout@v4
       - name: Install the extension
         run: |
-          dir="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/$UUID"
+          dir="$E2E_HOME/.local/share/gnome-shell/extensions/$UUID"
           mkdir -p "$dir"
-          git archive HEAD | tar -x -C "$dir"
+          # inside a container the checkout belongs to another user than the one running git
+          git -c safe.directory="$PWD" archive HEAD | tar -x -C "$dir"
           ls "$dir"
       - name: Run the suite
         id: suite
-        timeout-minutes: 30
+        timeout-minutes: 15
         env:
           ONLY: ${{ inputs.only }}
-          THEME: ${{ inputs.theme }}
+          THEME: ${{ matrix.theme }}
         run: |
-          args=()
+          args=(--theme "$THEME")
           [ -z "$ONLY" ] || args+=(--only "$ONLY")
-          [ -z "$THEME" ] || args+=(--theme "$THEME")
-          bash scripts/run-tests.sh "${args[@]}"
+          if [ "$(id -u)" -eq 0 ]; then
+            chown -R tester "$E2E_HOME"
+            runuser -u tester -- env HOME="$E2E_HOME" bash scripts/run-tests.sh "${args[@]}"
+          else
+            HOME="$E2E_HOME" bash scripts/run-tests.sh "${args[@]}"
+          fi
       - name: Compute stats
         id: stats
         if: always()
         env:
           OUTCOME: ${{ steps.suite.outcome }}
         run: |
-          dir=$(find "$HOME/rss-feed-e2e" -mindepth 1 -maxdepth 1 -type d 2> /dev/null | sort | tail -n 1)
+          dir=$(find "$E2E_HOME/rss-feed-e2e" -mindepth 1 -maxdepth 1 -type d 2> /dev/null | sort | tail -n 1) || true
           passed=0
           failed=0
           if [ -f "$dir/results.tsv" ]; then
@@ -79,15 +111,12 @@ jobs:
           fi
           total=$((passed + failed))
           if [ "$failed" -eq 0 ] && [ "$OUTCOME" = success ]; then
-            emoji="✅"; alert="NOTE"; status_text="passed"; color="brightgreen"
-            message="$passed passing"
+            emoji="✅"; alert="NOTE"; status_text="passed"
           elif [ "$failed" -eq 0 ]; then
             # the script stopped early or a session was killed, so the counts say nothing
-            emoji="❌"; alert="CAUTION"; status_text="did not finish"; color="red"
-            message="did not finish"
+            emoji="❌"; alert="CAUTION"; status_text="did not finish"
           else
-            emoji="❌"; alert="CAUTION"; status_text="failed"; color="red"
-            message="$failed failed"
+            emoji="❌"; alert="CAUTION"; status_text="failed"
           fi
           {
             echo "dir=$dir"
@@ -97,8 +126,6 @@ jobs:
             echo "emoji=$emoji"
             echo "alert=$alert"
             echo "status_text=$status_text"
-            echo "color=$color"
-            echo "message=$message"
           } >> "$GITHUB_OUTPUT"
       - name: Print failed steps
         if: always() && steps.stats.outputs.failed != '0'
@@ -115,6 +142,8 @@ jobs:
         if: always()
         env:
           DIR: ${{ steps.stats.outputs.dir }}
+          GNOME: ${{ matrix.gnome }}
+          THEME: ${{ matrix.theme }}
           EMOJI: ${{ steps.stats.outputs.emoji }}
           ALERT: ${{ steps.stats.outputs.alert }}
           STATUS: ${{ steps.stats.outputs.status_text }}
@@ -123,7 +152,7 @@ jobs:
           TOTAL: ${{ steps.stats.outputs.total }}
         run: |
           {
-            echo "## $EMOJI End-to-end tests"
+            echo "## $EMOJI End-to-end tests (GNOME Shell $GNOME, $THEME)"
             echo ""
             echo "> [!$ALERT]"
             echo "> Status: $STATUS, $TOTAL steps ($PASSED passed, $FAILED failed)"
@@ -156,11 +185,66 @@ jobs:
         if: always() && steps.stats.outputs.dir != ''
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-gnome-46
+          name: e2e-gnome-${{ matrix.gnome }}-${{ matrix.theme }}
           path: ${{ steps.stats.outputs.dir }}
+
+  report:
+    name: Report
+    needs: test
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    steps:
+      - name: Collect results
+        id: stats
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ needs.test.result }}
+        run: |
+          passed=0
+          failed=0
+          rows=""
+          for name in $(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" --jq '.artifacts[].name' | sort); do
+            gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name "$name" --dir "results/$name"
+            p=$(awk -F'\t' '$4 == "PASS"' "results/$name/results.tsv" | wc -l)
+            f=$(awk -F'\t' '$4 == "FAIL"' "results/$name/results.tsv" | wc -l)
+            passed=$((passed + p))
+            failed=$((failed + f))
+            rows="$rows| $name | $p | $f |"$'\n'
+          done
+          if [ "$failed" -gt 0 ]; then
+            emoji="❌"; alert="CAUTION"; status_text="failed"; color="red"
+            message="$failed failed"
+          elif [ "$RESULT" != success ]; then
+            # a job stopped early or a session was killed, so the counts say nothing
+            emoji="❌"; alert="CAUTION"; status_text="did not finish"; color="red"
+            message="did not finish"
+          else
+            emoji="✅"; alert="NOTE"; status_text="passed"; color="brightgreen"
+            message="$passed passing"
+          fi
+          {
+            echo "color=$color"
+            echo "message=$message"
+          } >> "$GITHUB_OUTPUT"
+          printf '%s' "$rows"
+          echo "$status_text: $passed passed, $failed failed"
+          {
+            echo "## $emoji End-to-end tests"
+            echo ""
+            echo "> [!$alert]"
+            echo "> Status: $status_text, $((passed + failed)) steps ($passed passed, $failed failed)"
+            echo ""
+            echo "| Job | Passed | Failed |"
+            echo "|---|---|---|"
+            printf '%s' "$rows"
+            echo ""
+            echo "---"
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Publish badge
-        # a cancelled run has only part of the results
-        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: schneegans/dynamic-badges-action@v1.7.0
         with:
           auth: ${{ secrets.GIST_SECRET }}
