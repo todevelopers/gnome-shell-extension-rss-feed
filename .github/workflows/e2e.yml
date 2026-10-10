@@ -21,6 +21,10 @@ on:
         type: choice
         options: [both, dark, light]
         default: both
+      gnome:
+        description: GNOME versions separated by commas, 46 to 51 (empty runs 46)
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -32,29 +36,43 @@ concurrency:
 
 jobs:
   test:
-    name: GNOME Shell 46, ${{ matrix.theme }}
+    name: GNOME Shell ${{ matrix.gnome }}, ${{ matrix.theme }}
     # the GNOME version of the image is the point, so no ubuntu-latest
     runs-on: ubuntu-24.04
+    # 46 is the Shell of the runner itself, the newer ones come from the Fedora release that ships them
+    container: ${{ fromJSON('{"46":"","47":"quay.io/fedora/fedora:41","48":"quay.io/fedora/fedora:42","49":"quay.io/fedora/fedora:43","50":"quay.io/fedora/fedora:44","51":"quay.io/fedora/fedora:45"}')[format('{0}', matrix.gnome)] }}
     timeout-minutes: 20
     strategy:
-      # one red theme must not cancel the other
+      # one red job must not cancel the others
       fail-fast: false
       matrix:
+        gnome: ${{ fromJSON(format('[{0}]', inputs.gnome || '46')) }}
         theme: ${{ fromJSON(inputs.theme == 'dark' && '["dark"]' || inputs.theme == 'light' && '["light"]' || '["dark", "light"]') }}
     env:
       UUID: rss-feed@gnome-shell-extension.todevelopers.github.com
+      # the same place on the runner and inside a container, where the suite runs as another user
+      E2E_HOME: /tmp/e2e-home
     steps:
-      - uses: actions/checkout@v4
+      # before the checkout, which needs git inside a container to leave a repository behind
       - name: Install GNOME Shell
         run: |
-          sudo apt-get update
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-            gnome-shell gjs at-spi2-core dconf-gsettings-backend dconf-service dbus-daemon libglib2.0-bin \
-            libgl1-mesa-dri librsvg2-common adwaita-icon-theme fonts-cantarell
+          if command -v apt-get > /dev/null; then
+            sudo apt-get update
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+              gnome-shell gjs at-spi2-core dconf-gsettings-backend dconf-service dbus-daemon libglib2.0-bin \
+              libgl1-mesa-dri librsvg2-common adwaita-icon-theme fonts-cantarell
+          else
+            dnf install -y --setopt=install_weak_deps=False --skip-unavailable \
+              gnome-shell gjs at-spi2-core dconf dbus-daemon glib2 mesa-dri-drivers librsvg2 adwaita-icon-theme \
+              adwaita-sans-fonts abattis-cantarell-vf-fonts git python3 curl tar util-linux findutils gawk
+            # a container job is root, the Shell is tested as a normal user
+            useradd -m tester
+          fi
           gnome-shell --version
+      - uses: actions/checkout@v4
       - name: Install the extension
         run: |
-          dir="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/$UUID"
+          dir="$E2E_HOME/.local/share/gnome-shell/extensions/$UUID"
           mkdir -p "$dir"
           git archive HEAD | tar -x -C "$dir"
           ls "$dir"
@@ -67,14 +85,19 @@ jobs:
         run: |
           args=(--theme "$THEME")
           [ -z "$ONLY" ] || args+=(--only "$ONLY")
-          bash scripts/run-tests.sh "${args[@]}"
+          if [ "$(id -u)" -eq 0 ]; then
+            chown -R tester "$E2E_HOME"
+            runuser -u tester -- env HOME="$E2E_HOME" bash scripts/run-tests.sh "${args[@]}"
+          else
+            HOME="$E2E_HOME" bash scripts/run-tests.sh "${args[@]}"
+          fi
       - name: Compute stats
         id: stats
         if: always()
         env:
           OUTCOME: ${{ steps.suite.outcome }}
         run: |
-          dir=$(find "$HOME/rss-feed-e2e" -mindepth 1 -maxdepth 1 -type d 2> /dev/null | sort | tail -n 1)
+          dir=$(find "$E2E_HOME/rss-feed-e2e" -mindepth 1 -maxdepth 1 -type d 2> /dev/null | sort | tail -n 1)
           passed=0
           failed=0
           if [ -f "$dir/results.tsv" ]; then
@@ -114,6 +137,7 @@ jobs:
         if: always()
         env:
           DIR: ${{ steps.stats.outputs.dir }}
+          GNOME: ${{ matrix.gnome }}
           THEME: ${{ matrix.theme }}
           EMOJI: ${{ steps.stats.outputs.emoji }}
           ALERT: ${{ steps.stats.outputs.alert }}
@@ -123,7 +147,7 @@ jobs:
           TOTAL: ${{ steps.stats.outputs.total }}
         run: |
           {
-            echo "## $EMOJI End-to-end tests (GNOME Shell 46, $THEME)"
+            echo "## $EMOJI End-to-end tests (GNOME Shell $GNOME, $THEME)"
             echo ""
             echo "> [!$ALERT]"
             echo "> Status: $STATUS, $TOTAL steps ($PASSED passed, $FAILED failed)"
@@ -156,7 +180,7 @@ jobs:
         if: always() && steps.stats.outputs.dir != ''
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-gnome-46-${{ matrix.theme }}
+          name: e2e-gnome-${{ matrix.gnome }}-${{ matrix.theme }}
           path: ${{ steps.stats.outputs.dir }}
 
   report:
