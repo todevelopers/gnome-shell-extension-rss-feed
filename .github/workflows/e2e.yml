@@ -200,6 +200,8 @@ jobs:
             echo "color=$color"
             echo "message=$message"
           } >> "$GITHUB_OUTPUT"
+          printf '%s' "$rows"
+          echo "$status_text: $passed passed, $failed failed"
           {
             echo "## $emoji End-to-end tests"
             echo ""
