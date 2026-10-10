@@ -38,7 +38,9 @@ class TaggedArticleRow extends PopupMenu.PopupBaseMenuItem
 		this._source = source;
 		this._runner = runner;
 
-		let contentBox = new St.BoxLayout({ vertical: true, x_expand: true });
+		// St.BoxLayout lost `vertical` in GNOME 51 and has `orientation` only since 48, the layout manager works on all of them
+		let contentBox = new St.BoxLayout({ x_expand: true });
+		contentBox.layout_manager.orientation = Clutter.Orientation.VERTICAL;
 		this._titleLabel = new St.Label({ text: item.title });
 		this._titleLabel.add_style_class_name(item.read ? 'rss-article-read' : 'rss-article-unread');
 		this._titleLabel.clutter_text.ellipsize = Pango.EllipsizeMode.END;
