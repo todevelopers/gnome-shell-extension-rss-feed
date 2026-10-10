@@ -17,6 +17,9 @@
 * bugfix: Feeds with an unclosed `<br>`, `<img>` or `<hr>` tag in the description are no longer rejected
 * bugfix: Feeds with an upper case or quoted charset declaration are decoded correctly
 * bugfix: Removing a source no longer scrolls the Sources page back to the top
+* bugfix: The Copy URL action of a notification no longer fails after it copied the link
+* bugfix: Over the notification limit the newest articles keep their notification instead of the oldest
+* bugfix: Restored articles show up in an open feed group right away instead of behind "Show more"
 * bugfix: Feeds added by an OPML import are fetched right away instead of waiting for the next update
 * bugfix: Source titles and URLs containing `&` or `<` are shown correctly on the Sources page
 * bugfix: Lower case letters typed into the Avatar field of a source no longer end up in reverse order
