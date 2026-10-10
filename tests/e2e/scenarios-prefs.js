@@ -1032,33 +1032,21 @@
 		};
 	};
 
-	probe('probeA', async (_entry, frame) =>
+	probe('probeG', async (_entry, frame) =>
 	{
-		await t.clickAt(frame.x + 24, frame.y + frame.height - 24);
+		await t.clickAt(frame.x + 30, frame.y + 300);
 		await p.park();
 	});
-	probe('probeB', async (_entry, frame) => t.clickAt(frame.x + 24, frame.y + frame.height - 24));
-	probe('probeC', async (_entry, frame) =>
+	probe('probeH', async (_entry, _frame, page) =>
 	{
-		await t.clickAt(frame.x + 24, frame.y + 20);
+		await p.clickOn(await p.get('label', 'RSS Sources', page));
 		await p.park();
 	});
-	probe('probeD', async entry =>
+	probe('probeI', async (_entry, _frame, page) =>
 	{
-		await p.clickOn(entry, 0.2, 0.5);
-		await sleep(400);
-		await t.key(Clutter.KEY_Escape);
-		await p.park();
-	});
-	probe('probeE', async (_entry, _frame, page) =>
-	{
+		let before = bool('mark-initial-as-new');
 		await p.clickOn(await p.get('label', 'Initial unread', page));
-		await p.park();
-	});
-	probe('probeF', async (_entry, frame) =>
-	{
-		await t.clickAt(frame.x + 24, frame.y + frame.height - 24);
-		await t.clickAt(frame.x + 24, frame.y + frame.height - 24);
-		await p.park();
+		await sleep(500);
+		check(false, 'Initial unread before the click on its label: ' + before + ', after: ' + bool('mark-initial-as-new'));
 	});
 })();
