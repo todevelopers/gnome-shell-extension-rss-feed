@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RSS Feed Story</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=block" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #000; overflow: hidden; }
+body { width: 1280px; height: 720px; font-family: 'Inter', 'Adwaita Sans', 'Cantarell', sans-serif; color: #fff; -webkit-font-smoothing: antialiased; }
+svg { display: block; }
+#screen { position: relative; width: 1280px; height: 720px; overflow: hidden; --ink: #fff; --accent: #3584e4; --menu-bg: #2e2e32; --menu-fg: #f6f6f7; --ov: 255, 255, 255; --win-bg: #222226; --win-fg: #f6f6f7; --card-bg: #36363a; }
+#bg, #wipe { position: absolute; inset: 0; }
+#deco i { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, var(--deco)); }
+#sky { position: absolute; inset: 0; }
+#sky i { position: absolute; width: 4px; height: 4px; border-radius: 2px; background: #fff; }
+#moon { position: absolute; left: 692px; top: 84px; width: 84px; height: 84px; border-radius: 50%; box-shadow: inset 22px -12px 0 0 #f9f06b; }
+.cloud { position: absolute; left: 0; top: 0; height: 34px; padding: 0 16px; border-radius: 17px; background: rgba(255, 255, 255, 0.14); display: flex; align-items: center; font-size: 15px; font-weight: 700; white-space: nowrap; }
+
+#panel { position: absolute; left: 0; top: 0; right: 0; height: 32px; z-index: 15; background: #000; display: flex; align-items: center; padding: 0 12px; font-size: 14px; font-weight: 700; color: #fff; }
+#pLeft { position: relative; width: 120px; height: 32px; }
+#pLeft > * { position: absolute; left: 0; top: 0; height: 32px; display: flex; align-items: center; gap: 5px; }
+.ws span { display: block; height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.45); width: 8px; }
+.ws span.a { width: 34px; background: #fff; }
+#clock { position: absolute; left: 50%; transform: translateX(-50%); white-space: pre; }
+#rssBtn { position: absolute; left: 1020px; top: 0; height: 32px; display: flex; align-items: center; justify-content: center; gap: 6px; width: 60px; margin-left: -30px; }
+#rssBtn b { font-size: 12px; }
+#rssPill { position: absolute; inset: 4px 6px; border-radius: 99px; background: rgba(255, 255, 255, 0.22); }
+#rssLine { position: absolute; left: 8px; right: 8px; bottom: 0; height: 2px; background: #5c9ee0; }
+#pRight { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+#year { position: absolute; right: 54px; bottom: 26px; color: var(--ink); text-align: right; transform-origin: 100% 100%; }
+#month { font-size: 22px; font-weight: 800; letter-spacing: 0.14em; height: 28px; opacity: 0.75; }
+#odo { display: flex; justify-content: flex-end; font-variant-numeric: tabular-nums; font-size: 150px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; height: 150px; overflow: hidden; }
+#odo div { height: 150px; }
+#odo span { display: block; height: 150px; }
+
+#caps { position: absolute; left: 60px; bottom: 30px; color: var(--ink); }
+.cap { position: absolute; left: 0; bottom: 0; white-space: nowrap; transform-origin: 0 100%; }
+.cap h2 { font-size: 66px; font-weight: 800; letter-spacing: -0.035em; line-height: 1; }
+.cap p { font-size: 23px; font-weight: 600; margin-top: 8px; opacity: 0.85; font-variant-numeric: tabular-nums; }
+
+.sticker { position: absolute; left: 0; top: 0; padding: 11px 18px; border-radius: 15px; background: #241f31; color: #fff; font-size: 20px; font-weight: 800; white-space: nowrap; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28); z-index: 30; }
+.sticker.y { background: #f9f06b; color: #241f31; }
+#parts i { position: absolute; left: 0; top: 0; border-radius: 50%; background: var(--ink); z-index: 31; }
+#parts .ring { border: 5px solid var(--ink); background: none; }
+.bigstar { position: absolute; left: 0; top: 0; z-index: 29; }
+.zz { position: absolute; left: 0; top: 0; font-size: 34px; font-weight: 800; z-index: 28; }
+
+#P { position: absolute; left: 350px; top: 320px; width: 0; height: 0; z-index: 10; }
+#W { position: absolute; left: 1020px; top: 32px; width: 0; height: 0; z-index: 10; transform-origin: 0 0; }
+.pw { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); }
+.ww { position: absolute; top: 0; left: 0; transform: translateX(-50%); }
+
+/* GTK 3 */
+.gw { background: #ededed; border-radius: 7px 7px 2px 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 16px 40px rgba(0, 0, 0, 0.4); color: #2e3436; font-size: 13px; overflow: hidden; }
+.ghb { height: 38px; background: linear-gradient(#e8e8e7, #d6d6d4); border-bottom: 1px solid #a8a8a6; display: flex; align-items: center; justify-content: center; font-weight: 700; position: relative; }
+.gclose { position: absolute; right: 12px; top: 11px; opacity: 0.65; }
+.gbody { padding: 12px 16px 14px; }
+.gcols { display: flex; gap: 22px; }
+.gcols > div { flex: 1; }
+.gsec { font-weight: 700; height: 24px; display: flex; align-items: center; }
+.grow { display: flex; align-items: center; height: 32px; gap: 10px; white-space: nowrap; }
+.grow > span:first-child { flex: 1; }
+.gspin { display: flex; align-items: center; height: 26px; border: 1px solid #a8a8a6; border-radius: 3px; background: #fff; overflow: hidden; }
+.gspin b { font-weight: 400; padding: 0 8px; min-width: 38px; }
+.gspin i { width: 22px; height: 26px; border-left: 1px solid #c8c8c6; display: flex; align-items: center; justify-content: center; font-style: normal; color: #555; background: linear-gradient(#f8f8f7, #e4e4e2); }
+.gsw { width: 62px; height: 24px; border-radius: 3px; border: 1px solid #a8a8a6; background: #d5d5d3; position: relative; font-size: 10px; font-weight: 700; color: #777; display: flex; align-items: center; justify-content: flex-end; padding: 0 8px; flex: none; }
+.gsw::after { content: ''; position: absolute; left: 0; top: 0; width: 30px; height: 22px; border-radius: 2px; background: linear-gradient(#fafafa, #e2e2e0); box-shadow: 0 0 0 1px #a8a8a6; }
+.gsw.on { background: #4a90d9; border-color: #2b73c2; color: #fff; justify-content: flex-start; }
+.gsw.on::after { left: auto; right: 0; }
+.gtree { border: 1px solid #a8a8a6; background: #fff; margin-top: 6px; }
+.gth { display: flex; height: 25px; align-items: center; padding: 0 8px; background: linear-gradient(#f8f8f7, #e6e6e4); border-bottom: 1px solid #c8c8c6; font-weight: 700; font-size: 12px; }
+.gtr { display: flex; height: 26px; align-items: center; padding: 0 8px; white-space: nowrap; }
+.gtr.sel { background: #4a90d9; color: #fff; }
+.gtr span:first-child, .gth span:first-child { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.gstat { width: 118px; flex: none; }
+.gbtns { display: flex; gap: 6px; margin-top: 8px; }
+.gbtn { height: 28px; min-width: 34px; padding: 0 9px; border: 1px solid #a8a8a6; border-radius: 3px; background: linear-gradient(#f9f9f8, #e3e3e1); display: flex; align-items: center; justify-content: center; }
+.hwrap { overflow: hidden; }
+
+/* GNOME 3 popup */
+.oarrow { position: absolute; left: 50%; top: 3px; margin-left: -7px; width: 14px; height: 14px; background: #2e3436; border: 1px solid #1c1f1f; border-right: none; border-bottom: none; transform: rotate(45deg); z-index: 2; }
+.obox { position: relative; margin-top: 10px; background: #2e3436; border: 1px solid #1c1f1f; border-radius: 6px; padding: 6px 0; color: #eeeeec; font-size: 14px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45); }
+.oitem { display: flex; align-items: center; height: 32px; padding: 0 16px 0 6px; white-space: nowrap; }
+.oitem.open { background: rgba(238, 238, 236, 0.08); }
+.orn { width: 18px; flex: none; display: flex; justify-content: center; }
+.ot { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.tri { flex: none; opacity: 0.8; margin-left: 10px; }
+.osub { background: #24282a; box-shadow: inset 0 1px 0 #1c1f1f, inset 0 -1px 0 #1c1f1f; padding: 2px 0; }
+.osub .oitem { padding-left: 18px; }
+.osep { height: 1px; background: rgba(238, 238, 236, 0.13); margin: 6px 22px; }
+.obar { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 6px 10px 4px; }
+.oact { width: 34px; height: 34px; border-radius: 17px; border: 1px solid #1c1f1f; background: #3b4245; display: flex; align-items: center; justify-content: center; flex: none; }
+.olast { font-size: 13px; margin: 0 4px; white-space: nowrap; }
+#obanner { position: absolute; left: 640px; top: 36px; width: 340px; background: #2e3436; border: 1px solid #1c1f1f; border-radius: 6px; color: #eeeeec; font-size: 13.5px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5); overflow: hidden; z-index: 20; }
+.obn { display: flex; gap: 12px; padding: 12px 14px; }
+.obt { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.obm { opacity: 0.8; margin-top: 2px; }
+.obtns { display: flex; border-top: 1px solid #1c1f1f; }
+.obtns span { flex: 1; text-align: center; font-weight: 700; padding: 8px 0; background: #353c3f; }
+.obtns span + span { border-left: 1px solid #1c1f1f; }
+
+/* libadwaita window */
+.aw { width: 580px; height: 470px; background: var(--win-bg); color: var(--win-fg); border-radius: 14px; box-shadow: 0 0 0 1px rgba(var(--ov), 0.1), 0 18px 46px rgba(0, 0, 0, 0.45); overflow: hidden; font-size: 14px; }
+.ahb { height: 46px; display: flex; align-items: center; justify-content: center; position: relative; }
+.avs { display: flex; gap: 4px; }
+.avb { display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: 13px; height: 32px; padding: 0 11px; border-radius: 8px; white-space: nowrap; overflow: hidden; flex: none; }
+.avb.sel { background: rgba(var(--ov), 0.1); }
+.aclose { position: absolute; right: 12px; top: 11px; width: 24px; height: 24px; border-radius: 12px; background: rgba(var(--ov), 0.1); display: flex; align-items: center; justify-content: center; }
+.apages { position: relative; height: 424px; }
+.apage { position: absolute; inset: 0; padding: 8px 26px; }
+.agt { font-weight: 700; height: 34px; display: flex; align-items: center; gap: 8px; }
+.agt em { font-style: normal; font-weight: 500; font-size: 12px; opacity: 0.6; font-variant-numeric: tabular-nums; }
+.atools { margin-left: auto; display: flex; gap: 4px; overflow: hidden; }
+.atools span { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex: none; }
+.alist { background: var(--card-bg); border-radius: 12px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.14), 0 1px 3px rgba(0, 0, 0, 0.12); overflow: hidden; margin-bottom: 12px; }
+.arow { display: flex; align-items: center; gap: 10px; height: 50px; padding: 0 14px; border-bottom: 1px solid rgba(var(--ov), 0.07); }
+.at { flex: 1; min-width: 0; }
+.at b { display: block; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.at small { display: block; font-size: 12px; opacity: 0.55; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.aval { opacity: 0.7; display: flex; align-items: center; gap: 6px; flex: none; }
+.asw { width: 44px; height: 24px; border-radius: 12px; background: rgba(var(--ov), 0.2); position: relative; flex: none; }
+.asw i { position: absolute; left: 2px; top: 2px; width: 20px; height: 20px; border-radius: 10px; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); }
+.asw.on { background: var(--accent); }
+.asw.on i { left: 22px; }
+.aradio { width: 18px; height: 18px; border-radius: 9px; border: 2px solid rgba(var(--ov), 0.4); flex: none; }
+.aradio.on { border-color: var(--accent); background: radial-gradient(var(--accent) 0 4.5px, transparent 5px); }
+.savatar { width: 32px; height: 32px; border-radius: 16px; background: rgba(var(--ov), 0.1); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none; opacity: 0.8; }
+.pill { border-radius: 99px; padding: 2px 8px; font-size: 11px; font-weight: 600; background: rgba(46, 194, 126, 0.2); color: #2ec27e; flex: none; white-space: nowrap; }
+.pill.err { background: rgba(224, 27, 36, 0.18); color: #ff7b63; }
+#toast { position: absolute; left: 50%; bottom: 16px; background: #45454b; color: #fff; border-radius: 99px; padding: 9px 18px; font-size: 13.5px; font-weight: 600; white-space: nowrap; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45); }
+#web { position: absolute; right: 0; top: 0; }
+#file { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 12px; background: #fff; color: #241f31; font-size: 15px; font-weight: 700; box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35); z-index: 25; }
+
+/* GNOME 46+ popup */
+.mcontent { width: 380px; margin-top: 6px; background: var(--menu-bg); color: var(--menu-fg); border-radius: 16px; padding: 6px; box-shadow: 0 0 0 1px rgba(var(--ov), 0.07), 0 10px 30px rgba(0, 0, 0, 0.45); font-size: 14.5px; }
+.item { border-radius: 10px; display: flex; align-items: center; gap: 6px; padding: 7px 8px; }
+.item.hover { background: rgba(var(--ov), 0.09); }
+.hdr { display: flex; align-items: center; gap: 10px; padding: 12px 14px 10px 14px; }
+.hicon { width: 32px; height: 32px; border-radius: 8px; background: rgba(127, 127, 127, 0.15); display: flex; align-items: center; justify-content: center; flex: none; }
+.htitles { flex: 1; min-width: 0; }
+.ht { font-size: 14px; font-weight: 700; }
+.hsub { display: flex; align-items: center; font-size: 11px; height: 17px; margin-top: 1px; }
+.hsub > span:first-child { opacity: 0.8; font-variant-numeric: tabular-nums; }
+.warnpill { font-size: 11px; padding: 0 6px; margin-left: 6px; border-radius: 9px; background: rgba(229, 165, 10, 0.35); line-height: 16px; transform-origin: 0 50%; display: none; }
+.badge, .count { min-width: 30px; height: 30px; border-radius: 15px; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; flex: none; }
+.ibtn { width: 30px; height: 30px; border-radius: 15px; display: flex; align-items: center; justify-content: center; flex: none; }
+.hgrp { display: flex; gap: 10px; overflow: hidden; flex: none; }
+.hnew { width: 0; }
+.mbody { position: relative; overflow: hidden; }
+.classic, .minimal { position: absolute; left: 0; right: 0; top: 0; }
+.minimal { opacity: 0; }
+.grp { border-radius: 12px; overflow: hidden; }
+.grp.open { background: rgba(var(--ov), 0.045); }
+.grp.open .feed { background: rgba(var(--ov), 0.07); }
+.feed { padding: 7px 8px; }
+.avatar { width: 32px; height: 32px; border-radius: 16px; background: rgba(127, 127, 127, 0.15); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none; margin-right: 6px; }
+.ftitle { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gcount { font-size: 11px; font-weight: 700; padding: 0 6px; }
+.arrow { width: 16px; height: 16px; flex: none; margin-left: 4px; }
+.arts { position: relative; height: 108px; overflow: hidden; }
+.speed { position: absolute; left: 0; right: 0; top: 0; }
+.art { padding: 8px 8px; height: 36px; }
+.atitle { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.unread { font-weight: 700; }
+.read { font-weight: 300; opacity: 0.45; }
+.atime { font-size: 11px; opacity: 0.6; flex: none; }
+.acts { display: none; gap: 2px; flex: none; }
+.acts span { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; opacity: 0.55; }
+.acts span.hot { opacity: 1; color: #f9f06b; }
+.sechdr { padding: 8px 8px 7px; margin-top: 4px; border-bottom: 1px solid rgba(127, 127, 127, 0.2); border-radius: 10px 10px 0 0; }
+.seclabel { flex: 1; font-size: 10px; font-weight: 700; letter-spacing: 0.07em; opacity: 0.65; }
+.mart { flex-direction: column; align-items: stretch; gap: 3px; padding: 7px 8px; }
+.mtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta { display: flex; align-items: center; gap: 6px; }
+.tag { font-size: 10px; border-radius: 4px; padding: 1px 5px; background: rgba(127, 127, 127, 0.16); }
+#banner { position: absolute; left: 668px; top: 38px; width: 310px; background: #333338; border-radius: 18px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 10px 30px rgba(0, 0, 0, 0.5); padding: 10px 12px 12px; font-size: 13.5px; color: #f6f6f7; z-index: 20; }
+.nhdr { display: flex; align-items: center; gap: 6px; font-size: 12px; height: 22px; }
+.nbody { display: flex; gap: 12px; margin-top: 8px; }
+.navatar { width: 40px; height: 40px; border-radius: 20px; background: #3584e4; flex: none; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; }
+
+#intro, #outro { position: absolute; inset: 0; color: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; pointer-events: none; }
+.logo { width: 120px; height: 120px; border-radius: 27px; box-shadow: 0 18px 44px rgba(0, 0, 0, 0.4); }
+#intro h1 { font-size: 76px; font-weight: 800; letter-spacing: -0.035em; margin-top: 26px; }
+#intro p { font-size: 28px; font-weight: 600; opacity: 0.9; margin-top: 4px; }
+#intro .chip { margin-top: 26px; transform: rotate(-3deg); font-size: 17px; font-weight: 800; padding: 9px 18px; border-radius: 13px; background: #fff; color: #241f31; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25); }
+#lineup { display: flex; align-items: flex-end; justify-content: center; gap: 26px; height: 250px; }
+.lu { display: flex; flex-direction: column; align-items: center; gap: 10px; transform-origin: 50% 100%; }
+.lu b { font-size: 18px; font-weight: 800; }
+.lubox { position: relative; text-align: left; }
+.lubox > div { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.luarrow { margin-bottom: 86px; opacity: 0.8; }
+#tnum { font-size: 140px; font-weight: 800; letter-spacing: -0.045em; line-height: 1; margin-top: 14px; font-variant-numeric: tabular-nums; }
+#tplus { display: inline-block; color: #e66100; transform-origin: 0 60%; }
+#outro .dl { font-size: 26px; font-weight: 700; margin-top: 14px; }
+#tty { margin-top: 16px; }
+#tty h2 { font-size: 46px; font-weight: 800; letter-spacing: -0.025em; }
+#tty p { font-size: 19px; font-weight: 600; opacity: 0.85; margin-top: 4px; }
+#cta { margin-top: 22px; display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 800; }
+#cta img { width: 44px; height: 44px; border-radius: 10px; }
+#cta span { margin-left: 6px; font-size: 17px; padding: 9px 16px; border-radius: 13px; background: #241f31; color: #fff; }
+#confetti { position: absolute; inset: 0; }
+#confetti i { position: absolute; left: 0; top: 0; width: 10px; height: 16px; border-radius: 3px; }
+#outro > :not(#confetti) { position: relative; }
+</style>
+</head>
+<body>
+<div id="screen">
+	<div id="bg"></div>
+	<div id="wipe"></div>
+	<div id="deco"><i style="left: -140px; top: 380px; width: 520px; height: 520px"></i><i style="left: 880px; top: -220px; width: 620px; height: 620px"></i><i style="left: 560px; top: 520px; width: 300px; height: 300px"></i></div>
+	<div id="sky"><div id="moon"></div></div>
+	<div id="clouds"></div>
+
+	<div id="year"><div id="month"></div><div id="odo"></div></div>
+	<div id="caps"></div>
+
+	<div id="P">
+		<div class="pw gw" id="pA" style="width: 400px">
+			<div class="ghb">RSS Feed<span class="gclose" data-i="x" data-s="12"></span></div>
+			<div class="gbody">
+				<div class="grow"><span>Update interval (minutes):</span><span class="gspin"><b>5</b><i>-</i><i>+</i></span></div>
+				<div class="grow"><span>RSS sources per page:</span><span class="gspin"><b>3</b><i>-</i><i>+</i></span></div>
+				<div class="gtree">
+					<div class="gtr"><span>http://planet.gnome.org/rss20.xml</span></div>
+					<div class="gtr sel"><span>http://feeds.feedburner.com/d0od</span></div>
+					<div class="gtr"><span>http://itsfoss.com/feed/</span></div>
+					<div class="hwrap" id="pANew"><div class="gtr"><span>http://fedoramagazine.org/feed/</span></div></div>
+				</div>
+				<div class="gbtns"><span class="gbtn">New</span><span class="gbtn">Edit</span><span class="gbtn">Delete</span></div>
+			</div>
+		</div>
+
+		<div class="pw gw" id="pB" style="width: 540px">
+			<div class="ghb">RSS Feed<span class="gclose" data-i="x" data-s="12"></span></div>
+			<div class="gbody">
+				<div class="gcols">
+					<div>
+						<div class="gsec">General</div>
+						<div class="grow"><span>Update interval (min):</span><span class="gspin"><b>5</b><i>-</i><i>+</i></span></div>
+						<div class="grow"><span>Poll delay (ms):</span><span class="gspin"><b>250</b><i>-</i><i>+</i></span></div>
+						<div class="grow"><span>Detect updates:</span><span class="gsw on">ON</span></div>
+					</div>
+					<div>
+						<div class="gsec">Notifications</div>
+						<div class="grow"><span>Show notifications:</span><span class="gsw on">ON</span></div>
+						<div class="grow"><span>Max notifications:</span><span class="gspin"><b>5</b><i>-</i><i>+</i></span></div>
+						<div class="grow"><span>Show on lock screen:</span><span class="gsw">OFF</span></div>
+					</div>
+				</div>
+				<div class="gsec" style="margin-top: 8px">RSS sources</div>
+				<div class="gtree">
+					<div class="gth"><span>URL</span><span class="gstat">Status</span></div>
+					<div class="gtr"><span>http://planet.gnome.org/rss20.xml</span><span class="gstat"></span></div>
+					<div class="gtr sel"><span>https://itsfoss.com/feed/</span><span class="gstat"></span></div>
+					<div class="gtr"><span>http://fedoramagazine.org/feed/</span><span class="gstat"></span></div>
+					<div class="gtr"><span>http://feeds.feedburner.com/d0od</span><span class="gstat"></span></div>
+				</div>
+				<div class="gbtns"><span class="gbtn" data-i="plus" data-s="14"></span><span class="gbtn" data-i="minus" data-s="14"></span><span class="gbtn" data-i="up" data-s="14"></span><span class="gbtn" data-i="down" data-s="14"></span><span class="gbtn" style="margin-left: auto" data-i="refresh" data-s="14"></span></div>
+			</div>
+			<svg id="web" width="120" height="120" viewBox="0 0 120 120" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"><path d="M120 0 0 30M120 0 22 70M120 0 60 104M120 0 96 120"/><path d="M86 9q-2 12 9 21q4 14 14 23M52 17q-4 22 15 34q7 23 24 36M24 24q-6 30 20 46q10 32 35 46"/></svg>
+		</div>
+
+		<div class="pw aw" id="pC">
+			<div class="ahb">
+				<div class="avs">
+					<div class="avb" data-pg="gen"><span data-i="gear" data-s="16"></span>General</div>
+					<div class="avb" data-pg="not"><span data-i="bell" data-s="16"></span>Notifications</div>
+					<div class="avb" data-pg="src"><span data-i="list" data-s="16"></span>Sources</div>
+					<div class="avb" data-pg="act" id="tabAct"><span data-i="pointer" data-s="16"></span>Actions</div>
+				</div>
+				<div class="aclose"><span data-i="x" data-s="12"></span></div>
+			</div>
+			<div class="apages">
+				<div class="apage" id="pg_gen">
+					<div class="agt">Layout</div>
+					<div class="alist">
+						<div class="arow"><div class="at"><b>Classic</b><small>Group articles by feed with expandable sections</small></div><span class="aradio" id="rClassic"></span></div>
+						<div class="arow"><div class="at"><b>Minimal</b><small>Flat chronological list, unread first</small></div><span class="aradio" id="rMinimal"></span></div>
+					</div>
+					<div class="agt">Polling</div>
+					<div class="alist">
+						<div class="arow"><div class="at"><b>Update interval</b></div><span class="aval">5 min</span></div>
+						<div class="arow"><div class="at"><b>Articles kept per feed</b></div><span class="aval">50</span></div>
+					</div>
+					<div class="agt">Panel</div>
+					<div class="alist">
+						<div class="arow"><div class="at"><b>Unread indicator</b><small>A dot on the panel icon</small></div><span class="asw on"><i></i></span></div>
+					</div>
+				</div>
+				<div class="apage" id="pg_not">
+					<div class="agt">Notifications</div>
+					<div class="alist">
+						<div class="arow"><div class="at"><b>Show notifications</b></div><span class="asw on"><i></i></span></div>
+						<div class="arow"><div class="at"><b>Group by source</b><small>One notification per feed</small></div><span class="asw" id="swGroup"><i></i></span></div>
+						<div class="arow"><div class="at"><b>Show on lock screen</b></div><span class="asw"><i></i></span></div>
+						<div class="arow"><div class="at"><b>Notification limit</b></div><span class="aval">5</span></div>
+					</div>
+				</div>
+				<div class="apage" id="pg_src">
+					<div class="agt">RSS Sources<em id="srcCount"></em>
+						<div class="atools" id="tools"><span data-i="refresh" data-s="16"></span><span data-i="open" data-s="16"></span><span data-i="save" data-s="16"></span><span style="color: #ff7b63" data-i="trash" data-s="16"></span></div>
+					</div>
+					<div class="alist" id="srcList"></div>
+				</div>
+				<div class="apage" id="pg_act">
+					<div class="agt">Hover buttons</div>
+					<div class="alist">
+						<div class="arow"><span data-i="starOff" data-s="16"></span><div class="at"><b>First button</b></div><span class="aval">Star<span data-i="down" data-s="12"></span></span></div>
+						<div class="arow"><span data-i="mail" data-s="16"></span><div class="at"><b>Second button</b></div><span class="aval">Mark as read<span data-i="down" data-s="12"></span></span></div>
+						<div class="arow"><span data-i="link" data-s="16"></span><div class="at"><b>Third button</b></div><span class="aval">Open in browser<span data-i="down" data-s="12"></span></span></div>
+					</div>
+					<div class="agt">Mouse buttons</div>
+					<div class="alist">
+						<div class="arow"><div class="at"><b>Left click</b></div><span class="aval">Open in browser<span data-i="down" data-s="12"></span></span></div>
+						<div class="arow"><div class="at"><b>Middle click</b></div><span class="aval">Mark as read<span data-i="down" data-s="12"></span></span></div>
+						<div class="arow"><div class="at"><b>Right click</b></div><span class="aval">Copy link<span data-i="down" data-s="12"></span></span></div>
+					</div>
+				</div>
+				<div id="toast">Imported 36 feeds</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="W">
+		<div class="ww" id="wA" style="width: 300px">
+			<div class="oarrow"></div>
+			<div class="obox">
+				<div class="oitem open"><span class="orn"></span><span class="ot">Planet GNOME</span><span class="tri" style="transform: rotate(90deg)" data-i="tri" data-s="10"></span></div>
+				<div class="osub">
+					<div class="oitem"><span class="ot">GTK+ 3.16 and the new scrollbars</span></div>
+					<div class="oitem"><span class="ot">Notifications reloaded in the Shell</span></div>
+					<div class="oitem"><span class="ot">Building apps with GNOME Builder</span></div>
+				</div>
+				<div class="oitem"><span class="orn"></span><span class="ot">OMG! Ubuntu</span><span class="tri" data-i="tri" data-s="10"></span></div>
+				<div class="oitem"><span class="orn"></span><span class="ot">It's FOSS</span><span class="tri" data-i="tri" data-s="10"></span></div>
+				<div class="hwrap" id="wANew"><div class="oitem"><span class="orn"></span><span class="ot">Fedora Magazine</span><span class="tri" data-i="tri" data-s="10"></span></div></div>
+				<div class="osep"></div>
+				<div class="obar"><span class="oact"><span data-i="chevl" data-s="14"></span></span><span class="oact"><span data-i="chev" data-s="14"></span></span><span class="olast">Last update: 10:42</span><span class="oact"><span data-i="refresh" data-s="14"></span></span><span class="oact"><span data-i="gear" data-s="14"></span></span></div>
+			</div>
+		</div>
+
+		<div class="ww" id="wB" style="width: 350px">
+			<div class="oarrow"></div>
+			<div class="obox">
+				<div class="oitem open"><span class="orn" data-i="dot" data-s="8"></span><span class="ot">Planet GNOME (3)</span><span class="tri" style="transform: rotate(90deg)" data-i="tri" data-s="10"></span></div>
+				<div class="osub">
+					<div class="oitem"><span class="orn" data-i="dot" data-s="8"></span><span class="ot">Wayland by default: where we stand</span></div>
+					<div class="oitem"><span class="orn" data-i="dot" data-s="8"></span><span class="ot">Night Light lands in GNOME 3.24</span></div>
+					<div class="oitem"><span class="orn" data-i="dot" data-s="8"></span><span class="ot">A new look for the Settings app</span></div>
+					<div class="oitem"><span class="orn"></span><span class="ot">Flatpak 0.8 and the road to 1.0</span></div>
+				</div>
+				<div class="oitem"><span class="orn" data-i="dot" data-s="8"></span><span class="ot">It's FOSS (2)</span><span class="tri" data-i="tri" data-s="10"></span></div>
+				<div class="oitem"><span class="orn"></span><span class="ot">Fedora Magazine</span><span class="tri" data-i="tri" data-s="10"></span></div>
+				<div class="oitem"><span class="orn" data-i="dot" data-s="8"></span><span class="ot">OMG! Ubuntu (1)</span><span class="tri" data-i="tri" data-s="10"></span></div>
+				<div class="osep"></div>
+				<div class="obar"><span class="olast" style="margin-right: auto">Last update: 14:07:22</span><span class="oact"><span data-i="refresh" data-s="14"></span></span><span class="oact"><span data-i="gear" data-s="14"></span></span></div>
+			</div>
+		</div>
+
+		<div class="ww" id="wC">
+			<div class="mcontent">
+				<div class="hdr">
+					<div class="hicon"><span data-i="rss" data-s="20"></span></div>
+					<div class="htitles">
+						<div class="ht">RSS Feed</div>
+						<div class="hsub"><span id="cSub">Updated at 16:20</span><span id="failPill" class="warnpill">2 failed</span></div>
+					</div>
+					<div class="badge">7</div>
+					<div class="hgrp hold" id="hOld"><div class="ibtn"><span data-i="refresh" data-s="16"></span></div><div class="ibtn"><span data-i="gear" data-s="16"></span></div></div>
+					<div class="hgrp hnew" id="hNew"><div class="ibtn"><span data-i="more" data-s="16"></span></div></div>
+				</div>
+				<div class="mbody" id="mbody">
+					<div class="classic" id="classic"></div>
+					<div class="minimal" id="minimal"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="obanner">
+		<div class="obn"><span data-i="rss" data-s="26"></span><div style="min-width: 0"><div class="obt">Wayland by default: where we stand</div><div class="obm">Source: Planet GNOME</div></div></div>
+		<div class="obtns"><span>Open URL</span><span>Copy URL</span></div>
+	</div>
+	<div id="banner">
+		<div class="nhdr"><span data-i="rss" data-s="14"></span><b>RSS Feed</b><span style="opacity: 0.6">Just now</span></div>
+		<div class="nbody"><div class="navatar">PG</div><div><b>Planet GNOME</b><div style="opacity: 0.85; margin-top: 2px">4 new articles</div></div></div>
+	</div>
+	<div id="file"><span data-i="doc" data-s="22"></span>subscriptions.opml</div>
+
+	<div id="panel">
+		<div id="pLeft"><span id="pOld">Activities</span><div class="ws" id="pNew"><span class="a"></span><span></span><span></span></div></div>
+		<div id="clock"></div>
+		<div id="rssBtn"><div id="rssPill"></div><div id="rssLine"></div><b id="rssCount">5</b><span data-i="rss" data-s="16"></span></div>
+		<div id="pRight"><span data-i="wifi" data-s="15"></span><span data-i="vol" data-s="15"></span><span data-i="bat" data-s="15"></span></div>
+	</div>
+
+	<div id="zzz"></div>
+	<div id="stars"></div>
+	<div id="stickers"></div>
+	<div id="parts"></div>
+
+	<div id="intro">
+		<img class="logo" id="iLogo" src="logo.png" alt="">
+		<h1 id="iTitle">RSS Feed</h1>
+		<p id="iSub">A GNOME Shell extension</p>
+		<span class="chip" id="iChip">How it grew up, 2014 to 2026</span>
+	</div>
+
+	<div id="outro">
+		<div id="confetti"></div>
+		<div id="lineup"></div>
+		<div id="tnum"><span id="tval">0</span><span id="tplus">+</span></div>
+		<div class="dl">downloads since the 2026 revival</div>
+		<div id="tty"><h2>Thank you!</h2><p>For every install, issue and feature request</p></div>
+		<div id="cta"><img src="logo.png" alt=""><b>RSS Feed</b><span>extensions.gnome.org</span></div>
+	</div>
+</div>
+
+<script>
+const ICONS = {
+	rss: '<circle cx="3.6" cy="12.4" r="1.9" fill="currentColor"/><path d="M2 7.3a6.7 6.7 0 0 1 6.7 6.7M2 2.4A11.6 11.6 0 0 1 13.6 14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>',
+	refresh: '<path d="M13.2 8.2A5.2 5.2 0 1 1 11.6 4.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M9.3 1.8h4.3v4.3z" fill="currentColor"/>',
+	chevl: '<path d="M10 3.5 5.5 8 10 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+	chev: '<path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+	down: '<path d="M3.5 6 8 10.5 12.5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+	up: '<path d="M3.5 10 8 5.5 12.5 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+	plus: '<path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>',
+	minus: '<path d="M3 8h10" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>',
+	x: '<path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>',
+	bell: '<path d="M8 1.6c-2.4 0-4.1 1.8-4.1 4.3v2.9L2.6 11v1h10.8v-1l-1.3-2.2V5.9C12.1 3.4 10.4 1.6 8 1.6z" fill="currentColor"/><path d="M6.3 13.2a1.7 1.7 0 0 0 3.4 0z" fill="currentColor"/>',
+	trash: '<path d="M5.6 1.6h4.8v1.6H14v1.6H2V3.2h3.6z" fill="currentColor"/><path d="M3.4 5.8h9.2l-.8 8a1.2 1.2 0 0 1-1.2 1H5.4a1.2 1.2 0 0 1-1.2-1z" fill="currentColor"/>',
+	open: '<path d="M1.6 3.2c0-.6.4-1 1-1h3.6l1.6 1.6h5.6c.6 0 1 .4 1 1V12.8c0 .6-.4 1-1 1H2.6c-.6 0-1-.4-1-1z" fill="currentColor"/>',
+	save: '<path d="M8 1.8v7.4M4.8 6.4 8 9.6l3.2-3.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.4 10.4v2.4c0 .6.4 1 1 1h9.2c.6 0 1-.4 1-1v-2.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+	list: '<g fill="currentColor"><rect x="1.5" y="2.5" width="2.4" height="2.4" rx=".6"/><rect x="1.5" y="6.8" width="2.4" height="2.4" rx=".6"/><rect x="1.5" y="11.1" width="2.4" height="2.4" rx=".6"/><rect x="5.6" y="2.9" width="9" height="1.6" rx=".8"/><rect x="5.6" y="7.2" width="9" height="1.6" rx=".8"/><rect x="5.6" y="11.5" width="9" height="1.6" rx=".8"/></g>',
+	wifi: '<path d="M8 13.6 .9 5.4a10.8 10.8 0 0 1 14.2 0z" fill="currentColor"/>',
+	vol: '<path d="M1.6 5.6h2.8L8 2.4v11.2L4.4 10.4H1.6z" fill="currentColor"/><path d="M10.2 5.4a3.4 3.4 0 0 1 0 5.2M12.1 3.2a6.4 6.4 0 0 1 0 9.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+	bat: '<rect x="4.4" y="2.6" width="7.2" height="12" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="6.4" y="1.2" width="3.2" height="1.6" rx=".5" fill="currentColor"/><rect x="5.9" y="6" width="4.2" height="7.1" rx=".5" fill="currentColor"/>',
+	doc: '<path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M9.5 1.5v3h3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>',
+	more: '<g fill="currentColor"><circle cx="3" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="13" cy="8" r="1.5"/></g>',
+	dot: '<circle cx="8" cy="8" r="5" fill="currentColor"/>',
+	tri: '<path d="M4.5 2.5 12 8l-7.5 5.5z" fill="currentColor"/>',
+	pointer: '<path d="M3 1.6v11.6l3-2.8 2 4.2 2-.9-1.9-4.1h4.1z" fill="currentColor"/>',
+	mail: '<path d="M2 6.3 8 2.4l6 3.9v7.3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M2.4 6.8 8 10.2l5.6-3.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>',
+	link: '<path d="M9.5 2.2h4.3v4.3M13.6 2.4 7.6 8.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.4 3.6H3.4c-.7 0-1.2.5-1.2 1.2v7.8c0 .7.5 1.2 1.2 1.2h7.8c.7 0 1.2-.5 1.2-1.2V9.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+};
+ICONS.gear = (() => {
+	let d = '', n = 8, ro = 7.2, ri = 5.6;
+	for (let i = 0; i < n; i++) {
+		let a = i / n * Math.PI * 2;
+		let w = Math.PI / n * 0.55;
+		let pts = [[ri, a - Math.PI / n + 0.05], [ro, a - w], [ro, a + w], [ri, a + Math.PI / n - 0.05]];
+		for (let [r, ang] of pts)
+			d += (d ? 'L' : 'M') + (8 + r * Math.cos(ang)).toFixed(2) + ' ' + (8 + r * Math.sin(ang)).toFixed(2);
+	}
+	d += 'Z M10.3 8a2.3 2.3 0 1 0-4.6 0 2.3 2.3 0 1 0 4.6 0z';
+	return '<path fill-rule="evenodd" d="' + d + '" fill="currentColor"/>';
+})();
+const STAR = (() => {
+	let d = '';
+	for (let i = 0; i < 10; i++) {
+		const r = i % 2 ? 2.9 : 6.6, a = -Math.PI / 2 + i * Math.PI / 5;
+		d += (d ? 'L' : 'M') + (8 + r * Math.cos(a)).toFixed(2) + ' ' + (8.5 + r * Math.sin(a)).toFixed(2);
+	}
+	return d + 'Z';
+})();
+ICONS.star = '<path d="' + STAR + '" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>';
+ICONS.starOff = '<path d="' + STAR + '" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>';
+
+function icon(name, size) {
+	return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 16 16">' + ICONS[name] + '</svg>';
+}
+function fillIcons(root) {
+	root.querySelectorAll('[data-i]').forEach(el => { el.innerHTML = icon(el.dataset.i, +el.dataset.s); el.style.display = 'inline-flex'; });
+}
+
+const $ = (id) => document.getElementById(id);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const seg = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
+const lerp = (a, b, k) => a + (b - a) * k;
+const eio = (k) => k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+const eout = (k) => 1 - Math.pow(1 - k, 3);
+const ein = (k) => k * k * k;
+const spring = (x) => x <= 0 ? 0 : 1 - Math.exp(-7 * x) * Math.cos(12 * x);
+const hex = (h) => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const mix = (a, b, k) => { const x = hex(a), y = hex(b); return x.map((v, i) => Math.round(lerp(v, y[i], k))); };
+const rgb = (c) => 'rgb(' + c.join(',') + ')';
+const pulse = (k) => k > 0 && k < 1 ? 1 + 0.3 * Math.sin(Math.PI * k) : 1;
+function fade(el, o) { el.style.opacity = o; el.style.visibility = o > 0.001 ? 'visible' : 'hidden'; }
+function setH(el, h) { el.style.height = h + 'px'; }
+
+// scene starts
+const A = 1.6, B = 7.2, C = 12.8, D = 18.0, E = 23.0, F = 26.4, G = 30.0, H = 34.4, END = 39.2;
+const OUTRO = 6.0;
+const DURATION = END + OUTRO;
+const EVO_B = B + 0.5, NIGHT = C + 1.2, EVO_C = D + 0.35;
+const GAP_DAYS = 2463;
+const INK_LIGHT = '#ffffff', INK_DARK = '#241f31';
+
+// [time, colour, origin x, origin y, text colour]
+const WIPES = [
+	[EVO_B, '#8ff0a4', 350, 320, INK_DARK],
+	[NIGHT, '#241f31', 1280, 0, INK_LIGHT],
+	[D + 0.05, '#ffbe6f', 640, 441, INK_DARK],
+	[E + 0.5, '#f6f5f4', 1020, 16, INK_DARK],
+	[F, '#f8a59b', 640, 320, INK_DARK],
+	[G, '#dc8add', 350, 320, INK_DARK],
+	[H, '#99c1f1', 1020, 200, INK_DARK],
+];
+const BASE = '#99c1f1';
+
+// [in, out, title, line]
+const CAPS = [
+	[A + 0.7, A + 3.1, 'v1.0', 'Hello, top bar!'],
+	[A + 3.3, EVO_B - 0.1, 'v1.2', 'Now fluent in Atom and RDF'],
+	[EVO_B + 0.1, NIGHT - 0.1, 'v2.0', 'Level up!'],
+	[NIGHT + 0.2, D + 0.1, 'Nap time', '<span id="napNum">0</span> days without a commit'],
+	[EVO_C + 0.15, E - 0.1, 'v7.0', 'Rise and shine!'],
+	[E + 0.1, F - 0.1, 'v7.2', 'Lights on'],
+	[F + 0.1, G - 0.1, 'v8.0', 'Fast, even with huge feeds'],
+	[G + 0.1, H - 0.1, 'v9.0', 'Bring all your feeds'],
+	[H + 0.1, END, 'v10.0', 'Seeing stars'],
+];
+$('caps').innerHTML = CAPS.map((c, i) => '<div class="cap" id="cap' + i + '"><h2>' + c[2] + '</h2><p>' + c[3] + '</p></div>').join('');
+
+// [in, out, text, x, y, rotation, style]
+const STICKERS = [
+	[A + 1.5, A + 5.4, 'settings: two numbers and a list', 70, 478, -3],
+	[A + 2.1, A + 3.3, 'XML parsed with regex. Really.', 620, 396, -4],
+	[A + 3.7, A + 5.4, '+ Atom and RDF', 700, 396, 5, 'y'],
+	[EVO_B + 0.9, C + 0.1, 'settings rebuilt, feeds get checked', 60, 56, -2],
+	[EVO_B + 1.5, EVO_B + 2.9, 'unread counts', 650, 420, 4],
+	[EVO_B + 3.0, C + 0.1, 'notifications!', 640, 150, -7, 'y'],
+	[C + 0.3, NIGHT + 0.1, 'still keeping up with GNOME 3.32', 590, 470, 3],
+	[NIGHT + 1.0, D - 0.7, '14 GNOME releases fly by', 640, 490, -3, 'y'],
+	[EVO_C + 0.8, EVO_C + 2.6, 'GNOME 46 and up', 596, 110, -6],
+	[EVO_C + 1.5, E - 0.2, 'Classic or Minimal', 650, 452, 5, 'y'],
+	[EVO_C + 2.9, E - 0.2, 'preferences go Adwaita', 120, 40, -2],
+	[E + 1.0, F - 0.2, 'light theme', 660, 150, -5],
+	[E + 1.7, F - 0.2, 'any accent color', 640, 452, 4],
+	[F + 0.9, G - 0.2, '400 feeds? Fine.', 640, 452, -6, 'y'],
+	[F + 2.3, G - 0.2, 'grouped notifications', 120, 40, -2],
+	[G + 1.4, H - 0.2, 'OPML import and export', 110, 40, -3, 'y'],
+	[G + 3.1, H - 0.2, 'broken feeds get flagged', 700, 420, 4],
+	[H + 1.2, END - 0.1, 'a whole new Actions page', 110, 40, -2],
+	[H + 2.0, H + 3.1, 'hover buttons', 640, 318, 5],
+	[H + 3.2, END - 0.1, 'starred articles', 636, 120, -6, 'y'],
+].map((s, i) => {
+	const el = document.createElement('div');
+	el.className = 'sticker' + (s[6] ? ' ' + s[6] : '');
+	el.textContent = s[2];
+	$('stickers').appendChild(el);
+	return { at: s[0], out: s[1], x: s[3], y: s[4], rot: s[5], el, i };
+});
+
+const PALETTE = ['#62a0ea', '#57e389', '#f8e45c', '#ffa348', '#ed333b', '#c061cb'];
+// [time, x, y, size]
+const POOFS = [[A + 0.2, 350, 320, 0.7], [A + 0.55, 1020, 200, 0.7], [EVO_B, 350, 320, 1], [EVO_B, 1020, 220, 1], [D, 640, 441, 0.45], [EVO_C, 350, 290, 1.15], [EVO_C, 1020, 220, 1.15], [H + 2.9, 1176, 286, 0.5]].map(p => {
+	const els = [];
+	for (let i = 0; i < 13; i++) {
+		const el = document.createElement('i');
+		if (i === 12) el.className = 'ring';
+		else if (p[3] < 0.6) el.style.background = '#f5c211';
+		else if (i % 3 === 0) el.style.background = PALETTE[i % PALETTE.length];
+		$('parts').appendChild(el);
+		els.push(el);
+	}
+	return { at: p[0], x: p[1], y: p[2], s: p[3], els };
+});
+
+function prng(seed) {
+	return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let x = Math.imul(seed ^ seed >>> 15, 1 | seed); x = x + Math.imul(x ^ x >>> 7, 61 | x) ^ x; return ((x ^ x >>> 14) >>> 0) / 4294967296; };
+}
+const rnd = prng(1000);
+const SKY = [];
+for (let i = 0; i < 46; i++) {
+	const el = document.createElement('i');
+	const s = 2 + rnd() * 4;
+	el.style.cssText = 'left:' + (rnd() * 1280).toFixed(0) + 'px;top:' + (40 + rnd() * 640).toFixed(0) + 'px;width:' + s.toFixed(1) + 'px;height:' + s.toFixed(1) + 'px';
+	$('sky').appendChild(el);
+	SKY.push({ el, p: rnd() * 6.28, f: 1.5 + rnd() * 2.5 });
+}
+const CLOUDS = ['3.34', '3.36', '3.38', '40', '41', '42', '43', '44', '45', '46', '47', '48', '49', '50'].map((v, i) => {
+	const el = document.createElement('div');
+	el.className = 'cloud';
+	el.textContent = 'GNOME ' + v;
+	$('clouds').appendChild(el);
+	// the last one does not fly by, it bumps into the window and wakes everything up
+	return i === 13 ? { el, at: D - 0.9, hit: true } : { el, at: NIGHT + 0.4 + i * 0.15, y: [118, 548, 250, 600, 400][i % 5] };
+});
+const ZZ = [];
+for (let i = 0; i < 6; i++) {
+	const el = document.createElement('div');
+	el.className = 'zz';
+	el.textContent = i % 3 ? 'z' : 'Z';
+	$('zzz').appendChild(el);
+	ZZ.push({ el, x: i < 3 ? 560 : 1150, y: i < 3 ? 150 : 110, p: (i % 3) / 3 });
+}
+const BIGSTARS = [[612, 250, 54, -12, 0.0], [820, 470, 40, 14, 0.15], [700, 86, 34, 8, 0.3], [640, 410, 26, -20, 0.45], [760, 240, 22, 22, 0.6]].map(s => {
+	const el = document.createElement('div');
+	el.className = 'bigstar';
+	el.innerHTML = '<svg width="' + s[2] + '" height="' + s[2] + '" viewBox="-1 -1 18 18"><path d="' + STAR + '" fill="#f9f06b" stroke="#241f31" stroke-width="1.3" stroke-linejoin="round"/></svg>';
+	$('stars').appendChild(el);
+	return { el, x: s[0], y: s[1], rot: s[3], at: H + 3.0 + s[4] };
+});
+const CONFETTI = [];
+for (let i = 0; i < 96; i++) {
+	const el = document.createElement('i');
+	el.style.background = i % 5 ? PALETTE[i % PALETTE.length] : '#fff';
+	$('confetti').appendChild(el);
+	const a = -Math.PI / 2 + (rnd() - 0.5) * 2.6, v = 320 + rnd() * 560;
+	CONFETTI.push({ el, x: 640 + (rnd() - 0.5) * 460, y: 380 + (rnd() - 0.5) * 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: rnd() * 360, vr: (rnd() - 0.5) * 900, s: 0.7 + rnd() * 0.7 });
+}
+
+$('odo').innerHTML = [0, 1, 2, 3].map(i => '<div id="od' + i + '">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(d => '<span>' + d + '</span>').join('') + '</div>').join('');
+
+const FEEDS = [
+	{ id: 'pg', title: 'Planet GNOME', av: 'PG', count: 3 },
+	{ id: 'tw', title: 'This Week in GNOME', av: 'TW', count: 2, arts: [
+		['#251 Smoother Scrolling', '2h', 0],
+		['#250 Sharper Icons', '1w', 0],
+		['#249 Quieter Notifications', '2w', 1],
+	] },
+	{ id: 'gs', title: 'GNOME Shell &amp; Mutter', av: 'GS', count: 1 },
+	{ id: 'ou', title: 'OMG! Ubuntu', av: 'OU', count: 1 },
+];
+const FILLER = ['Faster Thumbnails', 'New Toggles', 'Better Search', 'Fresh Wallpapers', 'Tiny Fixes', 'Calmer Colors', 'Bigger Buttons', 'Quick Settings'];
+const art = (a, extra) => '<div class="item art"' + (extra || '') + '><div class="atitle ' + (a[2] ? 'read' : 'unread') + '">' + a[0] + '</div>';
+let classicHtml = '<div class="hwrap" id="w_st"><div class="grp"><div class="item feed"><div class="avatar">' + icon('star', 14) + '</div><div class="ftitle">Starred</div><div class="gcount" id="stCount">2</div><div class="arrow">' + icon('chev', 16) + '</div></div></div></div>';
+for (let f of FEEDS) {
+	classicHtml += '<div class="grp' + (f.arts ? ' open' : '') + '"><div class="item feed"><div class="avatar">' + f.av + '</div><div class="ftitle">' + f.title + '</div>'
+		+ '<div class="count">' + f.count + '</div><div class="arrow"' + (f.arts ? ' style="transform: rotate(90deg)"' : '') + '>' + icon('chev', 16) + '</div></div>';
+	if (f.arts) {
+		classicHtml += '<div class="arts"><div id="artsNormal">';
+		f.arts.forEach((a, i) => {
+			classicHtml += art(a, i === 1 ? ' id="art1"' : '')
+				+ (i === 1 ? '<div class="acts" id="acts"><span id="actStar"></span><span>' + icon('mail', 14) + '</span><span>' + icon('link', 14) + '</span></div>' : '')
+				+ '<div class="atime">' + a[1] + '</div></div>';
+		});
+		classicHtml += '</div><div class="speed" id="speed">';
+		for (let i = 0; i < 48; i++)
+			classicHtml += art(i < 3 ? f.arts[i] : ['#' + (251 - i) + ' ' + FILLER[i % FILLER.length], '', i % 4 > 0]) + '<div class="atime">' + (i < 3 ? f.arts[i][1] : i + 'w') + '</div></div>';
+		classicHtml += '</div></div>';
+	}
+	classicHtml += '</div>';
+}
+$('classic').innerHTML = classicHtml;
+const MIN_UNREAD = [['#251 Smoother Scrolling', 'This Week in GNOME', '2h'], ['Building adaptive layouts with libadwaita', 'Planet GNOME', '3h'], ['A closer look at the new Quick Settings', 'GNOME Shell &amp; Mutter', '1d']];
+const MIN_READ = [['Ten GNOME extensions worth a try', 'OMG! Ubuntu', '2d'], ['Profiling GNOME Shell with Sysprof', 'Planet GNOME', '3d']];
+const mrow = (a, cls) => '<div class="item mart"><div class="mtitle ' + cls + '">' + a[0] + '</div><div class="meta"><span class="tag">' + a[1] + '</span><span class="atime">' + a[2] + '</span></div></div>';
+$('minimal').innerHTML = '<div class="item sechdr"><span class="seclabel">UNREAD</span>' + icon('down', 16) + '</div>' + MIN_UNREAD.map(a => mrow(a, 'unread')).join('')
+	+ '<div class="item sechdr"><span class="seclabel">READ</span>' + icon('down', 16) + '</div>' + MIN_READ.map(a => mrow(a, 'read')).join('');
+
+const SOURCES = [['PG', 'Planet GNOME', 'https://planet.gnome.org/atom.xml'], ['TW', 'This Week in GNOME', 'https://thisweek.gnome.org/index.xml'], ['GS', 'GNOME Shell &amp; Mutter', 'https://blogs.gnome.org/shell-dev/feed/'],
+	['OU', 'OMG! Ubuntu', 'https://www.omgubuntu.co.uk/feed'], ['IF', 'It\'s FOSS', 'https://itsfoss.com/feed/'], ['BE', 'blog.example.com', 'https://blog.example.com/feed.xml']];
+$('srcList').innerHTML = SOURCES.map((s, i) => '<div class="hwrap" id="sw' + i + '"><div class="arow"><span class="savatar">' + s[0] + '</span><div class="at"><b>' + s[1] + '</b><small>' + s[2] + '</small></div>'
+	+ '<span class="pill' + (i === 5 ? ' err' : '') + '">' + (i === 5 ? '404' : 'OK') + '</span><span style="opacity: 0.7">' + icon('bell', 16) + '</span><span style="color: #ff7b63">' + icon('trash', 16) + '</span></div></div>').join('');
+
+fillIcons(document);
+
+// the evolution line-up of the outro is built from copies of the three popups
+[['wA', '2015', 300], ['wB', '2017', 350], ['wC', '2026', 380]].forEach((l, i) => {
+	const copy = $(l[0]).cloneNode(true);
+	copy.querySelectorAll('[id]').forEach(e => e.removeAttribute('id'));
+	copy.removeAttribute('id');
+	copy.className = '';
+	copy.style.width = l[2] + 'px';
+	copy.querySelectorAll('.minimal, .speed, .oarrow').forEach(e => e.remove());
+	copy.querySelectorAll('.classic').forEach(e => { e.style.position = 'static'; });
+	copy.querySelectorAll('.arts').forEach(e => { e.style.height = 'auto'; });
+	copy.querySelectorAll('.hold').forEach(e => { e.style.display = 'none'; });
+	copy.querySelectorAll('.hnew').forEach(e => { e.style.width = '30px'; });
+	const item = document.createElement('div');
+	item.className = 'lu';
+	item.innerHTML = '<div class="lubox"></div><b>' + l[1] + '</b>';
+	item.firstChild.appendChild(copy);
+	if (i) $('lineup').insertAdjacentHTML('beforeend', '<div class="luarrow">' + icon('chev', 30) + '</div>');
+	$('lineup').appendChild(item);
+});
+
+const NAT = {};
+function measure() {
+	NAT.gtr = $('pANew').firstElementChild.offsetHeight;
+	NAT.oitem = $('wANew').firstElementChild.offsetHeight;
+	NAT.feed = $('w_st').offsetHeight;
+	NAT.classic = $('classic').offsetHeight - NAT.feed;
+	NAT.minimal = $('minimal').offsetHeight;
+	NAT.speed = $('speed').offsetHeight;
+	NAT.tabAct = $('tabAct').offsetWidth;
+	NAT.arow = $('sw0').offsetHeight;
+	document.querySelectorAll('.lubox').forEach(box => {
+		const copy = box.firstChild;
+		const k = 0.5;
+		copy.style.transform = 'scale(' + k + ')';
+		box.style.width = (copy.offsetWidth * k) + 'px';
+		box.style.height = (copy.offsetHeight * k) + 'px';
+	});
+}
+
+function yearAt(t) {
+	let y = 2015;
+	y = lerp(y, 2017, eio(seg(t, EVO_B - 0.3, EVO_B + 0.4)));
+	y = lerp(y, 2019, eio(seg(t, C, C + 0.7)));
+	const k = seg(t, NIGHT + 0.4, D - 0.4);
+	return lerp(y, 2026, k * k * (3 - 2 * k));
+}
+function monthAt(t) {
+	const list = [[0, 'April'], [A + 3.3, 'May'], [EVO_B - 0.1, 'March'], [C + 0.3, 'July'], [NIGHT + 0.4, ''], [EVO_C, 'May'], [E, 'June'], [F, 'July'], [G, 'August'], [H, 'October']];
+	let m = '';
+	for (const [at, name] of list) if (t >= at) m = name;
+	return m.toUpperCase();
+}
+
+function renderStage(t) {
+	const scr = $('screen');
+	let base = BASE, ink = hex(INK_DARK), wipe = null;
+	for (const w of WIPES) {
+		if (t < w[0]) break;
+		const k = seg(t, w[0], w[0] + 0.7);
+		ink = ink.map((v, i) => lerp(v, hex(w[4])[i], seg(k, 0.2, 0.6)));
+		if (k >= 1) base = w[1];
+		else wipe = [w, k];
+	}
+	$('bg').style.background = base;
+	const wp = $('wipe');
+	wp.style.visibility = wipe ? 'visible' : 'hidden';
+	if (wipe) {
+		wp.style.background = wipe[0][1];
+		wp.style.clipPath = 'circle(' + (1560 * eio(wipe[1])).toFixed(1) + 'px at ' + wipe[0][2] + 'px ' + wipe[0][3] + 'px)';
+	}
+	scr.style.setProperty('--ink', rgb(ink.map(Math.round)));
+	scr.style.setProperty('--deco', lerp(0.3, 0.06, (ink[0] - 36) / 219).toFixed(3));
+	// whole turns per loop, so the last frame meets the first one
+	const turn = t / DURATION * Math.PI * 2;
+	document.querySelectorAll('#deco i').forEach((el, i) => { el.style.transform = 'translate(' + (18 * Math.sin(turn * 4 + i * 2)).toFixed(1) + 'px,' + (14 * Math.cos(turn * 3 + i)).toFixed(1) + 'px)'; });
+
+	const night = eio(seg(t, NIGHT + 0.2, NIGHT + 0.9)) * (1 - seg(t, D, D + 0.3));
+	fade($('sky'), night);
+	for (const s of SKY) s.el.style.opacity = 0.35 + 0.65 * Math.abs(Math.sin(t * s.f + s.p));
+	$('moon').style.transform = 'translateY(' + (60 * (1 - spring(t - NIGHT - 0.3)) + 200 * ein(seg(t, D - 0.1, D + 0.3))).toFixed(1) + 'px) rotate(' + (6 * Math.sin(t * 0.8)).toFixed(2) + 'deg)';
+	for (const c of CLOUDS) {
+		if (c.hit) {
+			const gone = seg(t, D, D + 0.25);
+			c.el.style.visibility = t > c.at && gone < 1 ? 'visible' : 'hidden';
+			c.el.style.opacity = 1 - gone;
+			c.el.style.transform = 'translate(' + lerp(1300, 636, ein(seg(t, c.at, D))).toFixed(1) + 'px,424px) scale(' + (1 + 0.5 * gone).toFixed(3) + ')';
+			continue;
+		}
+		const k = seg(t, c.at, c.at + 1.6);
+		c.el.style.visibility = k > 0 && k < 1 ? 'visible' : 'hidden';
+		c.el.style.transform = 'translate(' + lerp(1300, -180, k).toFixed(1) + 'px,' + (c.y + 6 * Math.sin(t * 3 + c.y)).toFixed(1) + 'px)';
+	}
+	for (const z of ZZ) {
+		const k = (t * 0.45 + z.p) % 1;
+		z.el.style.opacity = night * Math.sin(Math.PI * k);
+		z.el.style.transform = 'translate(' + (z.x + 46 * k + 8 * Math.sin(k * 9)).toFixed(1) + 'px,' + (z.y - 78 * k).toFixed(1) + 'px) scale(' + (0.5 + 0.9 * k).toFixed(2) + ')';
+	}
+
+	const pk = eout(seg(t, A - 0.2, A + 0.25)) * (1 - ein(seg(t, END, END + 0.35)));
+	$('panel').style.transform = 'translateY(' + (-34 * (1 - pk)).toFixed(1) + 'px)';
+	const modern = seg(t, EVO_C - 0.05, EVO_C + 0.1);
+	fade($('pOld'), 1 - modern);
+	fade($('pNew'), modern);
+	$('rssLine').style.opacity = 1 - modern;
+	$('rssPill').style.opacity = modern;
+	$('rssCount').style.display = t >= EVO_B && t < EVO_C ? '' : 'none';
+	$('rssCount').textContent = t >= EVO_B + 2.2 ? 6 : 5;
+	$('rssCount').style.transform = 'scale(' + pulse(seg(t, EVO_B + 2.2, EVO_B + 2.6)) + ')';
+	let clock = 'Sat 10:42';
+	for (const [at, text] of [[EVO_B, 'Fri 14:07'], [C + 0.3, 'Wed 14:07'], [EVO_C, 'May 1  16:20'], [E, 'Jun 19  16:20'], [F, 'Jul 7  16:20'], [G, 'Aug 29  16:20'], [H, 'Oct 15  16:20']])
+		if (t >= at) clock = text;
+	$('clock').textContent = clock;
+
+	const y = yearAt(t);
+	const yk = spring(t - A - 0.4) * (1 - ein(seg(t, END, END + 0.3)));
+	fade($('year'), clamp(yk, 0, 1));
+	$('year').style.transform = 'scale(' + (0.6 + 0.4 * yk).toFixed(3) + ')';
+	for (let i = 0; i < 4; i++) {
+		const p = Math.pow(10, 3 - i);
+		const lower = y % p;
+		const roll = i === 3 ? y % 1 : Math.max(0, lower - (p - 1));
+		$('od' + i).style.transform = 'translateY(' + (-150 * (Math.floor(y / p) % 10 + roll)).toFixed(1) + 'px)';
+	}
+	$('month').textContent = monthAt(t);
+
+	CAPS.forEach((c, i) => {
+		const el = $('cap' + i);
+		const inK = spring(t - c[0]), outK = ein(seg(t, c[1] - 0.2, c[1]));
+		fade(el, clamp(inK * 1.6, 0, 1) * (1 - outK));
+		el.style.transform = 'translateY(' + (30 * (1 - inK) + 20 * outK).toFixed(1) + 'px) rotate(' + (-3 * (1 - inK)).toFixed(2) + 'deg)';
+	});
+	$('napNum').textContent = Math.round(GAP_DAYS * seg(t, NIGHT + 0.4, D - 0.4)).toLocaleString('en-US');
+
+	for (const s of STICKERS) {
+		const k = spring(t - s.at) * (1 - ein(seg(t, s.out - 0.2, s.out)));
+		s.el.style.visibility = k > 0.001 ? 'visible' : 'hidden';
+		s.el.style.transform = 'translate(' + s.x + 'px,' + (s.y + 3 * Math.sin(t * 2 + s.i)).toFixed(1) + 'px) rotate(' + (s.rot + 14 * (1 - spring(t - s.at)) + 1.2 * Math.sin(t * 1.7 + s.i)).toFixed(2) + 'deg) scale(' + k.toFixed(3) + ')';
+	}
+	for (const p of POOFS) {
+		const tau = t - p.at;
+		const on = tau > 0 && tau < 0.7;
+		p.els.forEach((el, i) => {
+			el.style.visibility = on ? 'visible' : 'hidden';
+			if (!on) return;
+			const k = eout(tau / 0.7);
+			el.style.opacity = 1 - seg(tau, 0.3, 0.7);
+			if (i === 12) {
+				const r = (60 + 240 * k) * p.s;
+				el.style.width = el.style.height = r + 'px';
+				el.style.transform = 'translate(' + (p.x - r / 2) + 'px,' + (p.y - r / 2) + 'px)';
+				return;
+			}
+			const a = i / 12 * Math.PI * 2 + p.x, d = (70 + 190 * k) * p.s, size = (8 + (i % 4) * 4) * p.s;
+			el.style.width = el.style.height = size + 'px';
+			el.style.transform = 'translate(' + (p.x + Math.cos(a) * d - size / 2).toFixed(1) + 'px,' + (p.y + Math.sin(a) * d * 0.8 - size / 2).toFixed(1) + 'px)';
+		});
+	}
+	for (const s of BIGSTARS) {
+		const k = spring(t - s.at) * (1 - ein(seg(t, END - 0.3, END)));
+		s.el.style.visibility = k > 0.001 ? 'visible' : 'hidden';
+		s.el.style.transform = 'translate(' + s.x + 'px,' + (s.y + 5 * Math.sin(t * 2.2 + s.x)).toFixed(1) + 'px) rotate(' + (s.rot + 40 * (1 - spring(t - s.at)) + 6 * Math.sin(t * 1.6 + s.y)).toFixed(1) + 'deg) scale(' + k.toFixed(3) + ')';
+	}
+}
+
+// squash before the change, pop with a spring after it
+function evolve(t, at) {
+	const a = seg(t, at - 0.28, at), tau = t - at;
+	if (tau < 0) return [(1 - 0.4 * ein(a)) * (1 + 0.12 * a), (1 - 0.4 * ein(a)) * (1 - 0.12 * a)];
+	const s = 0.6 + 0.4 * spring(tau);
+	return [s, s];
+}
+function bump(t, at, amount) {
+	const tau = t - at;
+	return tau <= 0 ? 0 : amount * Math.exp(-6 * tau) * Math.sin(16 * tau);
+}
+
+function renderActors(t) {
+	const sleep = eio(seg(t, NIGHT, NIGHT + 0.8)) * (1 - seg(t, D, D + 0.2));
+	const wake = t - D;
+	const jump = wake > 0 ? -44 * Math.sin(Math.PI * seg(wake, 0, 0.7)) : 0;
+	const shake = wake > 0 ? 6 * Math.sin(30 * wake) * Math.exp(-5 * wake) : 0;
+	const exit = 1 - ein(seg(t, END, END + 0.4));
+	const [eb1, eb2] = evolve(t, EVO_B), [ec1, ec2] = evolve(t, EVO_C);
+	let b = 0;
+	for (const at of [A + 3.3, E + 0.5, F + 0.1, G + 1.2, H + 0.9]) b += bump(t, at, 0.06);
+	const breathe = 1 + 0.025 * sleep * Math.sin(t * 2.4);
+	const filter = sleep > 0 ? 'grayscale(' + (0.75 * sleep).toFixed(3) + ') brightness(' + (1 - 0.3 * sleep).toFixed(3) + ')' : 'none';
+
+	const pIn = spring(t - A - 0.2);
+	const P = $('P');
+	P.style.transform = 'translate(0,' + (5 * Math.sin(t * 1.3) + 16 * sleep + jump).toFixed(2) + 'px) rotate(' + (0.5 * Math.sin(t * 0.9 + 1) - 5 * sleep + shake).toFixed(2) + 'deg) scale(' + (pIn * eb1 * ec1 * exit * (1 + b)).toFixed(4) + ',' + (pIn * eb2 * ec2 * exit * (1 - b) * breathe).toFixed(4) + ')';
+	P.style.filter = filter;
+	P.style.visibility = pIn * exit > 0.001 ? 'visible' : 'hidden';
+	const wIn = spring(t - A - 0.55);
+	const W = $('W');
+	W.style.transform = 'translate(0,' + (jump * 0.4).toFixed(2) + 'px) rotate(' + (0.7 * Math.sin(t * 1.1) + 3 * sleep * Math.sin(t * 0.9) - shake).toFixed(2) + 'deg) scale(' + (wIn * eb1 * ec1 * exit * (1 + b)).toFixed(4) + ',' + (wIn * eb2 * ec2 * exit * (1 - b) * breathe).toFixed(4) + ')';
+	W.style.filter = filter;
+	W.style.visibility = wIn * exit > 0.001 ? 'visible' : 'hidden';
+
+	const toB = seg(t, EVO_B - 0.08, EVO_B + 0.06), toC = seg(t, EVO_C - 0.08, EVO_C + 0.06);
+	for (const [a, b2, c] of [['pA', 'pB', 'pC'], ['wA', 'wB', 'wC']]) {
+		fade($(a), 1 - toB);
+		fade($(b2), toB * (1 - toC));
+		fade($(c), toC);
+	}
+
+	const newK = eio(seg(t, A + 3.3, A + 3.7));
+	setH($('pANew'), NAT.gtr * newK);
+	setH($('wANew'), NAT.oitem * newK);
+	$('wANew').style.opacity = newK;
+
+	document.querySelectorAll('#pB .gtr .gstat').forEach((el, i) => {
+		const done = t >= EVO_B + 1.7 + i * 0.22;
+		el.textContent = t < EVO_B + 1.1 ? '' : done ? ['OK - RSS 2.0', 'OK - RSS 2.0', 'OK - RSS 2.0', 'OK - Atom'][i] : 'Checking..';
+	});
+	const bIn = spring(t - EVO_B - 2.1), bOut = ein(seg(t, EVO_B + 4.2, EVO_B + 4.5));
+	fade($('obanner'), clamp(bIn * 2, 0, 1) * (1 - bOut));
+	$('obanner').style.transform = 'translate(-50%, ' + (-110 * (1 - bIn) - 120 * bOut).toFixed(1) + 'px)';
+	const web = eio(seg(t, NIGHT + 1.0, NIGHT + 2.2));
+	$('web').style.opacity = 0.75 * web * (1 - seg(t, D, D + 0.3));
+	$('web').style.transform = 'translateY(' + (160 * ein(seg(t, D, D + 0.35))).toFixed(1) + 'px)';
+}
+
+function accentAt(t) {
+	const stops = [[0, '#3584e4'], [E + 1.7, '#9141ac'], [E + 2.3, '#3a944a'], [F + 0.1, '#3584e4']];
+	let c = hex(stops[0][1]);
+	for (let i = 1; i < stops.length; i++) {
+		if (t < stops[i][0]) break;
+		const k = eio(seg(t, stops[i][0], stops[i][0] + 0.35));
+		c = c.map((v, j) => lerp(v, hex(stops[i][1])[j], k));
+	}
+	return c.map(Math.round);
+}
+
+const PAGES = [[0, 'gen'], [EVO_C + 2.7, 'src'], [F + 0.9, 'not'], [G + 0.2, 'src'], [H + 0.9, 'act']];
+function renderModern(t) {
+	const scr = $('screen').style;
+	const lk = eio(seg(t, E + 0.5, E + 1.1)) * (1 - eio(seg(t, F, F + 0.5)));
+	scr.setProperty('--menu-bg', rgb(mix('#2e2e32', '#fafafb', lk)));
+	scr.setProperty('--menu-fg', rgb(mix('#f6f6f7', '#2e2e33', lk)));
+	scr.setProperty('--ov', mix('#ffffff', '#000000', lk).join(','));
+	scr.setProperty('--win-bg', rgb(mix('#222226', '#fafafb', lk)));
+	scr.setProperty('--win-fg', rgb(mix('#f6f6f7', '#2e2e33', lk)));
+	scr.setProperty('--card-bg', rgb(mix('#36363a', '#ffffff', lk)));
+	scr.setProperty('--accent', rgb(accentAt(t)));
+
+	let page = 'gen', since = 0;
+	for (const [at, id] of PAGES) if (t >= at) { page = id; since = at; }
+	const pk = eout(seg(t, since, since + 0.3));
+	for (const id of ['gen', 'not', 'src', 'act']) {
+		const el = $('pg_' + id);
+		fade(el, id === page ? pk : 0);
+		el.style.transform = 'translateX(' + (id === page ? 26 * (1 - pk) : 0).toFixed(1) + 'px)';
+	}
+	document.querySelectorAll('.avb').forEach(el => el.classList.toggle('sel', el.dataset.pg === page));
+	const tabK = eio(seg(t, H + 0.3, H + 0.7));
+	$('tabAct').style.width = (NAT.tabAct * tabK) + 'px';
+	$('tabAct').style.paddingLeft = $('tabAct').style.paddingRight = (11 * tabK) + 'px';
+	$('tabAct').style.marginLeft = (-4 * (1 - tabK)) + 'px';
+	$('tabAct').style.opacity = tabK;
+
+	const minimalOn = t >= EVO_C + 1.7 && t < E + 0.1;
+	$('rClassic').classList.toggle('on', !minimalOn);
+	$('rMinimal').classList.toggle('on', minimalOn);
+	const mm = eio(seg(t, EVO_C + 1.9, EVO_C + 2.35)) * (1 - eio(seg(t, E + 0.1, E + 0.5)));
+	$('classic').style.opacity = 1 - mm;
+	$('minimal').style.opacity = mm;
+	$('classic').style.transform = 'translateX(' + (-24 * mm) + 'px)';
+	$('minimal').style.transform = 'translateX(' + (24 * (1 - mm)) + 'px)';
+	const starK = eio(seg(t, H + 0.6, H + 0.95));
+	setH($('w_st'), NAT.feed * starK);
+	$('w_st').style.opacity = starK;
+	setH($('mbody'), lerp(NAT.classic + NAT.feed * starK, NAT.minimal, mm));
+
+	$('swGroup').classList.toggle('on', t >= F + 1.6);
+	const nIn = spring(t - F - 2.0), nOut = ein(seg(t, G - 0.1, G + 0.2));
+	fade($('banner'), clamp(nIn * 2, 0, 1) * (1 - nOut));
+	$('banner').style.transform = 'translate(-50%, ' + (-120 * (1 - nIn) - 130 * nOut).toFixed(1) + 'px)';
+	const sp = seg(t, F + 0.4, F + 2.0);
+	const speeding = sp > 0 && t < F + 2.1;
+	$('speed').style.visibility = speeding ? 'visible' : 'hidden';
+	$('artsNormal').style.visibility = speeding ? 'hidden' : 'visible';
+	$('speed').style.transform = 'translateY(' + (-(NAT.speed - 108) * (1 - eio(sp))).toFixed(1) + 'px)';
+	$('speed').style.filter = sp > 0.15 && sp < 0.85 ? 'blur(1.2px)' : 'none';
+
+	const fk = seg(t, G + 0.5, G + 1.2);
+	const file = $('file');
+	file.style.visibility = fk > 0 && fk < 1 ? 'visible' : 'hidden';
+	file.style.transform = 'translate(' + lerp(40, 300, eio(fk)).toFixed(1) + 'px,' + (lerp(600, 290, eio(fk)) - 150 * Math.sin(Math.PI * fk)).toFixed(1) + 'px) rotate(' + (-14 + 28 * fk).toFixed(1) + 'deg) scale(' + (1 - 0.6 * ein(fk)).toFixed(3) + ')';
+	file.style.opacity = 1 - seg(fk, 0.85, 1);
+	SOURCES.forEach((s, i) => {
+		const k = i < 4 ? 1 : eio(seg(t, G + 1.2 + (i - 4) * 0.12, G + 1.5 + (i - 4) * 0.12));
+		setH($('sw' + i), NAT.arow * k);
+		$('sw' + i).style.opacity = k;
+	});
+	$('srcCount').textContent = Math.round(lerp(4, 40, eout(seg(t, G + 1.2, G + 2.0)))) + ' sources';
+	const toolK = eio(seg(t, G + 0.1, G + 0.5));
+	$('tools').style.width = (132 * toolK) + 'px';
+	$('tools').style.opacity = toolK;
+	const tk = spring(t - G - 1.5) * (1 - seg(t, G + 3.6, G + 3.9));
+	fade($('toast'), clamp(tk, 0, 1));
+	$('toast').style.transform = 'translate(-50%, ' + (30 * (1 - tk)).toFixed(1) + 'px)';
+
+	const starred = t >= H + 2.9;
+	let sub = 'Updated at 16:20';
+	if (t >= G + 1.6 && t < G + 3.0)
+		sub = 'Updating… ' + Math.floor(seg(t, G + 1.65, G + 2.95) * 40.999) + '/40';
+	else if (starred && t < H + 4.3)
+		sub = 'Article starred';
+	$('cSub').textContent = sub;
+	const fp = seg(t, G + 3.0, G + 3.3) * (1 - seg(t, H + 0.2, H + 0.4));
+	$('failPill').style.display = fp > 0 ? 'block' : 'none';
+	$('failPill').style.transform = 'scale(' + (t < H ? spring((t - G - 3.0) * 1.2) : 1).toFixed(3) + ')';
+	$('failPill').style.opacity = t < H ? 1 : fp;
+
+	const hk = eio(seg(t, H + 0.4, H + 0.85));
+	$('hOld').style.width = (70 * (1 - hk)) + 'px';
+	$('hOld').style.opacity = 1 - hk;
+	$('hOld').style.marginLeft = (-10 * hk) + 'px';
+	$('hNew').style.width = (30 * hk) + 'px';
+	$('hNew').style.opacity = hk;
+	$('hNew').style.marginLeft = (-10 * (1 - hk)) + 'px';
+	const hovering = t >= H + 2.0 && t < END;
+	$('art1').classList.toggle('hover', hovering);
+	$('acts').style.display = hovering ? 'flex' : 'none';
+	$('actStar').innerHTML = icon(starred ? 'star' : 'starOff', 14);
+	$('actStar').classList.toggle('hot', starred);
+	$('actStar').style.transform = 'scale(' + pulse(seg(t, H + 2.9, H + 3.25)) * (starred ? 1.15 : 1) + ')';
+	$('stCount').textContent = starred ? 3 : 2;
+	$('stCount').style.transform = 'scale(' + pulse(seg(t, H + 2.95, H + 3.3)) + ')';
+}
+
+function renderOutro(t) {
+	const ik = 1 - eio(seg(t, A - 0.5, A));
+	fade($('intro'), ik);
+	$('intro').style.transform = 'scale(' + (1 + 0.15 * (1 - ik)).toFixed(3) + ')';
+
+	const e = t - END;
+	fade($('outro'), e > 0.3 ? 1 : 0);
+	document.querySelectorAll('.lu').forEach((el, i) => {
+		const s = spring(e - 0.5 - i * 0.28);
+		el.style.transform = 'scale(' + s.toFixed(3) + ') rotate(' + (2 * Math.sin(t * 1.4 + i * 2)).toFixed(2) + 'deg)';
+	});
+	document.querySelectorAll('.luarrow').forEach((el, i) => { el.style.opacity = 0.8 * seg(e, 0.75 + i * 0.28, 0.95 + i * 0.28); });
+	const nk = spring(e - 1.3);
+	$('tnum').style.opacity = clamp(nk * 2, 0, 1);
+	$('tnum').style.transform = 'scale(' + ((0.7 + 0.3 * nk) * pulse(seg(e, 2.9, 3.3))).toFixed(3) + ')';
+	$('tval').textContent = Math.round(1000 * eout(seg(e, 1.3, 2.9))).toLocaleString('en-US');
+	$('tplus').style.transform = 'scale(' + spring(e - 2.9).toFixed(3) + ')';
+	document.querySelector('#outro .dl').style.opacity = seg(e, 1.5, 1.8);
+	const ty = spring(e - 3.0);
+	$('tty').style.opacity = clamp(ty * 2, 0, 1);
+	$('tty').style.transform = 'translateY(' + (20 * (1 - ty)).toFixed(1) + 'px) rotate(' + (-2 * (1 - ty)).toFixed(2) + 'deg)';
+	const ck = spring(e - 3.6);
+	$('cta').style.opacity = clamp(ck * 2, 0, 1);
+	$('cta').style.transform = 'scale(' + (0.7 + 0.3 * ck).toFixed(3) + ')';
+	const tau = e - 2.9;
+	for (const c of CONFETTI) {
+		if (tau <= 0) { c.el.style.opacity = 0; continue; }
+		c.el.style.opacity = 1 - seg(tau, 1.8, 2.8);
+		c.el.style.transform = 'translate(' + (c.x + c.vx * tau).toFixed(1) + 'px,' + (c.y + c.vy * tau + 400 * tau * tau).toFixed(1) + 'px) rotate(' + (c.r + c.vr * tau).toFixed(1) + 'deg) scale(' + c.s.toFixed(2) + ')';
+	}
+}
+
+function render(t) {
+	renderStage(t);
+	renderActors(t);
+	renderModern(t);
+	renderOutro(t);
+}
+
+window.renderAt = render;
+window.DURATION = DURATION;
+window.ready = document.fonts.ready.then(() => { measure(); render(0); return true; });
+
+if (!location.search.includes('capture')) {
+	window.ready.then(() => {
+		const params = new URLSearchParams(location.search);
+		const offset = parseFloat(params.get('t') || '0');
+		const t0 = performance.now() - offset * 1000;
+		const loop = (now) => { render(((now - t0) / 1000) % DURATION); requestAnimationFrame(loop); };
+		requestAnimationFrame(loop);
+	});
+}
+</script>
+</body>
+</html>

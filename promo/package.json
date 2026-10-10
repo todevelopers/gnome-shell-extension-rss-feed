@@ -3,7 +3,9 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"record": "node record.js"
+		"record": "node record.js",
+		"record:timeline": "node record.js timeline",
+		"record:story": "node record.js story"
 	},
 	"devDependencies": {
 		"playwright-core": "^1.63.0"

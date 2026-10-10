@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RSS Feed Timeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=block" rel="stylesheet">
+<style>
+:root {
+	--accent: #3584e4;
+	--accent-text: #78aeed;
+	--lit: #62a0ea;
+	--window-bg: #222226;
+	--fg: #ffffff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #000; overflow: hidden; }
+body { width: 1280px; height: 720px; font-family: 'Inter', 'Adwaita Sans', 'Cantarell', sans-serif; color: var(--fg); -webkit-font-smoothing: antialiased; }
+svg { display: block; }
+#screen { position: relative; width: 1280px; height: 720px; overflow: hidden; background: var(--window-bg); }
+#bg { position: absolute; inset: 0; background: radial-gradient(900px 420px at 50% -8%, rgba(53, 132, 228, 0.13), transparent 70%); }
+#app { position: absolute; inset: 0; }
+
+#hb { position: absolute; left: 0; top: 0; right: 0; height: 56px; display: flex; align-items: center; padding: 0 24px; gap: 10px; }
+#hb img { width: 28px; height: 28px; border-radius: 7px; }
+.hbt { font-size: 15px; font-weight: 700; }
+.hbs { font-size: 15px; opacity: 0.55; }
+#eras { position: absolute; left: 50%; top: 10px; height: 36px; transform: translateX(-50%); display: flex; gap: 4px; }
+#eraHl { position: absolute; top: 0; height: 36px; border-radius: 9px; background: rgba(255, 255, 255, 0.1); }
+.era { position: relative; height: 36px; padding: 0 16px; display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700; white-space: nowrap; }
+.era small { font-size: 12.5px; font-weight: 500; opacity: 0.6; }
+
+.ms { position: absolute; left: 56px; top: 92px; width: 456px; height: 456px; display: flex; flex-direction: column; justify-content: center; }
+.mrow { display: flex; align-items: center; gap: 10px; height: 28px; }
+.when { font-size: 15px; font-weight: 600; opacity: 0.6; }
+.tagp { font-size: 12.5px; font-weight: 700; padding: 4px 11px; border-radius: 99px; background: rgba(53, 132, 228, 0.25); color: var(--accent-text); }
+.ver { font-size: 84px; font-weight: 800; letter-spacing: -0.035em; line-height: 1; margin-top: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ver.word { font-size: 58px; letter-spacing: -0.03em; line-height: 1.15; }
+.ver .unit { font-size: 30px; letter-spacing: -0.01em; margin-left: 12px; opacity: 0.6; }
+.sub { font-size: 19px; font-weight: 500; line-height: 1.4; opacity: 0.72; margin-top: 14px; max-width: 430px; }
+.blist { margin-top: 26px; background: rgba(255, 255, 255, 0.07); border-radius: 12px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.2); overflow: hidden; }
+.row { display: flex; align-items: center; gap: 14px; height: 52px; padding: 0 16px; font-size: 15.5px; font-weight: 500; }
+.row + .row { border-top: 1px solid rgba(255, 255, 255, 0.06); }
+.ric { width: 16px; flex: none; opacity: 0.7; }
+
+#pv { position: absolute; left: 556px; top: 92px; width: 668px; height: 456px; border-radius: 16px; overflow: hidden; background: #111; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09), 0 14px 40px rgba(0, 0, 0, 0.5); }
+.st { position: absolute; inset: 0; overflow: hidden; }
+.wall { position: absolute; inset: 0; }
+#gchip { position: absolute; left: 14px; bottom: 14px; transform-origin: 0 100%; height: 30px; padding: 0 13px; border-radius: 15px; background: rgba(0, 0, 0, 0.62); display: flex; align-items: center; font-size: 12.5px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+
+/* GNOME 3.x shell */
+.wOld { background: linear-gradient(118deg, transparent 0 34%, rgba(255, 255, 255, 0.06) 34% 52%, transparent 52% 68%, rgba(255, 255, 255, 0.04) 68% 80%, transparent 80%), linear-gradient(160deg, #3d70a8 0%, #27518b 55%, #183864 100%); }
+.wOld2 { background: linear-gradient(62deg, transparent 0 28%, rgba(255, 255, 255, 0.04) 28% 47%, transparent 47% 70%, rgba(255, 255, 255, 0.05) 70% 84%, transparent 84%), linear-gradient(170deg, #2b5f7e 0%, #1c3f63 50%, #11263f 100%); }
+.opanel { position: absolute; left: 0; top: 0; right: 0; height: 27px; background: #000; color: #fff; font-size: 13.5px; font-weight: 700; display: flex; align-items: center; padding: 0 12px; }
+.oclock { position: absolute; left: 50%; transform: translateX(-50%); }
+.oright { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.orss { display: flex; align-items: center; gap: 5px; height: 27px; padding: 0 8px; }
+.orss.active { box-shadow: inset 0 -2px 0 #5c9ee0; }
+.orss b { font-size: 12px; }
+.opop { position: absolute; top: 27px; right: 8px; transform-origin: 80% 0; }
+.oarrow { position: absolute; top: 3px; width: 14px; height: 14px; background: #2e3436; border: 1px solid #1c1f1f; border-right: none; border-bottom: none; transform: rotate(45deg); z-index: 2; }
+.obox { position: relative; margin-top: 10px; background: #2e3436; border: 1px solid #1c1f1f; border-radius: 6px; padding: 6px 0; color: #eeeeec; font-size: 14px; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5); }
+.oitem { display: flex; align-items: center; height: 32px; padding: 0 18px 0 8px; white-space: nowrap; }
+.oitem.open { background: rgba(238, 238, 236, 0.08); }
+.orn { width: 18px; flex: none; display: flex; justify-content: center; }
+.ot { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.tri { flex: none; opacity: 0.8; margin-left: 10px; }
+.owrap { overflow: hidden; }
+.osub { background: #24282a; box-shadow: inset 0 1px 0 #1c1f1f, inset 0 -1px 0 #1c1f1f; padding: 2px 0; }
+.osub .oitem { padding-left: 20px; }
+.osep { height: 1px; background: rgba(238, 238, 236, 0.13); margin: 6px 26px; }
+.obar { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 8px 16px 6px; }
+.oact { width: 38px; height: 38px; border-radius: 19px; border: 1px solid #1c1f1f; background: #3b4245; display: flex; align-items: center; justify-content: center; flex: none; }
+.olast { font-size: 13.5px; margin: 0 6px; white-space: nowrap; }
+.flash { border-radius: 3px; }
+#obanner { position: absolute; left: 50%; top: 31px; width: 350px; background: #2e3436; border: 1px solid #1c1f1f; border-radius: 6px; color: #eeeeec; font-size: 13.5px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55); overflow: hidden; }
+.obn { display: flex; gap: 12px; padding: 12px 14px; }
+.obi { width: 32px; height: 32px; flex: none; display: flex; align-items: center; justify-content: center; }
+.obt { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.obm { opacity: 0.8; margin-top: 2px; }
+.obtns { display: flex; border-top: 1px solid #1c1f1f; }
+.obtns span { flex: 1; text-align: center; font-weight: 700; padding: 8px 0; background: #353c3f; }
+.obtns span + span { border-left: 1px solid #1c1f1f; }
+
+/* GNOME 46+ shell */
+#stC { --menu-bg: #2e2e32; --menu-fg: #f6f6f7; --ov: 255, 255, 255; }
+#wallDark { background: radial-gradient(520px 360px at 14% 92%, rgba(53, 132, 228, 0.42), transparent 60%), radial-gradient(420px 300px at 86% 14%, rgba(145, 65, 172, 0.30), transparent 60%), linear-gradient(135deg, #0c111c 0%, #161d2e 48%, #10141f 100%); }
+#wallLight { opacity: 0; background: radial-gradient(520px 360px at 14% 92%, rgba(53, 132, 228, 0.30), transparent 60%), radial-gradient(420px 300px at 86% 14%, rgba(145, 65, 172, 0.20), transparent 60%), linear-gradient(135deg, #e9eef6 0%, #f4f1f8 48%, #eef1f6 100%); }
+#panel { position: absolute; left: 0; top: 0; right: 0; height: 32px; background: #000; display: flex; align-items: center; padding: 0 4px; font-size: 14.5px; font-weight: 700; color: #fff; }
+.pbtn { height: 24px; border-radius: 99px; display: flex; align-items: center; padding: 0 11px; gap: 10px; color: #fff; }
+.pbtn.active { background: rgba(255, 255, 255, 0.22); }
+.ws { display: flex; align-items: center; gap: 5px; height: 24px; padding: 0 10px; }
+.ws span { display: block; height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.45); width: 8px; }
+.ws span.a { width: 34px; background: #fff; }
+#clock { position: absolute; left: 50%; transform: translateX(-50%); white-space: pre; }
+#panelRight { margin-left: auto; display: flex; align-items: center; gap: 2px; }
+#dot { width: 8px; height: 8px; border-radius: 4px; background: #fff; margin-right: -6px; }
+
+#menu { position: absolute; left: 260px; top: 38px; width: 400px; transform-origin: 70% 0; color: var(--menu-fg); }
+.mcontent { background: var(--menu-bg); border-radius: 16px; padding: 6px; box-shadow: 0 0 0 1px rgba(var(--ov), 0.07), 0 8px 26px rgba(0, 0, 0, 0.45); font-size: 14.5px; }
+.item { border-radius: 10px; display: flex; align-items: center; gap: 6px; padding: 7px 8px; }
+.item.hover { background: rgba(var(--ov), 0.09); }
+.item.kf { box-shadow: inset 0 0 0 2px var(--accent); }
+.hdr { display: flex; align-items: center; gap: 10px; padding: 12px 14px 10px 14px; }
+.hicon { width: 32px; height: 32px; border-radius: 8px; background: rgba(127, 127, 127, 0.15); display: flex; align-items: center; justify-content: center; flex: none; }
+.htitles { flex: 1; min-width: 0; }
+.ht { font-size: 14px; font-weight: 700; }
+.hsub { display: flex; align-items: center; font-size: 11px; height: 17px; margin-top: 1px; }
+#cSub { opacity: 0.8; font-variant-numeric: tabular-nums; }
+.warnpill { font-size: 11px; padding: 0 6px; margin-left: 6px; border-radius: 9px; background: rgba(229, 165, 10, 0.3); line-height: 16px; transform-origin: 0 50%; }
+.badge { width: 30px; height: 30px; border-radius: 15px; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; flex: none; }
+.ibtn { width: 30px; height: 30px; border-radius: 15px; display: flex; align-items: center; justify-content: center; flex: none; }
+.hgrp { display: flex; gap: 10px; overflow: hidden; flex: none; }
+#mbody { position: relative; overflow: hidden; }
+#classic, #minimal { position: absolute; left: 0; right: 0; top: 0; }
+.grp { border-radius: 12px; overflow: hidden; }
+.grp.open { background: rgba(var(--ov), 0.045); }
+.grp.open .feed { background: rgba(var(--ov), 0.07); }
+.feed { padding: 7px 8px; }
+.avatar { width: 32px; height: 32px; border-radius: 16px; background: rgba(127, 127, 127, 0.15); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none; margin-right: 6px; }
+.ftitle { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.count { min-width: 30px; height: 30px; border-radius: 15px; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none; }
+.gcount { font-size: 11px; font-weight: 700; padding: 0 6px; }
+.arrow { width: 16px; height: 16px; flex: none; margin-left: 4px; }
+.hwrap { overflow: hidden; }
+.art { padding: 8px 8px; height: 36px; }
+.atitle { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.unread { font-weight: 700; }
+.read { font-weight: 300; opacity: 0.45; }
+.atime { font-size: 11px; opacity: 0.6; flex: none; }
+.acts { display: none; gap: 2px; flex: none; }
+.acts span { width: 20px; height: 20px; border-radius: 10px; display: flex; align-items: center; justify-content: center; opacity: 0.5; }
+.acts span.hot { opacity: 1; }
+.astar { flex: none; opacity: 0.7; display: none; }
+.showmore { font-size: 11px; padding: 10px 8px; height: 34px; }
+.showmore span { opacity: 0.6; }
+.sechdr { padding: 8px 8px 7px; margin-top: 4px; border-bottom: 1px solid rgba(127, 127, 127, 0.2); border-radius: 10px 10px 0 0; }
+.seclabel { flex: 1; font-size: 10px; font-weight: 700; letter-spacing: 0.07em; opacity: 0.65; }
+.mart { flex-direction: column; align-items: stretch; gap: 3px; padding: 7px 8px; }
+.mtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta { display: flex; align-items: center; gap: 6px; }
+.tag { font-size: 10px; border-radius: 4px; padding: 1px 5px; background: rgba(127, 127, 127, 0.16); }
+
+#banner { position: absolute; left: 50%; top: 40px; width: 380px; background: #333338; border-radius: 18px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 10px 30px rgba(0, 0, 0, 0.55); padding: 10px 12px 12px; font-size: 13.5px; color: #f6f6f7; }
+.nhdr { display: flex; align-items: center; gap: 6px; font-size: 12px; height: 22px; }
+.nsrc { font-weight: 700; opacity: 0.9; }
+.ntime { opacity: 0.6; }
+.nbody { display: flex; gap: 12px; margin-top: 8px; }
+.navatar { width: 40px; height: 40px; border-radius: 20px; background: var(--accent); flex: none; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: #fff; }
+.ntext { min-width: 0; flex: 1; }
+.ntitle { font-weight: 700; }
+.nmsg { opacity: 0.85; font-size: 13px; line-height: 1.4; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#cursor { position: absolute; left: 0; top: 0; width: 22px; height: 26px; pointer-events: none; z-index: 50; }
+
+#rail { position: absolute; left: 0; top: 584px; width: 1280px; height: 124px; }
+#base { position: absolute; left: 56px; top: 78px; width: 1168px; height: 2px; border-radius: 1px; background: rgba(255, 255, 255, 0.12); }
+#prog { position: absolute; left: 56px; top: 78px; height: 2px; border-radius: 1px; background: var(--lit); }
+.bar { position: absolute; left: 0; bottom: 46px; border-radius: 1.5px 1.5px 0 0; background: rgba(255, 255, 255, 0.17); }
+.bar.lit { background: var(--lit); }
+.tick { position: absolute; left: 0; top: 80px; }
+.tick i { display: block; width: 1px; height: 6px; background: rgba(255, 255, 255, 0.28); }
+.tick span { position: absolute; left: -20px; top: 9px; width: 40px; text-align: center; font-size: 12px; font-weight: 600; opacity: 0.55; font-variant-numeric: tabular-nums; }
+.rel { position: absolute; left: 0; top: 79px; }
+.rel i { position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 5px; background: var(--window-bg); border: 2px solid rgba(255, 255, 255, 0.4); }
+.rel.minor i { left: -3.5px; top: -3.5px; width: 7px; height: 7px; }
+.rel.lit i { background: #fff; border-color: #fff; }
+.rel span { position: absolute; left: -24px; top: 27px; width: 48px; text-align: center; font-size: 11.5px; font-weight: 700; color: var(--accent-text); }
+#gapLabel { position: absolute; top: 50px; font-size: 12px; font-weight: 600; opacity: 0; transform: translateX(-50%); white-space: nowrap; }
+#head { position: absolute; left: 0; top: 0; }
+#headLine { position: absolute; left: -1px; top: 24px; width: 2px; height: 56px; border-radius: 1px; background: #fff; }
+#headPill { position: absolute; left: 0; top: 0; height: 22px; line-height: 22px; padding: 0 10px; border-radius: 11px; background: #fff; color: #1d1d20; font-size: 12px; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+#intro, #thanks { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; pointer-events: none; }
+.logo { width: 112px; height: 112px; border-radius: 25px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 16px 44px rgba(0, 0, 0, 0.6); }
+#intro h1 { font-size: 64px; font-weight: 800; letter-spacing: -0.03em; margin-top: 28px; }
+#intro .tagline { font-size: 22px; font-weight: 500; opacity: 0.72; margin-top: 8px; }
+.chips { margin-top: 28px; display: flex; gap: 10px; align-items: center; justify-content: center; }
+.chip { font-size: 15px; font-weight: 600; padding: 8px 16px; border-radius: 99px; background: rgba(255, 255, 255, 0.1); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1); }
+.chip.acc { background: var(--accent); box-shadow: none; }
+#thanks .since { font-size: 17px; font-weight: 600; opacity: 0.6; }
+#tnum { font-size: 168px; font-weight: 800; letter-spacing: -0.045em; line-height: 1; margin-top: 10px; color: var(--accent-text); font-variant-numeric: tabular-nums; }
+#thanks .dl { font-size: 30px; font-weight: 700; letter-spacing: -0.01em; margin-top: 6px; }
+#tty { margin-top: 30px; }
+#tty h2 { font-size: 44px; font-weight: 800; letter-spacing: -0.025em; }
+#tty p { font-size: 19px; font-weight: 500; opacity: 0.72; margin-top: 6px; }
+#confetti { position: absolute; inset: 0; pointer-events: none; }
+#thanks > :not(#confetti) { position: relative; }
+#confetti i { position: absolute; left: 0; top: 0; width: 9px; height: 15px; border-radius: 2.5px; }
+</style>
+</head>
+<body>
+<div id="screen">
+	<div id="bg"></div>
+	<div id="app">
+		<div id="hb">
+			<img src="logo.png" alt="">
+			<span class="hbt">RSS Feed</span><span class="hbs">Project timeline</span>
+			<div id="eras">
+				<div id="eraHl"></div>
+				<div class="era">Origins<small>2014 - 2015</small></div>
+				<div class="era">Community<small>2016 - 2019</small></div>
+				<div class="era">Revival<small>2026</small></div>
+			</div>
+		</div>
+
+		<div id="cards"></div>
+
+		<div id="pv">
+			<div class="st" id="stA">
+				<div class="wall wOld"></div>
+				<div class="opanel">
+					<span>Activities</span><span class="oclock" id="aClock"></span>
+					<span class="oright"><span class="orss" id="aRss"><span id="aIcon" data-i="rss" data-s="15"></span></span><span data-i="vol" data-s="15"></span><span data-i="bat" data-s="15"></span><span data-i="down" data-s="10"></span></span>
+				</div>
+				<div class="opop" id="aPop" style="width: 336px">
+					<div class="oarrow" id="aArrow"></div>
+					<div class="obox">
+						<div class="oitem open"><span class="orn"></span><span class="ot">Planet GNOME</span><span class="tri" id="aTri" data-i="tri" data-s="10"></span></div>
+						<div class="owrap" id="aSub"><div class="osub">
+							<div class="oitem"><span class="ot">GTK+ 3.16 and the new scrollbars</span></div>
+							<div class="oitem"><span class="ot" id="aEnt"></span></div>
+							<div class="oitem"><span class="ot">Notifications reloaded in GNOME Shell</span></div>
+							<div class="oitem"><span class="ot">Building apps with GNOME Builder</span></div>
+						</div></div>
+						<div class="oitem"><span class="orn"></span><span class="ot">Slashdot</span><span class="tri" data-i="tri" data-s="10"></span></div>
+						<div class="oitem"><span class="orn"></span><span class="ot">Phoronix</span><span class="tri" data-i="tri" data-s="10"></span></div>
+						<div class="owrap" id="aNew"><div class="oitem"><span class="orn"></span><span class="ot">LWN.net</span><span class="tri" data-i="tri" data-s="10"></span></div></div>
+						<div class="osep"></div>
+						<div class="obar"><span class="oact"><span data-i="chevl" data-s="16"></span></span><span class="oact"><span data-i="chev" data-s="16"></span></span><span class="olast" id="aLast"></span><span class="oact"><span data-i="refresh" data-s="16"></span></span><span class="oact"><span data-i="gear" data-s="16"></span></span></div>
+					</div>
+				</div>
+			</div>
+
+			<div class="st" id="stB">
+				<div class="wall wOld2"></div>
+				<div class="opanel">
+					<span>Activities</span><span class="oclock" id="bClock"></span>
+					<span class="oright"><span class="orss" id="bRss"><b id="bCount">5</b><span id="bIcon" data-i="rss" data-s="15"></span></span><span data-i="vol" data-s="15"></span><span data-i="bat" data-s="15"></span><span data-i="down" data-s="10"></span></span>
+				</div>
+				<div class="opop" id="bPop" style="width: 400px">
+					<div class="oarrow" id="bArrow"></div>
+					<div class="obox">
+						<div class="oitem open"><span class="orn" data-i="dot" data-s="8"></span><span class="ot">Planet GNOME (3)</span><span class="tri" style="transform: rotate(90deg)" data-i="tri" data-s="10"></span></div>
+						<div class="osub">
+							<div class="oitem"><span class="orn" data-i="dot" data-s="8"></span><span class="ot">Wayland by default: where we stand</span></div>
+							<div class="oitem"><span class="orn" data-i="dot" data-s="8"></span><span class="ot">Night Light lands in GNOME 3.24</span></div>
+							<div class="oitem"><span class="orn" data-i="dot" data-s="8"></span><span class="ot">A new look for the Settings app</span></div>
+							<div class="oitem"><span class="orn"></span><span class="ot">Flatpak 0.8 and the road to 1.0</span></div>
+						</div>
+						<div class="oitem"><span class="orn" data-i="dot" data-s="8"></span><span class="ot">Hacker News (2)</span><span class="tri" data-i="tri" data-s="10"></span></div>
+						<div class="oitem"><span class="orn"></span><span class="ot">Phoronix</span><span class="tri" data-i="tri" data-s="10"></span></div>
+						<div class="oitem"><span class="orn" data-i="dot" data-s="8"></span><span class="ot">OMG! Ubuntu (1)</span><span class="tri" data-i="tri" data-s="10"></span></div>
+						<div class="osep"></div>
+						<div class="obar"><span class="olast" style="margin-right: auto">Last update: 14:07:22</span><span class="oact"><span data-i="refresh" data-s="16"></span></span><span class="oact"><span data-i="gear" data-s="16"></span></span></div>
+					</div>
+				</div>
+				<div id="obanner">
+					<div class="obn"><span class="obi" data-i="rss" data-s="26"></span><div style="min-width: 0"><div class="obt">Wayland by default: where we stand</div><div class="obm">Source: Planet GNOME</div></div></div>
+					<div class="obtns"><span>Open URL</span><span>Copy URL</span></div>
+				</div>
+			</div>
+
+			<div class="st" id="stC">
+				<div class="wall" id="wallDark"></div>
+				<div class="wall" id="wallLight"></div>
+				<div id="panel">
+					<div class="ws"><span class="a"></span><span></span><span></span></div>
+					<div id="clock"></div>
+					<div id="panelRight">
+						<div id="rssBtn" class="pbtn"><div id="dot"></div><span data-i="rss" data-s="16"></span></div>
+						<div class="pbtn"><span data-i="wifi" data-s="16"></span><span data-i="vol" data-s="16"></span><span data-i="bat" data-s="16"></span></div>
+					</div>
+				</div>
+				<div id="banner">
+					<div class="nhdr"><span data-i="rss" data-s="14"></span><span class="nsrc">RSS Feed</span><span class="ntime">Just now</span></div>
+					<div class="nbody">
+						<div class="navatar">HN</div>
+						<div class="ntext"><div class="ntitle">Hacker News</div><div class="nmsg">4 new articles</div></div>
+					</div>
+				</div>
+				<div id="menu">
+					<div class="mcontent">
+						<div class="hdr">
+							<div class="hicon"><span data-i="rss" data-s="20"></span></div>
+							<div class="htitles">
+								<div class="ht">RSS Feed</div>
+								<div class="hsub"><span id="cSub"></span><span id="failPill" class="warnpill">2 failed</span></div>
+							</div>
+							<div class="badge">7</div>
+							<div class="hgrp" id="hOld"><div class="ibtn"><span data-i="refresh" data-s="16"></span></div><div class="ibtn"><span data-i="gear" data-s="16"></span></div></div>
+							<div class="hgrp" id="hNew"><div class="ibtn"><span data-i="more" data-s="16"></span></div></div>
+						</div>
+						<div id="mbody">
+							<div id="classic"></div>
+							<div id="minimal"></div>
+						</div>
+					</div>
+				</div>
+				<div id="cursor"><svg width="22" height="26" viewBox="0 0 22 26"><path d="M2 1.5 L2 20.5 L6.6 16.2 L9.7 23.3 L12.9 21.9 L9.9 15 L16.4 15 Z" fill="#000" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+			</div>
+
+			<div id="gchip"></div>
+		</div>
+
+		<div id="rail">
+			<div id="base"></div>
+			<div id="prog"></div>
+			<div id="bars"></div>
+			<div id="ticks"></div>
+			<div id="gapLabel">no commits</div>
+			<div id="head"><div id="headLine"></div><div id="headPill"></div></div>
+		</div>
+	</div>
+
+	<div id="intro">
+		<img class="logo" src="logo.png" alt="">
+		<h1>RSS Feed</h1>
+		<div class="tagline">The story so far</div>
+		<div class="chips"><span class="chip acc">2014 to 2026</span></div>
+	</div>
+
+	<div id="thanks">
+		<div id="confetti"></div>
+		<div class="since">Since the revival in April 2026</div>
+		<div id="tnum">0</div>
+		<div class="dl">downloads</div>
+		<div id="tty"><h2>Thank you!</h2><p>For every install, report and idea</p></div>
+		<div class="chips" id="tchips"><span class="chip acc">GNOME 46 - 51</span><span class="chip">extensions.gnome.org</span><span class="chip">version 10.0</span></div>
+	</div>
+</div>
+
+<script>
+const ICONS = {
+	rss: '<circle cx="3.6" cy="12.4" r="1.9" fill="currentColor"/><path d="M2 7.3a6.7 6.7 0 0 1 6.7 6.7M2 2.4A11.6 11.6 0 0 1 13.6 14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>',
+	refresh: '<path d="M13.2 8.2A5.2 5.2 0 1 1 11.6 4.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M9.3 1.8h4.3v4.3z" fill="currentColor"/>',
+	chevl: '<path d="M10 3.5 5.5 8 10 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+	chev: '<path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+	down: '<path d="M3.5 6 8 10.5 12.5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+	check: '<path d="M3.2 8.4 6.4 11.6 12.8 4.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+	bell: '<path d="M8 1.6c-2.4 0-4.1 1.8-4.1 4.3v2.9L2.6 11v1h10.8v-1l-1.3-2.2V5.9C12.1 3.4 10.4 1.6 8 1.6z" fill="currentColor"/><path d="M6.3 13.2a1.7 1.7 0 0 0 3.4 0z" fill="currentColor"/>',
+	trash: '<path d="M5.6 1.6h4.8v1.6H14v1.6H2V3.2h3.6z" fill="currentColor"/><path d="M3.4 5.8h9.2l-.8 8a1.2 1.2 0 0 1-1.2 1H5.4a1.2 1.2 0 0 1-1.2-1z" fill="currentColor"/>',
+	open: '<path d="M1.6 3.2c0-.6.4-1 1-1h3.6l1.6 1.6h5.6c.6 0 1 .4 1 1V12.8c0 .6-.4 1-1 1H2.6c-.6 0-1-.4-1-1z" fill="currentColor"/>',
+	list: '<g fill="currentColor"><rect x="1.5" y="2.5" width="2.4" height="2.4" rx=".6"/><rect x="1.5" y="6.8" width="2.4" height="2.4" rx=".6"/><rect x="1.5" y="11.1" width="2.4" height="2.4" rx=".6"/><rect x="5.6" y="2.9" width="9" height="1.6" rx=".8"/><rect x="5.6" y="7.2" width="9" height="1.6" rx=".8"/><rect x="5.6" y="11.5" width="9" height="1.6" rx=".8"/></g>',
+	wifi: '<path d="M8 13.6 .9 5.4a10.8 10.8 0 0 1 14.2 0z" fill="currentColor"/>',
+	vol: '<path d="M1.6 5.6h2.8L8 2.4v11.2L4.4 10.4H1.6z" fill="currentColor"/><path d="M10.2 5.4a3.4 3.4 0 0 1 0 5.2M12.1 3.2a6.4 6.4 0 0 1 0 9.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+	bat: '<rect x="4.4" y="2.6" width="7.2" height="12" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="6.4" y="1.2" width="3.2" height="1.6" rx=".5" fill="currentColor"/><rect x="5.9" y="6" width="4.2" height="7.1" rx=".5" fill="currentColor"/>',
+	doc: '<path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M9.5 1.5v3h3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>',
+	clock: '<circle cx="8" cy="8" r="6.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.2V8l2.6 1.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+	more: '<g fill="currentColor"><circle cx="3" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="13" cy="8" r="1.5"/></g>',
+	dot: '<circle cx="8" cy="8" r="5" fill="currentColor"/>',
+	tri: '<path d="M4.5 2.5 12 8l-7.5 5.5z" fill="currentColor"/>',
+	globe: '<circle cx="8" cy="8" r="6.3" fill="none" stroke="currentColor" stroke-width="1.4"/><ellipse cx="8" cy="8" rx="2.7" ry="6.3" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M1.9 8h12.2" fill="none" stroke="currentColor" stroke-width="1.3"/>',
+	code: '<path d="M5.5 4 1.8 8l3.7 4M10.5 4l3.7 4-3.7 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+	bolt: '<path d="M9.4 1 3.2 9.2h3.9L6.4 15l6.4-8.4H8.7z" fill="currentColor"/>',
+	sun: '<circle cx="8" cy="8" r="3.1" fill="currentColor"/><path d="M8 1.2v1.9M8 12.9v1.9M1.2 8h1.9M12.9 8h1.9M3.2 3.2l1.3 1.3M11.5 11.5l1.3 1.3M3.2 12.8l1.3-1.3M11.5 4.5l1.3-1.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+	contrast: '<circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.8a6.2 6.2 0 0 1 0 12.4z" fill="currentColor"/>',
+	warn: '<path d="M8 1.6 15 14H1z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><rect x="7.2" y="6" width="1.6" height="4.2" rx=".6" fill="currentColor"/><circle cx="8" cy="11.9" r=".95" fill="currentColor"/>',
+	kbd: '<rect x="1.2" y="3.6" width="13.6" height="8.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.4"/><g fill="currentColor"><rect x="3.4" y="5.8" width="1.6" height="1.5" rx=".4"/><rect x="6" y="5.8" width="1.6" height="1.5" rx=".4"/><rect x="8.6" y="5.8" width="1.6" height="1.5" rx=".4"/><rect x="11.1" y="5.8" width="1.6" height="1.5" rx=".4"/><rect x="4.6" y="8.8" width="6.8" height="1.5" rx=".5"/></g>',
+	pointer: '<path d="M3 1.6v11.6l3-2.8 2 4.2 2-.9-1.9-4.1h4.1z" fill="currentColor"/>',
+	mail: '<path d="M2 6.3 8 2.4l6 3.9v7.3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M2.4 6.8 8 10.2l5.6-3.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>',
+	link: '<path d="M9.5 2.2h4.3v4.3M13.6 2.4 7.6 8.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.4 3.6H3.4c-.7 0-1.2.5-1.2 1.2v7.8c0 .7.5 1.2 1.2 1.2h7.8c.7 0 1.2-.5 1.2-1.2V9.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+};
+ICONS.gear = (() => {
+	let d = '', n = 8, ro = 7.2, ri = 5.6;
+	for (let i = 0; i < n; i++) {
+		let a = i / n * Math.PI * 2;
+		let w = Math.PI / n * 0.55;
+		let pts = [[ri, a - Math.PI / n + 0.05], [ro, a - w], [ro, a + w], [ri, a + Math.PI / n - 0.05]];
+		for (let [r, ang] of pts)
+			d += (d ? 'L' : 'M') + (8 + r * Math.cos(ang)).toFixed(2) + ' ' + (8 + r * Math.sin(ang)).toFixed(2);
+	}
+	d += 'Z M10.3 8a2.3 2.3 0 1 0-4.6 0 2.3 2.3 0 1 0 4.6 0z';
+	return '<path fill-rule="evenodd" d="' + d + '" fill="currentColor"/>';
+})();
+const STAR = (() => {
+	let d = '';
+	for (let i = 0; i < 10; i++) {
+		const r = i % 2 ? 2.9 : 6.6, a = -Math.PI / 2 + i * Math.PI / 5;
+		d += (d ? 'L' : 'M') + (8 + r * Math.cos(a)).toFixed(2) + ' ' + (8.5 + r * Math.sin(a)).toFixed(2);
+	}
+	return d + 'Z';
+})();
+ICONS.star = '<path d="' + STAR + '" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>';
+ICONS.starOff = '<path d="' + STAR + '" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>';
+
+function icon(name, size) {
+	return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 16 16">' + ICONS[name] + '</svg>';
+}
+function fillIcons(root) {
+	root.querySelectorAll('[data-i]').forEach(el => { el.innerHTML = icon(el.dataset.i, +el.dataset.s); el.style.display = 'inline-flex'; });
+}
+
+const $ = (id) => document.getElementById(id);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const seg = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
+const lerp = (a, b, k) => a + (b - a) * k;
+const eio = (k) => k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+const eout = (k) => 1 - Math.pow(1 - k, 3);
+const ein = (k) => k * k * k;
+const eback = (k) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(k - 1, 3) + c1 * Math.pow(k - 1, 2); };
+const hex = (h) => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const mix = (a, b, k) => { const x = hex(a), y = hex(b); return x.map((v, i) => Math.round(lerp(v, y[i], k))); };
+const rgb = (c) => 'rgb(' + c.join(',') + ')';
+const pulse = (k) => k > 0 && k < 1 ? 1 + 0.25 * Math.sin(Math.PI * k) : 1;
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const yearSpan = (y) => [Date.UTC(y, 0, 1), Date.UTC(y + 1, 0, 1)];
+function dy(s) {
+	const [y, m, d] = s.split('-').map(Number);
+	const [a, b] = yearSpan(y);
+	return y + (Date.UTC(y, m - 1, d) - a) / (b - a);
+}
+function fromDy(v) {
+	const y = Math.floor(v);
+	const [a, b] = yearSpan(y);
+	return new Date(Math.round((a + (v - y) * (b - a)) / 864e5) * 864e5);
+}
+
+const SCENES = [
+	{ id: 'start', dur: 2.6, date: '2014-12-29', when: '29 December 2014', tag: 'First commit', ver: 'Day one', word: 1, sub: 'An RSS icon in the top bar and a plan',
+		rows: [['rss', 'A button in the top panel'], ['code', 'First XML parsing experiments']] },
+	{ id: 'v1', dur: 4.4, date: '2015-04-18', when: '18 April 2015', tag: 'First release', ver: 'v1.0', sub: 'Your feeds in a panel popup, one click away from the article',
+		rows: [['list', 'Feeds and articles in the popup'], ['refresh', 'Refresh on a schedule'], ['gear', 'Settings for sources and interval']] },
+	{ id: 'v12', dur: 3.2, date: '2015-05-24', when: 'May 2015', tag: 'More formats', ver: 'v1.2', sub: 'Two follow-up releases within five weeks',
+		rows: [['doc', 'Atom and RDF feeds'], ['globe', 'Works behind a proxy'], ['check', 'Escaped characters fixed']] },
+	{ id: 'y2016', dur: 3.2, date: '2016-08-08', when: '2016', tag: 'Community', ver: 'New hands', word: 1, sub: 'Contributors pick the project up and keep it going',
+		rows: [['globe', 'First translations'], ['check', 'GNOME 3.18 and 3.20'], ['code', 'Sturdier XML parsing']] },
+	{ id: 'v2', dur: 4.8, date: '2017-03-03', when: '3 March 2017', tag: 'Major rework', ver: 'v2.0', sub: 'Faster updates and a completely new settings window',
+		rows: [['bell', 'Notifications for new articles'], ['dot', 'Unread marks and counts'], ['list', 'Scrollable menu, source checks']] },
+	{ id: 'maint', dur: 3.0, move: 2.2, date: '2019-07-24', when: '2017 to 2019', tag: 'Maintenance', ver: 'Keeping pace', word: 1, sub: 'Small updates to follow each new GNOME release',
+		rows: [['check', 'GNOME 3.24 and 3.26'], ['check', 'GNOME 3.32'], ['clock', 'Last commit on 24 July 2019']] },
+	{ id: 'gap', dur: 4.6, linear: 1, date: '2026-04-21', when: 'July 2019 to April 2026', tag: 'Silence', ver: '', sub: 'No commits and no releases while 14 GNOME versions go by' },
+	{ id: 'rev', dur: 3.2, move: 2.2, date: '2026-04-30', when: '21 April 2026', tag: 'Revival', ver: 'Back to life', word: 1, sub: 'The project wakes up with 130 commits in ten days',
+		rows: [['trash', 'Repository cleaned up'], ['check', 'CI with ESLint and shexli'], ['code', 'Port to GNOME 46 begins']] },
+	{ id: 'v7', dur: 4.8, date: '2026-05-01', when: '1 May 2026', tag: 'Complete rewrite', ver: 'v7.0', sub: 'Rebuilt from scratch for the modern GNOME desktop',
+		rows: [['code', 'GNOME 46 to 50, ES modules'], ['list', 'Classic and Minimal layouts'], ['bell', 'New notifications and preferences']] },
+	{ id: 'v72', dur: 3.2, date: '2026-06-19', when: '19 June 2026', tag: 'Light themes', ver: 'v7.2', sub: 'Readable on every theme, in every accent color',
+		rows: [['sun', 'Light theme compatibility'], ['contrast', 'Follows the system accent color'], ['check', 'Cleanup for the extensions review']] },
+	{ id: 'v8', dur: 3.8, date: '2026-07-07', when: '7 July 2026', tag: 'Performance', ver: 'v8.0', sub: 'Large feed lists no longer freeze the Shell',
+		rows: [['bolt', 'Chunked menu and Show more'], ['bell', 'Notifications grouped by source'], ['code', 'New architecture and XML parser']] },
+	{ id: 'v9', dur: 4.0, date: '2026-08-29', when: '29 August 2026', tag: 'OPML and failed feeds', ver: 'v9.0', sub: 'Bring your subscriptions and see what is broken',
+		rows: [['open', 'OPML import and export'], ['warn', 'Failed feeds retried and flagged'], ['kbd', 'Keyboard navigation, GNOME 51']] },
+	{ id: 'v10', dur: 5.0, date: '2026-10-15', pill: 'Oct 2026', when: 'October 2026', tag: 'Starred articles', ver: 'v10.0', sub: 'Keep what matters and act on every article',
+		rows: [['star', 'Starred articles'], ['pointer', 'Hover buttons and mouse actions'], ['clock', 'Compact header, article history']] },
+];
+const START = 3.6;
+let cursorTime = START;
+for (const s of SCENES) { s.at = cursorTime; cursorTime += s.dur; s.end = cursorTime; s.d = dy(s.date); }
+const END = cursorTime;
+const OUTRO = 6.6;
+const DURATION = END + OUTRO;
+const S = Object.fromEntries(SCENES.map(s => [s.id, s]));
+const GAP_DAYS = 2463;
+
+// [date, featured in a scene]
+const RELEASES = [
+	['v1.0', '2015-04-18', 1], ['v1.1', '2015-05-03', 0], ['v1.2', '2015-05-24', 1], ['v2.0', '2017-03-03', 1],
+	['v7.0', '2026-05-01', 1], ['v7.1', '2026-06-15', 0], ['v7.2', '2026-06-19', 1], ['v8.0', '2026-07-07', 1],
+	['v8.1', '2026-07-08', 0], ['v9.0', '2026-08-29', 1], ['v10.0', '2026-10-15', 1],
+].map(r => ({ name: r[0], d: dy(r[1]), major: r[2] }));
+
+const GNOME = [
+	['3.14', '2014-09-24'], ['3.16', '2015-03-25'], ['3.18', '2015-09-23'], ['3.20', '2016-03-23'], ['3.22', '2016-09-21'], ['3.24', '2017-03-22'],
+	['3.26', '2017-09-13'], ['3.28', '2018-03-14'], ['3.30', '2018-09-05'], ['3.32', '2019-03-13'], ['3.34', '2019-09-12'], ['3.36', '2020-03-11'],
+	['3.38', '2020-09-16'], ['40', '2021-03-24'], ['41', '2021-09-22'], ['42', '2022-03-23'], ['43', '2022-09-21'], ['44', '2023-03-22'],
+	['45', '2023-09-20'], ['46', '2024-03-20'], ['47', '2024-09-18'], ['48', '2025-03-19'], ['49', '2025-09-17'], ['50', '2026-03-18'], ['51', '2026-09-16'],
+].map(g => [g[0], dy(g[1])]);
+
+// commits per day, from git log
+const COMMITS = [["2014-12-29",1],["2014-12-31",3],["2015-01-02",1],["2015-01-06",1],["2015-01-08",1],["2015-01-14",1],["2015-01-15",2],["2015-01-18",1],["2015-01-22",2],["2015-01-24",1],["2015-01-26",1],["2015-01-27",1],["2015-01-28",1],["2015-02-01",1],["2015-02-07",1],["2015-02-21",2],["2015-03-29",4],["2015-04-18",11],["2015-04-19",3],["2015-04-30",2],["2015-05-01",4],["2015-05-02",4],["2015-05-03",1],["2015-05-08",1],["2015-05-19",1],["2015-05-20",2],["2015-05-24",2],["2016-03-04",2],["2016-06-06",1],["2016-08-03",3],["2016-08-04",1],["2016-08-06",1],["2016-08-07",1],["2016-08-08",2],["2017-01-10",1],["2017-02-23",1],["2017-02-24",2],["2017-02-25",5],["2017-02-26",3],["2017-02-27",8],["2017-02-28",5],["2017-03-01",4],["2017-03-02",4],["2017-03-03",3],["2017-03-04",4],["2017-03-05",4],["2017-03-06",2],["2017-03-22",1],["2017-04-24",1],["2017-10-07",1],["2017-12-16",4],["2018-12-25",4],["2019-03-28",1],["2019-03-30",2],["2019-07-21",1],["2019-07-22",5],["2019-07-24",3],["2026-04-21",1],["2026-04-22",4],["2026-04-23",16],["2026-04-24",7],["2026-04-25",28],["2026-04-26",30],["2026-04-27",2],["2026-04-28",19],["2026-04-29",8],["2026-04-30",15],["2026-05-01",7],["2026-05-03",2],["2026-05-16",1],["2026-05-19",6],["2026-05-20",1],["2026-05-29",2],["2026-06-12",1],["2026-06-14",13],["2026-06-15",2],["2026-06-16",7],["2026-06-19",9],["2026-06-20",4],["2026-06-21",6],["2026-06-22",4],["2026-06-23",3],["2026-06-25",3],["2026-06-28",13],["2026-06-29",3],["2026-07-01",5],["2026-07-02",4],["2026-07-05",3],["2026-07-06",4],["2026-07-07",3],["2026-07-08",5],["2026-07-09",2],["2026-07-19",5],["2026-07-21",2],["2026-07-22",7],["2026-07-27",5],["2026-07-28",7],["2026-07-31",2],["2026-08-03",1],["2026-08-19",1],["2026-08-20",8],["2026-08-21",5],["2026-08-22",1],["2026-08-29",1],["2026-09-24",2],["2026-10-01",5],["2026-10-02",1],["2026-10-03",11],["2026-10-04",12],["2026-10-05",1],["2026-10-07",6],["2026-10-08",10],["2026-10-09",8],["2026-10-10",48]];
+const DAYS = COMMITS.map(c => ({ d: dy(c[0]), h: 5 + 39 * Math.sqrt(c[1] / 48) }));
+
+$('cards').innerHTML = SCENES.map((s, i) => '<div class="ms" id="ms' + i + '"><div class="mrow"><span class="when">' + s.when + '</span><span class="tagp">' + s.tag + '</span></div>'
+	+ '<div class="ver' + (s.word ? ' word' : '') + '">' + (s.id === 'gap' ? '<span id="gapNum">0</span><span class="unit">days</span>' : s.ver) + '</div>'
+	+ '<div class="sub">' + s.sub + '</div>'
+	+ (s.rows ? '<div class="blist">' + s.rows.map(r => '<div class="row"><span class="ric">' + icon(r[0], 16) + '</span><span>' + r[1] + '</span></div>').join('') + '</div>' : '')
+	+ '</div>').join('');
+SCENES.forEach((s, i) => { s.el = $('ms' + i); s.list = s.el.querySelector('.blist'); s.rowEls = [...s.el.querySelectorAll('.row')]; });
+
+const FEEDS = [
+	{ id: 'tw', title: 'This Week in GNOME', av: 'TW', count: 1 },
+	{ id: 'hn', title: 'Hacker News', av: 'HN', count: 2, arts: [
+		['Show HN: A static site generator in 300 lines', '1m', 0],
+		['The unreasonable effectiveness of plain text', '48m', 0],
+		['Understanding the Linux page cache', '5h', 1],
+	] },
+	{ id: 'pg', title: 'Planet GNOME', av: 'PG', count: 3 },
+	{ id: 'ph', title: 'Phoronix', av: 'PH', count: 1 },
+];
+let classicHtml = '<div class="hwrap" id="w_st"><div class="grp"><div class="item feed"><div class="avatar">' + icon('star', 14) + '</div><div class="ftitle">Starred</div><div class="gcount" id="stCount">2</div><div class="arrow">' + icon('chev', 16) + '</div></div></div></div>';
+for (let f of FEEDS) {
+	classicHtml += '<div class="grp" id="g_' + f.id + '"><div class="item feed" id="f_' + f.id + '"><div class="avatar">' + f.av + '</div><div class="ftitle">' + f.title + '</div>'
+		+ '<div class="count">' + f.count + '</div><div class="arrow" id="a_' + f.id + '">' + icon('chev', 16) + '</div></div>';
+	if (f.arts) {
+		classicHtml += '<div class="hwrap" id="s_' + f.id + '"><div>';
+		f.arts.forEach((a, i) => {
+			classicHtml += '<div class="item art" id="art' + i + '"><div class="atitle ' + (a[2] ? 'read' : 'unread') + '">' + a[0] + '</div>'
+				+ (i === 1 ? '<div class="acts" id="acts"><span id="actStar"></span><span>' + icon('mail', 14) + '</span><span>' + icon('link', 14) + '</span></div><span class="astar" id="astar">' + icon('star', 12) + '</span>' : '')
+				+ '<div class="atime">' + a[1] + '</div></div>';
+		});
+		classicHtml += '<div class="hwrap" id="w_more"><div class="item showmore" id="more"><span>Show more (148)</span></div></div></div></div>';
+	}
+	classicHtml += '</div>';
+}
+$('classic').innerHTML = classicHtml;
+
+const MIN_UNREAD = [
+	['Show HN: A static site generator in 300 lines', 'Hacker News', '1m'],
+	['#218 Faster Thumbnails', 'This Week in GNOME', '12m'],
+	['Building adaptive layouts with GTK 4 and libadwaita', 'Planet GNOME', '1h'],
+];
+const MIN_READ = [
+	['Understanding the Linux page cache', 'Hacker News', '5h'],
+	['Profiling GNOME Shell with Sysprof', 'Planet GNOME', '2d'],
+];
+const mrow = (a, cls) => '<div class="item mart"><div class="mtitle ' + cls + '">' + a[0] + '</div><div class="meta"><span class="tag">' + a[1] + '</span><span class="atime">' + a[2] + '</span></div></div>';
+$('minimal').innerHTML = '<div class="item sechdr"><span class="seclabel">UNREAD</span>' + icon('down', 16) + '</div>' + MIN_UNREAD.map(a => mrow(a, 'unread')).join('')
+	+ '<div class="item sechdr"><span class="seclabel">READ</span>' + icon('down', 16) + '</div>' + MIN_READ.map(a => mrow(a, 'read')).join('');
+
+fillIcons(document);
+
+const RX = 56, RW = 1168;
+const VIEW_YEARS = [2014.72, 2027.02];
+const VIEW_2026 = [dy('2026-04-06'), dy('2026-11-02')];
+const FOCUS = dy('2026-07-15');
+DAYS.forEach(b => { b.el = document.createElement('div'); b.el.className = 'bar'; b.el.style.height = b.h.toFixed(1) + 'px'; $('bars').appendChild(b.el); });
+function tick(label) {
+	const el = document.createElement('div');
+	el.className = 'tick';
+	el.innerHTML = '<i></i><span>' + label + '</span>';
+	$('ticks').appendChild(el);
+	return el;
+}
+const YEAR_TICKS = [];
+for (let y = 2015; y <= 2026; y++) YEAR_TICKS.push({ d: y, el: tick(y) });
+const MONTH_TICKS = [];
+for (let m = 4; m <= 10; m++) MONTH_TICKS.push({ d: dy('2026-' + String(m + 1).padStart(2, '0') + '-01'), el: tick(MONTHS[m]) });
+RELEASES.forEach(r => {
+	r.el = document.createElement('div');
+	r.el.className = 'rel' + (r.major ? '' : ' minor');
+	r.el.innerHTML = '<i></i><span>' + r.name + '</span>';
+	r.label = r.el.lastChild;
+	$('rail').insertBefore(r.el, $('gapLabel'));
+});
+
+const PALETTE = ['#62a0ea', '#57e389', '#f8e45c', '#ffa348', '#ed333b', '#c061cb'];
+function prng(seed) {
+	return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let x = Math.imul(seed ^ seed >>> 15, 1 | seed); x = x + Math.imul(x ^ x >>> 7, 61 | x) ^ x; return ((x ^ x >>> 14) >>> 0) / 4294967296; };
+}
+const rnd = prng(1000);
+const CONFETTI = [];
+for (let i = 0; i < 90; i++) {
+	const el = document.createElement('i');
+	el.style.background = PALETTE[i % PALETTE.length];
+	$('confetti').appendChild(el);
+	const a = -Math.PI / 2 + (rnd() - 0.5) * 2.5, v = 300 + rnd() * 520;
+	CONFETTI.push({ el, x: 640 + (rnd() - 0.5) * 420, y: 330 + (rnd() - 0.5) * 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: rnd() * 360, vr: (rnd() - 0.5) * 900, s: 0.7 + rnd() * 0.6 });
+}
+
+const stC = $('stC');
+function pos(el, ax = 0.5, ay = 0.5) {
+	let x = 0, y = 0, e = el;
+	while (e && e !== stC) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; }
+	return [x + el.offsetWidth * ax, y + el.offsetHeight * ay];
+}
+const PATH = [
+	{ at: 0, to: () => [300, 430] },
+	{ at: S.v10.at + 1.9, dur: 0.7, to: () => pos($('art1'), 0.32, 0.55) },
+	{ at: S.v10.at + 2.5, dur: 0.5, to: () => pos($('actStar'), 0.4, 0.7) },
+	{ at: S.v10.at + 4.2, dur: 0.6, to: () => [330, 420] },
+];
+function cursorAt(t) {
+	let p = PATH[0].to();
+	for (let i = 1; i < PATH.length; i++) {
+		const w = PATH[i];
+		const start = w.at - w.dur;
+		if (t < start) break;
+		const qd = w.to();
+		if (t >= w.at) { p = qd; continue; }
+		const k = eio((t - start) / w.dur);
+		const dx = qd[0] - p[0], dy2 = qd[1] - p[1];
+		const len = Math.hypot(dx, dy2) || 1;
+		const bow = Math.sin(k * Math.PI) * len * 0.08;
+		p = [lerp(p[0], qd[0], k) - dy2 / len * bow, lerp(p[1], qd[1], k) + dx / len * bow];
+		break;
+	}
+	return p;
+}
+
+const NAT = {};
+function measure() {
+	NAT.oitem = $('aNew').firstElementChild.offsetHeight;
+	NAT.aSub = $('aSub').firstElementChild.offsetHeight;
+	NAT.feed = $('f_tw').offsetHeight;
+	NAT.arts = $('s_hn').firstElementChild.offsetHeight - $('more').offsetHeight;
+	NAT.more = $('more').offsetHeight;
+	NAT.minimal = $('minimal').offsetHeight;
+	NAT.eras = [...document.querySelectorAll('.era')].map(e => [e.offsetLeft, e.offsetWidth]);
+	for (const [pop, arrow, btn] of [['aPop', 'aArrow', 'aIcon'], ['bPop', 'bArrow', 'bIcon']]) {
+		const p = $(pop).getBoundingClientRect(), b = $(btn).getBoundingClientRect();
+		$(arrow).style.right = (p.right - b.left - b.width / 2 - 7) + 'px';
+	}
+}
+
+function setH(el, h) { el.style.height = h + 'px'; }
+function fade(el, o) { el.style.opacity = o; el.style.visibility = o > 0.001 ? 'visible' : 'hidden'; }
+
+function headAt(t) {
+	let d = SCENES[0].d;
+	for (const s of SCENES) {
+		if (t < s.at) break;
+		const k = s.linear ? seg(t, s.at + 0.2, s.end - 0.5) : eio(seg(t, s.at + 0.05, s.at + (s.move || 0.8)));
+		d = lerp(d, s.d, k);
+	}
+	return d;
+}
+
+function renderRail(t, head) {
+	const zk = eio(seg(t, S.rev.at + 0.4, S.rev.at + 2.0));
+	const s0 = VIEW_YEARS[1] - VIEW_YEARS[0], s1 = VIEW_2026[1] - VIEW_2026[0];
+	const span = Math.exp(lerp(Math.log(s0), Math.log(s1), zk));
+	const d0 = FOCUS - lerp((FOCUS - VIEW_YEARS[0]) / s0, (FOCUS - VIEW_2026[0]) / s1, zk) * span;
+	const X = (d) => RX + (d - d0) / span * RW;
+	const edge = (x) => clamp((x - RX + 2) / 14, 0, 1) * clamp((RX + RW + 2 - x) / 14, 0, 1);
+
+	const bw = clamp(RW / (span * 365.25) - 1, 2, 5);
+	for (const b of DAYS) {
+		const x = X(b.d);
+		const o = edge(x);
+		b.el.style.opacity = o;
+		if (!o) continue;
+		b.el.style.transform = 'translateX(' + (x - bw / 2).toFixed(2) + 'px)';
+		b.el.style.width = bw.toFixed(2) + 'px';
+		b.el.className = b.d <= head + 0.0005 ? 'bar lit' : 'bar';
+	}
+	for (const y of YEAR_TICKS) {
+		const x = X(y.d);
+		y.el.style.opacity = edge(x);
+		y.el.style.transform = 'translateX(' + x.toFixed(2) + 'px)';
+	}
+	for (const m of MONTH_TICKS) {
+		const x = X(m.d);
+		m.el.style.opacity = edge(x) * zk;
+		m.el.style.transform = 'translateX(' + x.toFixed(2) + 'px)';
+	}
+
+	// labels of featured releases win the space, the rest shows up once the rail is zoomed in
+	const taken = [];
+	for (const r of [...RELEASES.filter(r => r.major), ...RELEASES.filter(r => !r.major)]) {
+		const x = X(r.d);
+		const o = edge(x);
+		r.el.style.opacity = o;
+		r.el.style.transform = 'translateX(' + x.toFixed(2) + 'px)';
+		r.el.classList.toggle('lit', r.d <= head + 0.0005);
+		const room = Math.min(...taken.map(v => Math.abs(v - x)), 1e9);
+		const lo = clamp((room - 30) / 12, 0, 1);
+		r.label.style.opacity = lo;
+		if (lo > 0.5) taken.push(x);
+	}
+
+	const hx = clamp(X(head), RX, RX + RW);
+	$('head').style.transform = 'translateX(' + hx.toFixed(2) + 'px)';
+	$('prog').style.width = (hx - RX).toFixed(2) + 'px';
+	const date = fromDy(head);
+	let text = zk < 0.5 ? MONTHS[date.getUTCMonth()] + ' ' + date.getUTCFullYear() : date.getUTCDate() + ' ' + MONTHS[date.getUTCMonth()];
+	if (t >= S.v10.at + 0.5) text = S.v10.pill;
+	const pill = $('headPill');
+	pill.textContent = text;
+	const half = pill.offsetWidth / 2;
+	pill.style.transform = 'translateX(' + (clamp(hx, RX + half, RX + RW - half) - hx - half).toFixed(2) + 'px)';
+
+	const gl = $('gapLabel');
+	gl.style.left = ((X(S.maint.d) + X(S.gap.d)) / 2).toFixed(2) + 'px';
+	gl.style.opacity = 0.45 * seg(t, S.gap.at + 0.3, S.gap.at + 0.8) * (1 - zk);
+}
+
+function renderCards(t) {
+	SCENES.forEach((s, i) => {
+		const inK = eout(seg(t, s.at + 0.1, s.at + 0.55));
+		const outK = i === SCENES.length - 1 ? 0 : ein(seg(t, s.end - 0.25, s.end + 0.05));
+		fade(s.el, inK * (1 - outK));
+		s.el.style.transform = 'translateY(' + (18 * (1 - inK) - 12 * outK).toFixed(2) + 'px)';
+		if (s.list) s.list.style.opacity = eout(seg(t, s.at + 0.4, s.at + 0.75));
+		s.rowEls.forEach((row, j) => {
+			const k = eout(seg(t, s.at + 0.5 + j * 0.13, s.at + 0.9 + j * 0.13));
+			row.style.opacity = k;
+			row.style.transform = 'translateX(' + (16 * (1 - k)).toFixed(2) + 'px)';
+		});
+	});
+	$('gapNum').textContent = Math.round(GAP_DAYS * seg(t, S.gap.at + 0.2, S.gap.end - 0.5)).toLocaleString('en-US');
+
+	const ep = eio(seg(t, S.y2016.at, S.y2016.at + 0.45)) + eio(seg(t, S.rev.at, S.rev.at + 0.45));
+	const i0 = Math.min(1, Math.floor(ep)), k = ep - i0;
+	$('eraHl').style.left = lerp(NAT.eras[i0][0], NAT.eras[i0 + 1][0], k) + 'px';
+	$('eraHl').style.width = lerp(NAT.eras[i0][1], NAT.eras[i0 + 1][1], k) + 'px';
+	document.querySelectorAll('.era').forEach((e, i) => { e.style.opacity = lerp(1, 0.5, clamp(Math.abs(ep - i), 0, 1)); });
+}
+
+function renderLegacy(t, scene) {
+	const day = WEEKDAYS[fromDy(scene.d).getUTCDay()];
+	$('aClock').textContent = day + ' 10:42';
+	$('bClock').textContent = day + ' 14:07';
+
+	const toB = eio(seg(t, S.v2.at, S.v2.at + 0.5));
+	const toC = eio(seg(t, S.rev.at + 0.2, S.rev.at + 0.9));
+	fade($('stA'), 1 - toB);
+	fade($('stB'), toB * (1 - toC));
+
+	const iconK = seg(t, S.start.at + 0.9, S.start.at + 1.25);
+	$('aRss').style.transform = 'scale(' + (iconK > 0 ? eback(iconK) : 0) + ')';
+	const aOpen = eout(seg(t, S.v1.at + 0.5, S.v1.at + 0.75));
+	fade($('aPop'), aOpen);
+	$('aPop').style.transform = 'translateY(' + (-8 * (1 - aOpen)) + 'px)';
+	$('aRss').classList.toggle('active', aOpen > 0);
+	const subK = eio(seg(t, S.v1.at + 1.4, S.v1.at + 1.75));
+	setH($('aSub'), NAT.aSub * subK);
+	$('aTri').style.transform = 'rotate(' + (90 * subK) + 'deg)';
+	const newK = eio(seg(t, S.v12.at + 0.7, S.v12.at + 1.0));
+	setH($('aNew'), NAT.oitem * newK);
+	$('aNew').style.opacity = newK;
+	const fixed = t >= S.v12.at + 1.7;
+	$('aEnt').textContent = fixed ? 'Fedora 22: "what\'s new" in Workstation' : 'Fedora 22: &quot;what&#039;s new&quot; in Workstation';
+	$('aEnt').parentElement.style.background = 'rgba(92, 158, 224, ' + (fixed ? 0.45 * (1 - seg(t, S.v12.at + 1.7, S.v12.at + 2.5)) : 0) + ')';
+	$('aLast').textContent = t >= S.y2016.at + 1.3 ? 'Letzte Aktualisierung: 10:42' : 'Last update: 10:42';
+	$('aPop').style.width = lerp(336, 396, eio(seg(t, S.y2016.at + 1.0, S.y2016.at + 1.3))) + 'px';
+
+	const arrived = t >= S.v2.at + 1.0;
+	$('bCount').textContent = arrived ? 6 : 5;
+	$('bCount').style.transform = 'scale(' + pulse(seg(t, S.v2.at + 1.0, S.v2.at + 1.35)) + ')';
+	const bIn = eout(seg(t, S.v2.at + 0.9, S.v2.at + 1.3)), bOut = ein(seg(t, S.v2.at + 2.6, S.v2.at + 2.95));
+	fade($('obanner'), bIn * (1 - bOut));
+	$('obanner').style.transform = 'translate(-50%, ' + (-90 * (1 - bIn) - 110 * bOut) + 'px)';
+	const bOpen = eout(seg(t, S.v2.at + 3.0, S.v2.at + 3.25)) * (1 - seg(t, S.gap.at + 0.3, S.gap.at + 0.5));
+	fade($('bPop'), bOpen);
+	$('bPop').style.transform = 'translateY(' + (-8 * (1 - bOpen)) + 'px)';
+	$('bRss').classList.toggle('active', bOpen > 0);
+	const sleep = eio(seg(t, S.gap.at + 0.3, S.gap.at + 1.4));
+	$('stB').style.filter = sleep > 0 ? 'grayscale(' + sleep.toFixed(3) + ') brightness(' + (1 - 0.5 * sleep).toFixed(3) + ')' : 'none';
+}
+
+function accentAt(t) {
+	const stops = [[0, '#3584e4'], [S.v72.at + 1.9, '#9141ac'], [S.v72.at + 2.5, '#3a944a'], [S.v8.at + 0.1, '#3584e4']];
+	let c = hex(stops[0][1]);
+	for (let i = 1; i < stops.length; i++) {
+		if (t < stops[i][0]) break;
+		const k = eio(seg(t, stops[i][0], stops[i][0] + 0.35));
+		c = c.map((v, j) => lerp(v, hex(stops[i][1])[j], k));
+	}
+	return c.map(Math.round);
+}
+
+function renderModern(t, scene) {
+	fade(stC, eio(seg(t, S.rev.at + 0.2, S.rev.at + 0.9)));
+	const date = fromDy(scene.d);
+	$('clock').textContent = MONTHS[date.getUTCMonth()] + ' ' + date.getUTCDate() + '  16:20';
+
+	const lk = eio(seg(t, S.v72.at + 0.7, S.v72.at + 1.4)) * (1 - eio(seg(t, S.v8.at + 0.1, S.v8.at + 0.7)));
+	$('wallLight').style.opacity = lk;
+	stC.style.setProperty('--menu-bg', rgb(mix('#2e2e32', '#fafafb', lk)));
+	stC.style.setProperty('--menu-fg', rgb(mix('#f6f6f7', '#2e2e33', lk)));
+	stC.style.setProperty('--ov', mix('#ffffff', '#000000', lk).join(','));
+	stC.style.setProperty('--accent', rgb(accentAt(t)));
+
+	const iconK = seg(t, S.rev.at + 1.7, S.rev.at + 2.05);
+	$('rssBtn').style.transform = 'scale(' + (iconK > 0 ? eback(iconK) : 0) + ')';
+
+	const open = eout(seg(t, S.v7.at + 0.5, S.v7.at + 0.72)) * (1 - seg(t, S.v8.at + 1.9, S.v8.at + 2.05)) + eout(seg(t, S.v9.at + 0.5, S.v9.at + 0.72));
+	const menu = $('menu');
+	fade(menu, open);
+	menu.style.transform = 'translateY(' + (-10 * (1 - open)) + 'px) scale(' + (0.97 + 0.03 * open) + ')';
+	$('rssBtn').classList.toggle('active', open > 0);
+
+	const bIn = eout(seg(t, S.v8.at + 2.2, S.v8.at + 2.6)), bOut = ein(seg(t, S.v9.at + 0.05, S.v9.at + 0.4));
+	fade($('banner'), bIn * (1 - bOut));
+	$('banner').style.transform = 'translate(-50%, ' + (-120 * (1 - bIn) - 140 * bOut) + 'px)';
+
+	const hnK = eio(seg(t, S.v7.at + 1.1, S.v7.at + 1.4));
+	const moreK = eio(seg(t, S.v8.at + 0.5, S.v8.at + 0.8)) * (1 - eio(seg(t, S.v10.at + 0.6, S.v10.at + 0.95)));
+	const starK = eio(seg(t, S.v10.at + 0.6, S.v10.at + 0.95));
+	setH($('w_more'), NAT.more * moreK);
+	$('w_more').style.opacity = moreK;
+	$('more').classList.toggle('hover', t >= S.v8.at + 1.1 && t < S.v8.at + 1.9);
+	setH($('s_hn'), (NAT.arts + NAT.more * moreK) * hnK);
+	$('a_hn').style.transform = 'rotate(' + (90 * hnK) + 'deg)';
+	$('g_hn').classList.toggle('open', hnK > 0);
+	setH($('w_st'), NAT.feed * starK);
+	$('w_st').style.opacity = starK;
+
+	const mm = eio(seg(t, S.v7.at + 2.8, S.v7.at + 3.25)) * (1 - eio(seg(t, S.v72.at + 0.1, S.v72.at + 0.5)));
+	const classic = $('classic'), minimal = $('minimal');
+	classic.style.opacity = 1 - mm;
+	minimal.style.opacity = mm;
+	classic.style.transform = 'translateX(' + (-24 * mm) + 'px)';
+	minimal.style.transform = 'translateX(' + (24 * (1 - mm)) + 'px)';
+	setH($('mbody'), lerp(classic.offsetHeight, NAT.minimal, mm));
+
+	const l9 = t - S.v9.at, l10 = t - S.v10.at;
+	const starred = l10 >= 2.6;
+	let sub = 'Updated at 16:20';
+	if (l9 >= 0.9 && l9 < 2.3)
+		sub = 'Updating… ' + Math.floor(seg(l9, 0.95, 2.25) * 40.999) + '/40';
+	else if (starred && l10 < 3.9)
+		sub = 'Article starred';
+	$('cSub').textContent = sub;
+	const fp = seg(l9, 2.3, 2.6) * (1 - seg(l10, 0.2, 0.4));
+	$('failPill').style.display = fp > 0 ? '' : 'none';
+	$('failPill').style.opacity = fp;
+	$('failPill').style.transform = 'scale(' + (l10 < 0 ? eback(fp) : 1) + ')';
+
+	const focus = l9 < 2.9 || l10 >= 0 ? -1 : Math.min(3, Math.floor((l9 - 2.9) / 0.28));
+	['f_tw', 'f_hn', 'art0', 'art1'].forEach((id, i) => $(id).classList.toggle('kf', i === focus));
+
+	const hk = eio(seg(l10, 0.4, 0.85));
+	$('hOld').style.width = (70 * (1 - hk)) + 'px';
+	$('hOld').style.opacity = 1 - hk;
+	$('hOld').style.marginLeft = (-10 * hk) + 'px';
+	$('hNew').style.width = (30 * hk) + 'px';
+	$('hNew').style.opacity = hk;
+	$('hNew').style.marginLeft = (-10 * (1 - hk)) + 'px';
+
+	const hovering = l10 >= 1.75 && l10 < 3.8;
+	$('art1').classList.toggle('hover', hovering);
+	$('acts').style.display = hovering ? 'flex' : 'none';
+	$('actStar').innerHTML = icon(starred ? 'star' : 'starOff', 14);
+	$('actStar').classList.toggle('hot', hovering && l10 >= 2.35);
+	$('astar').style.display = starred && !hovering ? 'flex' : 'none';
+	$('stCount').textContent = starred ? 3 : 2;
+	$('stCount').style.transform = 'scale(' + pulse(seg(l10, 2.6, 2.95)) + ')';
+
+	const [cx, cy] = cursorAt(t);
+	const press = l10 >= 2.54 && l10 < 2.7;
+	$('cursor').style.opacity = seg(l10, 1.2, 1.4) * (1 - seg(l10, 4.1, 4.35));
+	$('cursor').style.transform = 'translate(' + (cx - 2).toFixed(2) + 'px,' + (cy - 1.5).toFixed(2) + 'px) scale(' + (press ? 0.86 : 1) + ')';
+}
+
+function renderOutro(t) {
+	const e = t - END;
+	const k = eout(seg(e, 0.45, 0.95)) * (1 - eio(seg(e, OUTRO - 0.75, OUTRO - 0.15)));
+	const th = $('thanks');
+	fade(th, k);
+	th.style.transform = 'scale(' + (0.96 + 0.04 * k) + ')';
+	$('tnum').textContent = Math.round(1000 * eout(seg(e, 0.7, 2.3))).toLocaleString('en-US');
+	$('tnum').style.transform = 'scale(' + pulse(seg(e, 2.3, 2.7)) + ')';
+	const ty = eout(seg(e, 2.45, 2.9));
+	$('tty').style.opacity = ty;
+	$('tty').style.transform = 'translateY(' + (14 * (1 - ty)) + 'px)';
+	const ch = eout(seg(e, 2.95, 3.4));
+	$('tchips').style.opacity = ch;
+	$('tchips').style.transform = 'translateY(' + (14 * (1 - ch)) + 'px)';
+	const tau = e - 2.3;
+	for (const c of CONFETTI) {
+		if (tau <= 0) { c.el.style.opacity = 0; continue; }
+		c.el.style.opacity = 1 - seg(tau, 1.7, 2.7);
+		c.el.style.transform = 'translate(' + (c.x + c.vx * tau).toFixed(1) + 'px,' + (c.y + c.vy * tau + 400 * tau * tau).toFixed(1) + 'px) rotate(' + (c.r + c.vr * tau).toFixed(1) + 'deg) scale(' + c.s.toFixed(2) + ')';
+	}
+}
+
+function render(t) {
+	const intro = eout(seg(t, 0.4, 0.9)) * (1 - eio(seg(t, 2.7, 3.2)));
+	fade($('intro'), intro);
+	$('intro').style.transform = 'scale(' + (0.96 + 0.04 * intro) + ')';
+	fade($('app'), eout(seg(t, 3.0, 3.6)) * (1 - eio(seg(t, END, END + 0.5))));
+
+	const scene = SCENES.find(s => t < s.end) || SCENES[SCENES.length - 1];
+	const head = headAt(t);
+	renderRail(t, head);
+	renderCards(t);
+	renderLegacy(t, scene);
+	renderModern(t, scene);
+	renderOutro(t);
+
+	let gnome = GNOME[0][0];
+	for (const g of GNOME) if (g[1] <= head) gnome = g[0];
+	const chip = $('gchip');
+	chip.textContent = 'GNOME ' + gnome;
+	// while the project sleeps the GNOME version is the only thing that moves
+	const ck = eio(seg(t, S.gap.at + 0.4, S.gap.at + 1.1)) * (1 - eio(seg(t, S.rev.at + 0.1, S.rev.at + 0.7)));
+	const cs = 1 + 1.4 * ck;
+	chip.style.transform = 'translate(' + ((320 - chip.offsetWidth * cs / 2) * ck).toFixed(2) + 'px,' + ((-214 + 15 * cs) * ck).toFixed(2) + 'px) scale(' + cs.toFixed(3) + ')';
+}
+
+window.renderAt = render;
+window.DURATION = DURATION;
+window.ready = document.fonts.ready.then(() => { measure(); render(0); return true; });
+
+if (!location.search.includes('capture')) {
+	window.ready.then(() => {
+		const params = new URLSearchParams(location.search);
+		const offset = parseFloat(params.get('t') || '0');
+		const t0 = performance.now() - offset * 1000;
+		const loop = (now) => { render(((now - t0) / 1000) % DURATION); requestAnimationFrame(loop); };
+		requestAnimationFrame(loop);
+	});
+}
+</script>
+</body>
+</html>

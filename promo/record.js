@@ -5,7 +5,9 @@ import { chromium } from 'playwright-core';
 
 const FPS = 30;
 const FFMPEG = process.env.FFMPEG || 'ffmpeg';
-const PAGE_URL = new URL('index.html?capture', import.meta.url).href;
+const NAME = process.argv[2] || 'promo';
+const PAGE_URL = new URL((NAME === 'promo' ? 'index' : NAME) + '.html?capture', import.meta.url).href;
+const MP4 = 'rss-feed-' + NAME + '.mp4';
 
 function run(args, stdin)
 {
@@ -27,7 +29,7 @@ let duration = await page.evaluate(() => globalThis.DURATION);
 
 // the page is stepped frame by frame, so the output is smooth regardless of how fast the machine renders
 await run(['-y', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'png', '-i', '-',
-	'-c:v', 'libx264', '-preset', 'slow', '-crf', '20', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', 'rss-feed-promo.mp4'],
+	'-c:v', 'libx264', '-preset', 'slow', '-crf', '20', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', MP4],
 async (stdin) =>
 {
 	let frames = Math.round(duration * FPS);
@@ -44,11 +46,15 @@ await browser.close();
 
 function webp(width, fps, quality, preset, output)
 {
-	return run(['-y', '-i', 'rss-feed-promo.mp4', '-vf', 'fps=' + fps + ',scale=' + width + ':-1:flags=lanczos',
+	return run(['-y', '-i', MP4, '-vf', 'fps=' + fps + ',scale=' + width + ':-1:flags=lanczos',
 		'-c:v', 'libwebp_anim', '-lossless', '0', '-quality', String(quality), '-preset', preset,
 		'-compression_level', '6', '-loop', '0', '-an', output]);
 }
 
-await webp(1280, 20, 92, 'picture', 'media/rss-feed-promo.webp');
-// extensions.gnome.org rejects images over 2 MiB, a lower frame rate keeps the dark wallpaper free of blocks
-await webp(800, 10, 88, 'photo', 'rss-feed-promo-ego.webp');
+// only the README and extensions.gnome.org take WebP, the other scenes are posted as video
+if (NAME === 'promo')
+{
+	await webp(1280, 20, 92, 'picture', 'media/rss-feed-promo.webp');
+	// extensions.gnome.org rejects images over 2 MiB, a lower frame rate keeps the dark wallpaper free of blocks
+	await webp(800, 10, 88, 'photo', 'rss-feed-promo-ego.webp');
+}
