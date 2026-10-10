@@ -29,6 +29,8 @@ bash scripts/run-tests.sh --only header,classic --theme dark
 | `classic` | Classic layout, hover buttons, mouse buttons, keyboard |
 | `minimal` | Minimal layout, sections, Show more |
 | `feeds` | feed formats, broken feeds, long feeds, titles |
+| `starred` | Starred group and section, unstar, feeds removed and added again with starred articles |
+| `dismiss` | dismissed articles stay hidden, restore, mark as read skips them |
 | `prefs` | preferences: General and Notifications pages, About dialog, how the window is opened |
 | `sources` | preferences: Sources page (add, remove, edit, mute, reorder, check all, remove all) |
 | `actions` | preferences: Actions page and what its choices do in the popup |

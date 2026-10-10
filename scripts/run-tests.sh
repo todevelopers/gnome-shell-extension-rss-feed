@@ -8,7 +8,7 @@ INDICATOR="Main.panel.statusArea.rssFeedMenu"
 HARNESS_SCRIPTS="driver.js prefs.js scenarios.js scenarios-prefs.js"
 HARNESS_FILES="$HARNESS_SCRIPTS feeds.py"
 THEMES="dark light"
-SCENARIOS="smoke lifecycle panel header classic minimal feeds prefs sources actions opml"
+SCENARIOS="smoke lifecycle panel header classic minimal feeds starred dismiss prefs sources actions opml"
 SCENARIO_TIMEOUT=360
 RUN_TIMEOUT=500
 SESSION_PID=""
@@ -339,7 +339,7 @@ write_report() {
         echo "## Not automated"
         echo
         echo "- Lock screen (11), log out and in, Shell restart (parts of 1)"
-        echo "- Not covered yet: notifications (8), cleanup (12), starred (16), dismiss and restore (17)"
+        echo "- Not covered yet: notifications (8), cleanup (12)"
         echo "- Preferences: the file chooser is the one built into GTK (the desktop portal is masked), the colour scheme comes from GSettings"
         echo
         echo "## Shell log (filtered)"
