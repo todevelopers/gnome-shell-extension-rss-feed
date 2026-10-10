@@ -2,16 +2,20 @@
   <img width="64" height="64" src="https://github.com/user-attachments/assets/66743a26-2dfa-447a-920c-3efe6647b2a1" alt="rss-icon-card">
 </p>
 
-# RSS Feed - GNOME Shell Extension
+<h1 align="center">RSS Feed - GNOME Shell Extension</h1>
 
-[![CI](https://github.com/todevelopers/gnome-shell-extension-rss-feed/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/todevelopers/gnome-shell-extension-rss-feed/actions/workflows/ci.yml)
-[![vitest](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tommy-gun/87195eb23e76eae80cd14a6d80e56072/raw/vitest.json&cacheSeconds=0)](https://github.com/todevelopers/gnome-shell-extension-rss-feed/actions/workflows/ci.yml?query=branch%3Amaster)
-[![e2e](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tommy-gun/87195eb23e76eae80cd14a6d80e56072/raw/e2e.json&cacheSeconds=0)](https://github.com/todevelopers/gnome-shell-extension-rss-feed/actions/workflows/e2e.yml?query=branch%3Amaster)
-[![CodeScene Average Code Health](https://codescene.io/projects/85597/status-badges/average-code-health)](https://codescene.io/projects/85597)
-[![GitHub Release](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tommy-gun/87195eb23e76eae80cd14a6d80e56072/raw/release.json&cacheSeconds=0)](https://github.com/todevelopers/gnome-shell-extension-rss-feed/releases/latest)
-[![GNOME](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tommy-gun/87195eb23e76eae80cd14a6d80e56072/raw/gnome.json&cacheSeconds=0)](https://extensions.gnome.org/extension/948/)
-[![GNOME Extensions Downloads](https://img.shields.io/gnome-extensions/dt/rss-feed@gnome-shell-extension.todevelopers.github.com)](https://extensions.gnome.org/extension/948/)
-[![ko-fi](https://img.shields.io/badge/Support%20on-Ko--fi-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/tommygunx89)
+<p align="center">
+  <a href="https://github.com/todevelopers/gnome-shell-extension-rss-feed/actions/workflows/ci.yml"><img src="https://github.com/todevelopers/gnome-shell-extension-rss-feed/actions/workflows/ci.yml/badge.svg?branch=master" alt="CI"></a>
+  <a href="https://github.com/todevelopers/gnome-shell-extension-rss-feed/actions/workflows/ci.yml?query=branch%3Amaster"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tommy-gun/87195eb23e76eae80cd14a6d80e56072/raw/vitest.json&amp;cacheSeconds=0" alt="vitest"></a>
+  <a href="https://github.com/todevelopers/gnome-shell-extension-rss-feed/actions/workflows/e2e.yml?query=branch%3Amaster"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tommy-gun/87195eb23e76eae80cd14a6d80e56072/raw/e2e.json&amp;cacheSeconds=0" alt="e2e"></a>
+  <a href="https://codescene.io/projects/85597"><img src="https://codescene.io/projects/85597/status-badges/average-code-health" alt="CodeScene Average Code Health"></a>
+  <br>
+  <a href="https://github.com/todevelopers/gnome-shell-extension-rss-feed/releases/latest"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tommy-gun/87195eb23e76eae80cd14a6d80e56072/raw/release.json&amp;cacheSeconds=0" alt="GitHub Release"></a>
+  <a href="https://extensions.gnome.org/extension/948/"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tommy-gun/87195eb23e76eae80cd14a6d80e56072/raw/gnome.json&amp;cacheSeconds=0" alt="GNOME"></a>
+  <a href="https://extensions.gnome.org/extension/948/"><img src="https://img.shields.io/gnome-extensions/dt/rss-feed@gnome-shell-extension.todevelopers.github.com" alt="GNOME Extensions Downloads"></a>
+  <br>
+  <a href="https://ko-fi.com/tommygunx89"><img src="https://img.shields.io/badge/Support%20on-Ko--fi-FF5E5B?logo=ko-fi&amp;logoColor=white" alt="ko-fi"></a>
+</p>
 
 A modern GNOME Shell extension for following your favorite feeds right from the top bar. Run it as a panel widget, desktop notifications, or both. It has two layout modes and a fully editable list of RSS, Atom, and RDF sources.
 
