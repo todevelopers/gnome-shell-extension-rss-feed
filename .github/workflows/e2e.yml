@@ -47,8 +47,8 @@ jobs:
       # one red job must not cancel the others
       fail-fast: false
       matrix:
-        # a push and a pull request run the versions whose only failures are known bugs of the extension
-        gnome: ${{ fromJSON(inputs.gnome == 'all' && '["46", "47", "48", "49", "50", "51"]' || inputs.gnome && format('["{0}"]', inputs.gnome) || '["46", "47", "48", "49", "50"]') }}
+        # a push and a pull request run every version, a manual run can pick one
+        gnome: ${{ fromJSON(inputs.gnome && inputs.gnome != 'all' && format('["{0}"]', inputs.gnome) || '["46", "47", "48", "49", "50", "51"]') }}
         theme: ${{ fromJSON(inputs.theme == 'dark' && '["dark"]' || inputs.theme == 'light' && '["light"]' || '["dark", "light"]') }}
     defaults:
       run:
