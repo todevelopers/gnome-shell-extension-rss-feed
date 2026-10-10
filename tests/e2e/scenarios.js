@@ -1589,6 +1589,8 @@
 			Main.extensionManager.enableExtension(uuid());
 			await waitFor('the extension to be enabled', () => t.ext().state === 1 && t.ind() && t.store(), 15000);
 			t.setValue('notifications-cleanup', true);
+			// the Shell is stopped right after the scenario; an update that is still running then answers into a panel that is gone
+			await waitFor('the first update after the enable to finish', () => t.obj()._poller.lastUpdated, 20000);
 		}, 60000);
 	};
 

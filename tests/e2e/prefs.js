@@ -314,7 +314,7 @@
 		return shown ? find('label', undefined, shown)?.get_name() ?? '' : '';
 	}
 
-	const toast = (text, timeout = 6000) => get('label', text, app, timeout);
+	const toast = (text, timeout = 6000) => get('label', text, undefined, timeout);
 
 	// typing a path works in every file chooser of GTK: in an open dialog the first "/" brings up the location entry, in a save dialog the name entry has the focus
 	async function chooseFile(path, save = false)
@@ -331,11 +331,38 @@
 		await sleep(300);
 	}
 
+	// at-spi 2.54 (GNOME 47) sometimes throws the whole application away when one of its windows closes and answers "The application no
+	// longer exists" from then on, although the window is fine. A new start of the library does not help, only a new window does.
+	function lost()
+	{
+		try
+		{
+			app.get_child_count();
+			return false;
+		}
+		catch
+		{
+			console.log('e2e: the accessibility library lost the preferences window');
+			return true;
+		}
+	}
+
+	// true when the window can no longer be read: the caller has to close it and open a new one
 	async function confirmFile()
 	{
 		await t.key(Clutter.KEY_Return);
 		await waitFor('the file chooser to close', () => !chooser(), 10000);
 		await sleep(300);
+
+		for (let i = 0; i < (t.config().major === 47 ? 5 : 1); i++)
+		{
+			if (lost())
+				return true;
+
+			await sleep(200);
+		}
+
+		return false;
 	}
 
 	function area()
