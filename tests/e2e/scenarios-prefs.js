@@ -1006,48 +1006,4 @@
 			await eventually(() => t.source('latin2')?.items.length, 3, 'articles loaded for the feed that arrived while the Shell was busy', 10000);
 		}, 45000);
 	};
-	// TEMPORARY probe: is the first press on a new window lost for any GTK 4 application, or only for the preferences of this extension?
-	t.scenarios.probeGtk = async () =>
-	{
-		await step('99-gtk', 'probe: presses on the window of a plain GTK 4 application', async () =>
-		{
-			let dir = t.config().profile;
-			GLib.file_set_contents(dir + '/app.js', [
-				"import Gtk from 'gi://Gtk?version=4.0';",
-				"import GLib from 'gi://GLib';",
-				'let count = 0;',
-				"let app = new Gtk.Application({ application_id: 'org.example.E2eProbe' });",
-				"app.connect('activate', () =>",
-				'{',
-				"	let button = new Gtk.Button({ label: 'probe' });",
-				"	button.connect('clicked', () => GLib.file_set_contents(ARGV[0], String(++count)));",
-				"	new Gtk.ApplicationWindow({ application: app, title: 'E2E probe', default_width: 400, default_height: 300, child: button }).present();",
-				'});',
-				'app.run([]);',
-			].join('\n') + '\n');
-
-			let env = GLib.environ_setenv(GLib.get_environ(), 'WAYLAND_DISPLAY', 'wayland-0', true);
-			GLib.spawn_async(null, ['gjs', '-m', dir + '/app.js', dir + '/clicks'], env, GLib.SpawnFlags.SEARCH_PATH, null);
-
-			let window = await waitFor('the probe window', () => global.get_window_actors().map(a => a.meta_window).find(w => w.get_title() === 'E2E probe'), 20000);
-			await sleep(1500);
-			window.activate(global.get_current_time());
-			await waitFor('the probe window to get the focus', () => window.has_focus(), 5000);
-			await sleep(500);
-
-			let clicks = () => GLib.file_test(dir + '/clicks', GLib.FileTest.EXISTS) ? t.readText(dir + '/clicks') : '0';
-			let frame = window.get_frame_rect();
-			let notes = [];
-
-			for (let i = 1; i <= 3; i++)
-			{
-				await t.clickAt(frame.x + frame.width / 2, frame.y + frame.height / 2 + 20);
-				await sleep(500);
-				notes.push('after press ' + i + ': ' + clicks() + ' clicked');
-			}
-
-			window.delete(global.get_current_time());
-			return notes.join(' | ');
-		}, 60000);
-	};
 })();
