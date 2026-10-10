@@ -31,6 +31,8 @@ bash scripts/run-tests.sh --only header,classic --theme dark
 | `feeds` | feed formats, broken feeds, long feeds, titles |
 | `starred` | Starred group and section, unstar, feeds removed and added again with starred articles |
 | `dismiss` | dismissed articles stay hidden, restore, mark as read skips them |
+| `notifications` | notifications for new articles, their actions, limit, grouping, display modes, cleanup on disable |
+| `appearance` | count pills: system accent on GNOME 47 and newer, neutral gray on 46 |
 | `prefs` | preferences: General and Notifications pages, About dialog, how the window is opened |
 | `sources` | preferences: Sources page (add, remove, edit, mute, reorder, check all, remove all) |
 | `actions` | preferences: Actions page and what its choices do in the popup |
