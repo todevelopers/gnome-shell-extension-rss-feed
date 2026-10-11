@@ -216,16 +216,3 @@
 	font-size: 11px;
 	opacity: 0.6;
 }
-
-.rss-action-button {
-	padding: 8px;
-	border-radius: 4px;
-}
-
-.rss-action-button:hover {
-	background-color: rgba(127, 127, 127, 0.15);
-}
-
-.rss-action-button:active {
-	background-color: rgba(127, 127, 127, 0.25);
-}
