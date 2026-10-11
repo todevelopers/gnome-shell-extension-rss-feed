@@ -153,6 +153,9 @@ svg { display: block; }
 .mbody { position: relative; overflow: hidden; }
 .classic, .minimal { position: absolute; left: 0; right: 0; top: 0; }
 .minimal { opacity: 0; }
+.showmore { font-size: 11px; padding: 10px 8px; }
+.showmore span { opacity: 0.6; }
+.sbar { position: absolute; right: 1px; top: 0; width: 5px; border-radius: 3px; background: rgba(var(--ov), 0.32); opacity: 0; }
 .grp { border-radius: 12px; overflow: hidden; }
 .grp.open { background: rgba(var(--ov), 0.045); }
 .grp.open .feed { background: rgba(var(--ov), 0.07); }
@@ -162,7 +165,6 @@ svg { display: block; }
 .gcount { font-size: 11px; font-weight: 700; padding: 0 6px; }
 .arrow { width: 16px; height: 16px; flex: none; margin-left: 4px; }
 .arts { position: relative; height: 108px; overflow: hidden; }
-.speed { position: absolute; left: 0; right: 0; top: 0; }
 .art { padding: 8px 8px; height: 36px; }
 .atitle { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .unread { font-weight: 700; }
@@ -175,6 +177,10 @@ svg { display: block; }
 #fly span { color: #f9f06b; flex: none; }
 .sechdr { padding: 8px 8px 7px; margin-top: 4px; border-bottom: 1px solid rgba(127, 127, 127, 0.2); border-radius: 10px 10px 0 0; }
 .seclabel { flex: 1; font-size: 10px; font-weight: 700; letter-spacing: 0.07em; opacity: 0.65; }
+.sechdr.line { border-bottom: none; gap: 8px; }
+.sechdr.line > * { opacity: 0.8; }
+.sechdr.line .seclabel { flex: none; }
+.secline { flex: 1; height: 1px; background: currentColor; }
 .mart { flex-direction: column; align-items: stretch; gap: 3px; padding: 7px 8px; }
 .mtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .meta { display: flex; align-items: center; gap: 6px; }
@@ -189,7 +195,7 @@ svg { display: block; }
 #intro h1 { font-size: 76px; font-weight: 800; letter-spacing: -0.035em; margin-top: 26px; }
 #intro p { font-size: 28px; font-weight: 600; opacity: 0.9; margin-top: 4px; }
 #intro .chip { margin-top: 26px; transform: rotate(-3deg); font-size: 17px; font-weight: 800; padding: 9px 18px; border-radius: 13px; background: #fff; color: #241f31; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25); }
-#lineup { display: flex; align-items: flex-end; justify-content: center; gap: 26px; height: 250px; }
+#lineup { display: flex; align-items: flex-end; justify-content: center; gap: 20px; height: 250px; }
 .lu { display: flex; flex-direction: column; align-items: center; gap: 10px; transform-origin: 50% 100%; }
 .lu b { font-size: 18px; font-weight: 800; }
 .lubox { position: relative; text-align: left; }
@@ -378,6 +384,8 @@ svg { display: block; }
 				<div class="mbody" id="mbody">
 					<div class="classic" id="classic"></div>
 					<div class="minimal" id="minimal"></div>
+					<div class="minimal minlong" id="minlong"></div>
+					<div class="sbar" id="sbar"></div>
 				</div>
 			</div>
 		</div>
@@ -495,7 +503,7 @@ function fade(el, o) { el.style.opacity = o; el.style.visibility = o > 0.001 ? '
 function setH(el, h) { el.style.height = h + 'px'; }
 
 // scene starts
-const A = 1.6, B = 7.2, C = 12.8, D = 18.0, E = 23.0, F = 26.4, G = 30.0, H = 34.4, END = 39.2;
+const A = 1.6, B = 7.2, C = 12.8, D = 18.0, E = 23.0, F = 26.4, G = 30.6, H = 35.0, END = 39.8;
 const OUTRO = 6.0;
 const DURATION = END + OUTRO;
 const EVO_B = B + 0.5, NIGHT = C + 1.2, EVO_C = D + 0.35;
@@ -545,10 +553,10 @@ const STICKERS = [
 	[EVO_C + 2.9, E - 0.2, 'preferences go Adwaita', 120, 40, -2],
 	[E + 1.0, F - 0.2, 'light theme', 660, 150, -5],
 	[E + 1.7, F - 0.2, 'any accent color', 640, 452, 4],
-	[F + 0.9, G - 0.2, '400 feeds? Fine.', 640, 452, -6, 'y'],
-	[F + 2.3, G - 0.2, 'grouped notifications', 120, 40, -2],
+	[F + 1.6, G - 0.2, '400 feeds? Fine.', 640, 452, -6, 'y'],
+	[F + 3.2, G - 0.2, 'grouped notifications', 120, 40, -2],
 	[G + 1.4, H - 0.2, 'OPML import and export', 110, 40, -3, 'y'],
-	[G + 3.1, H - 0.2, 'broken feeds get flagged', 700, 420, 4],
+	[G + 3.1, H - 0.2, 'broken feeds get flagged', 640, 452, 4],
 	[H + 1.2, END - 0.1, 'a whole new Actions page', 110, 40, -2],
 	[H + 1.8, H + 2.9, 'hover buttons', 640, 318, 5],
 	[H + 3.0, END - 0.1, 'starred articles', 636, 120, -6, 'y'],
@@ -631,7 +639,6 @@ const FEEDS = [
 	{ id: 'gs', title: 'GNOME Shell &amp; Mutter', av: 'GS', count: 1 },
 	{ id: 'ou', title: 'OMG! Ubuntu', av: 'OU', count: 1 },
 ];
-const FILLER = ['Faster Thumbnails', 'New Toggles', 'Better Search', 'Fresh Wallpapers', 'Tiny Fixes', 'Calmer Colors', 'Bigger Buttons', 'Quick Settings'];
 const art = (a, extra) => '<div class="item art"' + (extra || '') + '><div class="atitle ' + (a[2] ? 'read' : 'unread') + '">' + a[0] + '</div>';
 const mrow = (a, cls) => '<div class="item mart"><div class="mtitle ' + cls + '">' + a[0] + '</div><div class="meta"><span class="tag">' + a[1] + '</span><span class="atime">' + a[2] + '</span></div></div>';
 let classicHtml = '<div class="hwrap" id="w_st"><div class="grp" id="g_st"><div class="item feed"><div class="avatar">' + icon('star', 14) + '</div><div class="ftitle">Starred</div><div class="gcount" id="stCount">1</div><div class="arrow" id="a_st">' + icon('chev', 16) + '</div></div>'
@@ -646,9 +653,6 @@ for (let f of FEEDS) {
 				+ (i === 1 ? '<div class="acts" id="acts"><span id="actStar"></span><span>' + icon('mail', 14) + '</span><span>' + icon('link', 14) + '</span></div>' : '')
 				+ '<div class="atime">' + a[1] + '</div></div>';
 		});
-		classicHtml += '</div><div class="speed" id="speed">';
-		for (let i = 0; i < 48; i++)
-			classicHtml += art(i < 3 ? f.arts[i] : ['#' + (251 - i) + ' ' + FILLER[i % FILLER.length], '', i % 4 > 0]) + '<div class="atime">' + (i < 3 ? f.arts[i][1] : i + 'w') + '</div></div>';
 		classicHtml += '</div></div>';
 	}
 	classicHtml += '</div>';
@@ -659,6 +663,14 @@ const MIN_UNREAD = [['#251 Smoother Scrolling', 'This Week in GNOME', '2h'], ['B
 const MIN_READ = [['Ten GNOME extensions worth a try', 'OMG! Ubuntu', '2d'], ['Profiling GNOME Shell with Sysprof', 'Planet GNOME', '3d']];
 $('minimal').innerHTML = '<div class="item sechdr"><span class="seclabel">UNREAD</span>' + icon('down', 16) + '</div>' + MIN_UNREAD.map(a => mrow(a, 'unread')).join('')
 	+ '<div class="item sechdr"><span class="seclabel">READ</span>' + icon('down', 16) + '</div>' + MIN_READ.map(a => mrow(a, 'read')).join('');
+// a long unread list for the fast scroll, it starts with the same rows as the short one
+const MANY = [['#250 Sharper Icons', 'This Week in GNOME'], ['Profiling GNOME Shell with Sysprof', 'Planet GNOME'], ['Ten GNOME extensions worth a try', 'OMG! Ubuntu'], ['A faster overview animation', 'GNOME Shell &amp; Mutter'],
+	['Five terminal tricks worth keeping', 'It\'s FOSS'], ['Notes from the design hackfest', 'Planet GNOME'], ['A first look at the next Workstation', 'Fedora Magazine'], ['#249 Quieter Notifications', 'This Week in GNOME'],
+	['What is new in Files', 'OMG! Ubuntu'], ['Porting an app to libadwaita', 'Planet GNOME'], ['Fractional scaling, one year on', 'GNOME Shell &amp; Mutter'], ['A beginner guide to Flatpak', 'It\'s FOSS']];
+let longHtml = '<div class="item sechdr"><span class="seclabel">UNREAD</span>' + icon('down', 16) + '</div>' + MIN_UNREAD.map(a => mrow(a, 'unread')).join('');
+for (let i = 0; i < 37; i++)
+	longHtml += mrow([MANY[i % MANY.length][0], MANY[i % MANY.length][1], i < 12 ? (2 + (i >> 1)) + 'd' : (1 + ((i - 12) >> 2)) + 'w'], 'unread');
+$('minlong').innerHTML = longHtml + '<div class="item showmore"><span>Show more (40 of 852)</span></div>';
 
 const SOURCES = [['PG', 'Planet GNOME', 'https://planet.gnome.org/atom.xml'], ['TW', 'This Week in GNOME', 'https://thisweek.gnome.org/index.xml'], ['GS', 'GNOME Shell &amp; Mutter', 'https://blogs.gnome.org/shell-dev/feed/'],
 	['OU', 'OMG! Ubuntu', 'https://www.omgubuntu.co.uk/feed'], ['IF', 'It\'s FOSS', 'https://itsfoss.com/feed/'], ['BE', 'blog.example.com', 'https://blog.example.com/feed.xml']];
@@ -668,15 +680,22 @@ $('srcList').innerHTML = SOURCES.map((s, i) => '<div class="hwrap" id="sw' + i +
 
 fillIcons(document);
 
-// the evolution line-up of the outro is built from copies of the three popups
-[['wA', '2015', 300], ['wB', '2017', 350], ['wC', '2026', 380]].forEach((l, i) => {
+// the Minimal layout as it looks today: a Starred section on top and a line with a count in every header
+const sec = (label, count) => '<div class="item sechdr line"><span class="seclabel">' + label + '</span><span class="secline"></span>' + (count ? '<span class="gcount">' + count + '</span>' : '') + icon('down', 16) + '</div>';
+const MIN_NOW = sec('STARRED', 2) + mrow(['#250 Sharper Icons', 'This Week in GNOME', '1w'], 'unread') + mrow(['Building adaptive layouts with libadwaita', 'Planet GNOME', '3h'], 'read')
+	+ sec('UNREAD', 2) + mrow(MIN_UNREAD[0], 'unread') + mrow(MIN_UNREAD[2], 'unread')
+	+ sec('READ') + mrow(MIN_READ[0], 'read');
+
+// the evolution line-up of the outro is built from copies of the popups, the current one in both layouts
+[['wA', '2015', 300], ['wB', '2017', 350], ['wC', '2026 Classic', 380, '.minimal'], ['wC', '2026 Minimal', 380, '.classic']].forEach((l, i) => {
 	const copy = $(l[0]).cloneNode(true);
 	copy.querySelectorAll('[id]').forEach(e => e.removeAttribute('id'));
 	copy.removeAttribute('id');
 	copy.className = '';
 	copy.style.width = l[2] + 'px';
-	copy.querySelectorAll('.minimal, .speed, .oarrow, .fly').forEach(e => e.remove());
-	copy.querySelectorAll('.classic').forEach(e => { e.style.position = 'static'; });
+	copy.querySelectorAll((l[3] || '.none') + ', .minlong, .sbar, .oarrow, .fly').forEach(e => e.remove());
+	copy.querySelectorAll('.classic, .minimal').forEach(e => { e.style.position = 'static'; e.style.opacity = 1; });
+	copy.querySelectorAll('.minimal').forEach(e => { e.innerHTML = MIN_NOW; });
 	copy.querySelectorAll('.arts').forEach(e => { e.style.height = 'auto'; });
 	copy.querySelectorAll('.hold').forEach(e => { e.style.display = 'none'; });
 	copy.querySelectorAll('.hnew').forEach(e => { e.style.width = '30px'; });
@@ -684,7 +703,7 @@ fillIcons(document);
 	item.className = 'lu';
 	item.innerHTML = '<div class="lubox"></div><b>' + l[1] + '</b>';
 	item.firstChild.appendChild(copy);
-	if (i) $('lineup').insertAdjacentHTML('beforeend', '<div class="luarrow">' + icon('chev', 30) + '</div>');
+	if (i) $('lineup').insertAdjacentHTML('beforeend', '<div class="luarrow">' + icon(i === 3 ? 'plus' : 'chev', 30) + '</div>');
 	$('lineup').appendChild(item);
 });
 
@@ -698,7 +717,7 @@ function measure() {
 	NAT.flyFrom = $('artsBox').offsetTop + $('art1').offsetTop;
 	NAT.flyTo = $('st_arts').offsetTop;
 	NAT.minimal = $('minimal').offsetHeight;
-	NAT.speed = $('speed').offsetHeight;
+	NAT.minlong = $('minlong').offsetHeight;
 	NAT.tabAct = $('tabAct').offsetWidth;
 	NAT.arow = $('sw0').offsetHeight;
 	document.querySelectorAll('.lubox').forEach(box => {
@@ -905,7 +924,7 @@ function accentAt(t) {
 	return c.map(Math.round);
 }
 
-const PAGES = [[0, 'gen'], [F + 0.9, 'not'], [G + 0.2, 'src'], [H + 0.9, 'act']];
+const PAGES = [[0, 'gen'], [F + 2.3, 'not'], [G + 0.2, 'src'], [H + 0.9, 'act']];
 function renderModern(t) {
 	const scr = $('screen').style;
 	const lk = eio(seg(t, E + 0.5, E + 1.1)) * (1 - eio(seg(t, F, F + 0.5)));
@@ -932,14 +951,26 @@ function renderModern(t) {
 	$('tabAct').style.marginLeft = (-4 * (1 - tabK)) + 'px';
 	$('tabAct').style.opacity = tabK;
 
-	const minimalOn = t >= EVO_C + 1.7 && t < E + 0.1;
+	const minimalOn = (t >= EVO_C + 1.7 && t < E + 0.1) || (t >= F + 0.3 && t < H);
 	$('rClassic').classList.toggle('on', !minimalOn);
 	$('rMinimal').classList.toggle('on', minimalOn);
 	const mm = eio(seg(t, EVO_C + 1.9, EVO_C + 2.35)) * (1 - eio(seg(t, E + 0.1, E + 0.5)));
-	$('classic').style.opacity = 1 - mm;
+	// second visit to the Minimal layout: from the v8 scene until the stars need the Classic one again
+	const long = eio(seg(t, F + 0.4, F + 0.8)) * (1 - eio(seg(t, H + 0.05, H + 0.45)));
+	const anyMin = Math.max(mm, long);
+	$('classic').style.opacity = 1 - anyMin;
 	$('minimal').style.opacity = mm;
-	$('classic').style.transform = 'translateX(' + (-24 * mm) + 'px)';
+	$('minlong').style.opacity = long;
+	$('classic').style.transform = 'translateX(' + (-24 * anyMin) + 'px)';
 	$('minimal').style.transform = 'translateX(' + (24 * (1 - mm)) + 'px)';
+	const sp = eio(seg(t, F + 0.9, F + 2.3));
+	const travel = NAT.minlong - NAT.minimal;
+	$('minlong').style.transform = 'translate(' + (24 * (1 - long)).toFixed(1) + 'px,' + (-travel * sp).toFixed(1) + 'px)';
+	$('minlong').style.filter = sp > 0.04 && sp < 0.96 ? 'blur(1.2px)' : 'none';
+	const thumb = Math.max(28, NAT.minimal * NAT.minimal / NAT.minlong);
+	$('sbar').style.height = thumb.toFixed(1) + 'px';
+	$('sbar').style.opacity = long;
+	$('sbar').style.transform = 'translateY(' + (4 + (NAT.minimal - thumb - 8) * sp).toFixed(1) + 'px)';
 	const starK = eio(seg(t, H + 0.6, H + 0.95));
 	const moveK = eio(seg(t, MOVE + 0.05, MOVE + 0.5));
 	setH($('st_arts'), NAT.stArts * moveK);
@@ -950,23 +981,17 @@ function renderModern(t) {
 	$('a_open').style.transform = 'rotate(' + (90 * (1 - moveK)) + 'deg)';
 	setH($('w_st'), (NAT.feed + NAT.stArts * moveK) * starK);
 	$('w_st').style.opacity = starK;
-	setH($('mbody'), lerp(NAT.classic + NAT.feed * starK + (NAT.stArts - 108) * moveK, NAT.minimal, mm));
+	setH($('mbody'), lerp(NAT.classic + NAT.feed * starK + (NAT.stArts - 108) * moveK, NAT.minimal, anyMin));
 	const flyK = seg(t, MOVE, MOVE + 0.55);
 	const fly = $('fly');
 	fly.style.visibility = flyK > 0 && flyK < 1 ? 'visible' : 'hidden';
 	fly.style.transform = 'translateY(' + lerp(NAT.flyFrom, NAT.flyTo, eio(flyK)).toFixed(1) + 'px) scale(' + (1 + 0.04 * Math.sin(Math.PI * flyK)).toFixed(3) + ')';
 	$('st_new').style.opacity = seg(flyK, 0.8, 1);
 
-	$('swGroup').classList.toggle('on', t >= F + 1.6);
-	const nIn = spring(t - F - 2.0), nOut = ein(seg(t, G - 0.1, G + 0.2));
+	$('swGroup').classList.toggle('on', t >= F + 2.7);
+	const nIn = spring(t - F - 3.0), nOut = ein(seg(t, G - 0.1, G + 0.2));
 	fade($('banner'), clamp(nIn * 2, 0, 1) * (1 - nOut));
 	$('banner').style.transform = 'translate(-50%, ' + (-120 * (1 - nIn) - 130 * nOut).toFixed(1) + 'px)';
-	const sp = seg(t, F + 0.4, F + 2.0);
-	const speeding = sp > 0 && t < F + 2.1;
-	$('speed').style.visibility = speeding ? 'visible' : 'hidden';
-	$('artsNormal').style.visibility = speeding ? 'hidden' : 'visible';
-	$('speed').style.transform = 'translateY(' + (-(NAT.speed - 108) * (1 - eio(sp))).toFixed(1) + 'px)';
-	$('speed').style.filter = sp > 0.15 && sp < 0.85 ? 'blur(1.2px)' : 'none';
 
 	const fk = seg(t, G + 0.5, G + 1.2);
 	const file = $('file');
@@ -1023,10 +1048,10 @@ function renderOutro(t) {
 	const e = t - END;
 	fade($('outro'), e > 0.3 ? 1 : 0);
 	document.querySelectorAll('.lu').forEach((el, i) => {
-		const s = spring(e - 0.5 - i * 0.28);
+		const s = spring(e - 0.5 - i * 0.22);
 		el.style.transform = 'scale(' + s.toFixed(3) + ') rotate(' + (2 * Math.sin(t * 1.4 + i * 2)).toFixed(2) + 'deg)';
 	});
-	document.querySelectorAll('.luarrow').forEach((el, i) => { el.style.opacity = 0.8 * seg(e, 0.75 + i * 0.28, 0.95 + i * 0.28); });
+	document.querySelectorAll('.luarrow').forEach((el, i) => { el.style.opacity = 0.8 * seg(e, 0.7 + i * 0.22, 0.9 + i * 0.22); });
 	const nk = spring(e - 1.3);
 	$('tnum').style.opacity = clamp(nk * 2, 0, 1);
 	$('tnum').style.transform = 'scale(' + ((0.7 + 0.3 * nk) * pulse(seg(e, 2.9, 3.3))).toFixed(3) + ')';
