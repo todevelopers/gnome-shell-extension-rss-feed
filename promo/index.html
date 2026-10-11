@@ -59,7 +59,7 @@ svg { display: block; }
 #panelRight { margin-left: auto; display: flex; align-items: center; gap: 2px; }
 #dot { width: 8px; height: 8px; border-radius: 4px; background: #fff; margin-right: -6px; }
 
-#menu { position: absolute; left: 886px; top: 38px; width: 386px; transform-origin: 50% 0; color: var(--menu-fg); }
+#menu { position: absolute; left: 872px; top: 38px; width: 400px; transform-origin: 50% 0; color: var(--menu-fg); }
 .mcontent { background: var(--menu-bg); border-radius: 16px; padding: 6px; box-shadow: 0 0 0 1px rgba(var(--ov), 0.07), 0 8px 26px rgba(0, 0, 0, 0.45); font-size: 14.5px; }
 .item { border-radius: 10px; display: flex; align-items: center; gap: 6px; padding: 7px 8px; }
 .item.hover { background: rgba(var(--ov), 0.09); }
@@ -70,13 +70,17 @@ svg { display: block; }
 .htitles { flex: 1; min-width: 0; }
 .ht { font-size: 14px; font-weight: 700; }
 .hsub { display: flex; align-items: center; font-size: 11px; height: 17px; margin-top: 1px; }
-#sub { opacity: 0.8; }
+.ht, #sub { opacity: 0.5; }
 .warnpill { font-size: 11px; padding: 0 6px; margin-left: 6px; border-radius: 9px; background: rgba(229, 165, 10, 0.25); line-height: 16px; transform-origin: 0 50%; }
 .warnpill.hover { background: rgba(229, 165, 10, 0.4); }
 .badge { width: 30px; height: 30px; border-radius: 15px; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; flex: none; }
 .badge.hover { filter: brightness(1.12); }
 .ibtn { width: 30px; height: 30px; border-radius: 15px; display: flex; align-items: center; justify-content: center; flex: none; }
-.ibtn.hover { background: rgba(127, 127, 127, 0.18); }
+.ibtn.hover { background: rgba(127, 127, 127, 0.15); }
+.ibtn.checked { background: rgba(127, 127, 127, 0.25); }
+#omenu { position: absolute; right: 8px; top: 62px; width: 236px; z-index: 5; transform-origin: 90% 0; }
+.osep { height: 1px; margin: 6px 8px; background: rgba(var(--ov), 0.12); }
+.oitem { gap: 10px; }
 
 #mbody { position: relative; overflow: hidden; }
 #classic, #minimal { position: absolute; left: 0; right: 0; top: 0; }
@@ -99,14 +103,28 @@ svg { display: block; }
 .unread { font-weight: 700; }
 .read { font-weight: 300; opacity: 0.45; }
 .atime { font-size: 11px; opacity: 0.6; flex: none; }
+.tail { display: grid; flex: none; }
+.tail > * { grid-area: 1 / 1; justify-self: end; align-self: center; }
+.trail { display: flex; align-items: center; gap: 6px; }
+.tstar { opacity: 0.7; }
+.acts { display: flex; align-items: center; gap: 2px; visibility: hidden; }
+.hover > .tail > .acts, .hover > .meta > .acts { visibility: visible; }
+.hover > .tail > .trail { visibility: hidden; }
+.abtn { width: 20px; height: 20px; border-radius: 10px; display: flex; align-items: center; justify-content: center; opacity: 0.5; }
+.abtn.hover { opacity: 1; }
+#menu:not(.three) .b3 { display: none; }
 
-.sechdr { padding: 8px 8px 7px; margin-top: 4px; border-bottom: 1px solid rgba(127, 127, 127, 0.2); border-radius: 10px 10px 0 0; }
-.seclabel { flex: 1; font-size: 10px; font-weight: 700; letter-spacing: 0.07em; opacity: 0.65; }
-.mart { flex-direction: column; align-items: stretch; gap: 3px; padding: 7px 8px; }
+.sechdr { padding: 8px 8px 7px; margin-top: 4px; }
+.sechdr > * { opacity: 0.8; }
+.seclabel { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; flex: none; }
+.secline { flex: 1; height: 1px; background: currentColor; }
+.gcount { font-size: 11px; font-weight: 700; padding: 0 6px; }
+.mart { flex-direction: column; align-items: stretch; gap: 0; padding: 6px 8px; }
 .mwrap { overflow: hidden; }
 .mtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.meta { display: flex; align-items: center; gap: 6px; }
-.tag { font-size: 10px; border-radius: 4px; padding: 1px 5px; background: rgba(127, 127, 127, 0.16); }
+.meta { display: flex; align-items: center; gap: 6px; min-height: 20px; }
+.meta .acts { margin-left: auto; }
+.tag { font-size: 10px; border-radius: 4px; padding: 1px 5px; background: rgba(127, 127, 127, 0.12); }
 .showmore { font-size: 11px; padding: 10px 8px; }
 .showmore span { opacity: 0.6; }
 
@@ -126,26 +144,27 @@ svg { display: block; }
 .nact { flex: 1; text-align: center; font-weight: 700; font-size: 13px; background: rgba(255, 255, 255, 0.1); border-radius: 99px; padding: 7px 0; }
 .nact.hover { background: rgba(255, 255, 255, 0.17); }
 
-#browser { position: absolute; left: 572px; top: 58px; width: 668px; height: 600px; background: #1d1d20; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 48px rgba(0, 0, 0, 0.6); transform-origin: 50% 40%; }
-.bhb { height: 46px; display: flex; align-items: center; gap: 6px; padding: 0 10px; background: #2b2b2f; }
-.bbtn { width: 30px; height: 30px; border-radius: 15px; display: flex; align-items: center; justify-content: center; opacity: 0.85; }
-.burl { flex: 1; height: 30px; border-radius: 8px; background: rgba(255, 255, 255, 0.08); display: flex; align-items: center; justify-content: center; font-size: 13px; opacity: 0.85; margin: 0 6px; }
-.burl b { font-weight: 600; }
-.bclose { width: 24px; height: 24px; border-radius: 12px; background: rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; }
-.bpage { padding: 38px 60px; }
-.bpage .bsite { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; opacity: 0.5; text-transform: uppercase; }
-.bpage h3 { font-size: 30px; font-weight: 800; line-height: 1.15; margin-top: 10px; letter-spacing: -0.01em; }
-.bpage .bmeta { font-size: 13px; opacity: 0.5; margin-top: 10px; }
-.bimg { height: 150px; border-radius: 10px; margin: 22px 0 20px; background: linear-gradient(135deg, rgba(53, 132, 228, 0.35), rgba(145, 65, 172, 0.3)); }
-.sk { height: 10px; border-radius: 5px; background: rgba(255, 255, 255, 0.1); margin-bottom: 12px; }
-
 #prefs { position: absolute; left: 596px; top: 48px; width: 640px; height: 648px; background: var(--window-bg); border-radius: 14px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 48px rgba(0, 0, 0, 0.6); overflow: hidden; font-size: 14.5px; transform-origin: 50% 50%; }
 .hb { height: 47px; display: flex; align-items: center; justify-content: center; position: relative; }
 .vs { display: flex; gap: 4px; }
 .vsb { display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: 13.5px; padding: 6px 12px; border-radius: 8px; }
+.vsb.hover { background: rgba(255, 255, 255, 0.06); }
 .vsb.sel { background: rgba(255, 255, 255, 0.1); }
 .closeb { position: absolute; right: 12px; width: 24px; height: 24px; border-radius: 12px; background: rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; }
-.pcontent { padding: 18px 28px; }
+.ppage { position: absolute; left: 0; right: 0; top: 47px; padding: 18px 28px; }
+.ghdr2 { margin-bottom: 10px; }
+.blist + .ghdr2 { margin-top: 22px; }
+.gdesc { font-size: 12.5px; opacity: 0.55; margin-top: 2px; }
+.crow { display: flex; align-items: center; height: 50px; padding: 0 8px 0 14px; border-bottom: 1px solid rgba(0, 0, 0, 0.28); }
+.crow:last-child { border-bottom: none; }
+.cval { margin-left: auto; display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; }
+.cval.hover { background: rgba(255, 255, 255, 0.08); }
+.rrow { justify-content: center; font-weight: 700; padding: 0; }
+.rrow.off { opacity: 0.5; }
+#drop { position: absolute; right: 28px; width: 236px; padding: 6px; background: #36363a; border-radius: 12px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 8px 24px rgba(0, 0, 0, 0.5); transform-origin: 80% 0; }
+.opt { display: flex; align-items: center; padding: 8px 10px; border-radius: 8px; font-size: 14px; }
+.opt.hover { background: rgba(255, 255, 255, 0.08); }
+.opt > span { margin-left: auto; }
 .ghdr { display: flex; align-items: center; margin-bottom: 10px; height: 34px; }
 .gtitle { font-weight: 700; font-size: 14.5px; flex: 1; }
 .gacts { display: flex; align-items: center; gap: 6px; }
@@ -205,6 +224,7 @@ svg { display: block; }
 #shade { position: absolute; inset: 0; -webkit-mask-image: linear-gradient(to bottom, transparent 40px, #000 64px); background: linear-gradient(90deg, rgba(var(--shade), 0.8) 0%, rgba(var(--shade), 0.5) 32%, rgba(var(--shade), 0) 55%); pointer-events: none; opacity: 0; }
 .cap { position: absolute; left: 64px; top: 50%; width: 480px; pointer-events: none; opacity: 0; }
 .cap.bottom { top: auto; bottom: 60px; width: 900px; }
+.cap .newtag { display: inline-block; font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 5px 12px; border-radius: 99px; margin-bottom: 14px; background: var(--accent); color: #fff; }
 .cap .kicker { display: block; font-size: 46px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; color: var(--kick); }
 .cap h2 { font-size: 40px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; color: var(--cap-fg); }
 .cap p { font-size: 22px; line-height: 1.4; margin-top: 12px; color: var(--cap-fg); font-weight: 500; opacity: 0.85; }
@@ -238,7 +258,7 @@ svg { display: block; }
 
 			<div id="panel">
 				<div class="ws"><span class="a"></span><span></span><span></span></div>
-				<div id="clock">Sep 23&nbsp;&nbsp;19:54</div>
+				<div id="clock">Oct 11&nbsp;&nbsp;19:54</div>
 				<div id="panelRight">
 					<div id="rssBtn" class="pbtn"><div id="dot"></div><span data-i="rss" data-s="16"></span></div>
 					<div class="pbtn"><span data-i="wifi" data-s="16"></span><span data-i="vol" data-s="16"></span><span data-i="bat" data-s="16"></span></div>
@@ -246,36 +266,16 @@ svg { display: block; }
 			</div>
 
 			<div id="banner">
-				<div class="nhdr"><span data-i="rss" data-s="14"></span><span class="nsrc">Hacker News</span><span class="ntime">Just now</span>
+				<div class="nhdr"><span data-i="rss" data-s="14"></span><span class="nsrc">OMG! Ubuntu</span><span class="ntime">Just now</span>
 					<span class="nbtns"><span class="ncirc"><span data-i="down" data-s="12"></span></span><span class="ncirc"><span data-i="x" data-s="12"></span></span></span></div>
 				<div class="nbody">
-					<div class="navatar">HN</div>
+					<div class="navatar">OU</div>
 					<div class="ntext">
-						<div class="ntitle">Show HN: A static site generator in 300 lines</div>
-						<div class="nmsg">Plain Markdown in, fast HTML out. No plugins and no config files, just one script you can read in a single sitting.</div>
+						<div class="ntitle">Ten GNOME extensions worth a try</div>
+						<div class="nmsg">From tiling helpers to a clipboard history, these add-ons earn their place on a fresh desktop.</div>
 					</div>
 				</div>
 				<div id="nactsWrap"><div class="nacts"><div class="nact hv">Open</div><div class="nact hv">Copy URL</div><div class="nact hv" id="bMark">Mark as read</div></div></div>
-			</div>
-
-			<div id="browser">
-				<div class="bhb">
-					<span class="bbtn"><span data-i="chevl" data-s="16"></span></span>
-					<span class="bbtn" style="opacity: 0.35"><span data-i="chev" data-s="16"></span></span>
-					<span class="bbtn"><span data-i="refresh" data-s="16"></span></span>
-					<span class="burl"><b>blog.example.net</b>/plain-text</span>
-					<span class="bclose"><span data-i="x" data-s="12"></span></span>
-				</div>
-				<div class="bpage">
-					<div class="bsite">blog.example.net</div>
-					<h3>The unreasonable effectiveness of plain text</h3>
-					<div class="bmeta">6 min read</div>
-					<div class="bimg"></div>
-					<div class="sk" style="width: 100%"></div>
-					<div class="sk" style="width: 94%"></div>
-					<div class="sk" style="width: 97%"></div>
-					<div class="sk" style="width: 62%"></div>
-				</div>
 			</div>
 
 			<div id="menu">
@@ -286,9 +286,8 @@ svg { display: block; }
 							<div class="ht">RSS Feed</div>
 							<div class="hsub"><span id="sub">Updated at 19:42</span><span id="failPill" class="warnpill hv">1 failed</span></div>
 						</div>
-						<div id="hBadge" class="badge hv">12</div>
-						<div id="refreshBtn" class="ibtn hv"><span data-i="refresh" data-s="16"></span></div>
-						<div class="ibtn hv"><span data-i="gear" data-s="16"></span></div>
+						<div id="hBadge" class="badge hv">6</div>
+						<div id="moreBtn" class="ibtn hv"><span data-i="more" data-s="16"></span></div>
 					</div>
 					<div id="mbody">
 						<div id="classic"></div>
@@ -296,18 +295,51 @@ svg { display: block; }
 						<div id="scrollbar"></div>
 					</div>
 				</div>
+				<div id="omenu" class="mcontent">
+					<div class="item oitem hv" id="om_refresh"><span data-i="refresh" data-s="16"></span>Refresh</div>
+					<div class="item oitem hv"><span data-i="check" data-s="16"></span>Mark all as read</div>
+					<div class="item oitem hv" id="om_restore"><span data-i="undo" data-s="16"></span>Restore dismissed (2)</div>
+					<div class="item oitem hv"><span data-i="starOff" data-s="16"></span>Unstar all (1)</div>
+					<div class="osep"></div>
+					<div class="item oitem hv" id="om_settings"><span data-i="gear" data-s="16"></span>Settings</div>
+				</div>
 			</div>
 
 			<div id="prefs">
 				<div class="hb">
 					<div class="vs">
-						<div class="vsb"><span data-i="gear" data-s="16"></span>General</div>
-						<div class="vsb"><span data-i="bell" data-s="16"></span>Notifications</div>
-						<div class="vsb sel"><span data-i="list" data-s="16"></span>Sources</div>
+						<div class="vsb hv"><span data-i="gear" data-s="16"></span>General</div>
+						<div class="vsb hv" id="tabSrc"><span data-i="list" data-s="16"></span>Sources</div>
+						<div class="vsb hv" id="tabAct"><span data-i="pointer" data-s="16"></span>Actions</div>
+						<div class="vsb hv"><span data-i="bell" data-s="16"></span>Notifications</div>
 					</div>
 					<div class="closeb"><span data-i="x" data-s="12"></span></div>
 				</div>
-				<div class="pcontent">
+				<div class="ppage" id="pg_act">
+					<div class="ghdr2"><div class="gtitle">Hover buttons</div><div class="gdesc">Buttons shown when you hover over an article.</div></div>
+					<div class="blist">
+						<div class="crow">First button<span class="cval hv">Mark as read / unread<span data-i="down" data-s="12"></span></span></div>
+						<div class="crow">Second button<span class="cval hv">Star / unstar<span data-i="down" data-s="12"></span></span></div>
+						<div class="crow">Third button<span class="cval hv" id="cmb3"><span id="cmb3v">None</span><span data-i="down" data-s="12"></span></span></div>
+					</div>
+					<div class="ghdr2"><div class="gtitle">Mouse buttons</div><div class="gdesc">What happens when you click an article.</div></div>
+					<div class="blist">
+						<div class="crow">Left click<span class="cval hv">Open and mark as read<span data-i="down" data-s="12"></span></span></div>
+						<div class="crow">Middle click<span class="cval hv">Open only<span data-i="down" data-s="12"></span></span></div>
+						<div class="crow">Right click<span class="cval hv">Copy link<span data-i="down" data-s="12"></span></span></div>
+					</div>
+					<div class="blist" style="margin-top: 22px"><div class="crow rrow" id="resetRow">Reset to defaults</div></div>
+					<div id="drop">
+						<div class="opt hv">None<span data-i="check" data-s="14"></span></div>
+						<div class="opt hv">Mark as read / unread</div>
+						<div class="opt hv">Star / unstar</div>
+						<div class="opt hv" id="opt_dismiss">Dismiss</div>
+						<div class="opt hv">Mark older as read</div>
+						<div class="opt hv">Copy link</div>
+						<div class="opt hv">Open only</div>
+					</div>
+				</div>
+				<div class="ppage" id="pg_src">
 					<div class="ghdr">
 						<div class="gtitle">RSS Sources</div>
 						<div class="gacts">
@@ -320,7 +352,7 @@ svg { display: block; }
 					</div>
 					<div class="blist" id="blist"></div>
 				</div>
-				<div id="toast">Imported 6 feeds</div>
+				<div id="toast">Imported 3 feeds</div>
 			</div>
 
 			<div id="dim"></div>
@@ -358,7 +390,7 @@ svg { display: block; }
 		<img class="logo" src="logo.png" alt="">
 		<h1>RSS Feed</h1>
 		<div class="tagline">Your feeds, right in the GNOME top bar</div>
-		<div class="ego"><span class="chip acc">GNOME 46 - 51</span><span class="chip">extensions.gnome.org</span><span class="chip">version 9.0</span></div>
+		<div class="ego"><span class="chip acc">GNOME 46 - 51</span><span class="chip">extensions.gnome.org</span><span class="chip">version 10.0</span></div>
 	</div>
 </div>
 
@@ -385,6 +417,15 @@ const ICONS = {
 	home: '<path d="M8 1.8 1.6 7.4h1.8v6.8h3.4V10h2.4v4.2h3.4V7.4h1.8z" fill="currentColor"/>',
 	clock: '<circle cx="8" cy="8" r="6.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.2V8l2.6 1.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
 	music: '<path d="M6 12V3.2l7-1.4v8.4" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="4.3" cy="12.2" r="2" fill="currentColor"/><circle cx="11.3" cy="10.6" r="2" fill="currentColor"/>',
+	more: '<g fill="currentColor"><circle cx="8" cy="3" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13" r="1.5"/></g>',
+	undo: '<path d="M6.2 2.6 2.6 6.2l3.6 3.6M3 6.2h6.6a3.7 3.7 0 0 1 0 7.4H7.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+	pointer: '<path d="M3 1.6v11.6l3-2.8 2 4.2 2-.9-1.9-4.1h4.1z" fill="currentColor"/>',
+	// the article action icons are the files in ../icons
+	mailRead: '<path fill="currentColor" d="M8 .980469c-.480469 0-.960938.132812-1.386719.390625L1.328125 4.625C.503906 5.132812 0 6.03125 0 7v6c0 1.644531 1.355469 3 3 3h10c1.644531 0 3-1.355469 3-3V7c0-.96875-.503906-1.867188-1.328125-2.375L9.382812 1.371094C8.960938 1.113281 8.480469.980469 8 .980469m0 2c.117188 0 .234375.035156.335938.097656l5.289062 3.25c.085938.054687.164062.121094.222656.203125-.042968.011719-.085937.03125-.125.050781l-5.167968 3.445313c-.335938.226562-.773438.226562-1.109376 0L2.277344 6.582031c-.039063-.019531-.082032-.039062-.125-.050781.058594-.078125.132812-.148438.222656-.203125l5.285156-3.25c.105469-.066406.222656-.097656.339844-.097656M2 7.601562l4.890625 3.257813c.671875.449219 1.546875.449219 2.21875 0L14 7.601562V13c0 .5625-.4375 1-1 1H3c-.5625 0-1-.4375-1-1zm0 0"/>',
+	mailUnread: '<path fill="currentColor" d="M3 2C1.355469 2 0 3.355469 0 5v6c0 1.644531 1.355469 3 3 3h10c1.644531 0 3-1.355469 3-3V5c0-1.644531-1.355469-3-3-3zm.800781 2h8.394531L8.277344 6.613281c-.171875.113281-.382813.113281-.554688 0zM2 5.203125l4.613281 3.074219c.835938.558594 1.9375.558594 2.773438 0L14 5.203125V11c0 .570312-.429688 1-1 1H3c-.570312 0-1-.429688-1-1zm0 0"/>',
+	star: '<path fill="currentColor" d="M8 0c-.429688 0-.8125.273438-.949219.683594L5.601562 5.023438l-4.589843-.015626C.03125 5.003906-.371094 6.265625.429688 6.828125l3.625 2.554687-1.5 4.285157c-.316407.902343.6875 1.691406 1.492187 1.171875l4.003906-2.59375 3.894531 2.585937c.800782.53125 1.816407-.257812 1.5-1.160156l-1.503906-4.289063 3.644532-2.578124c.789062-.5625.394531-1.808594-.574219-1.8125l-4.660157-.015626L8.949219.691406C8.816406.28125 8.433594.003906 8 0m0 0"/>',
+	starOff: '<path fill="currentColor" d="M8 0c-.429688 0-.8125.273438-.949219.683594L5.601562 5.023438l-4.589843-.015626c-.4375 0-.828125.28125-.960938.695313-.132812.417969.019531.871094.378907 1.125l3.625 2.554687-1.5 4.285157c-.140626.40625-.011719.855469.328124 1.121093.335938.261719.804688.285157 1.164063.050782l4.003906-2.59375 3.894531 2.585937c.359376.238281.828126.222657 1.167969-.042969.339844-.261718.472657-.714843.332031-1.117187l-1.503906-4.289063 3.644532-2.578124c.351562-.25.503906-.703126.371093-1.113282-.128906-.414062-.511719-.695312-.945312-.699218l-4.660157-.015626L8.949219.691406C8.816406.28125 8.433594.003906 8 0m-.007812 4.1875.683593 2.097656c.132813.40625.515625.6875.945313.6875l2.253906.007813-1.703125 1.203125c-.363281.257812-.511719.726562-.363281 1.148437l.765625 2.191407-1.964844-1.304688c-.332031-.222656-.761719-.222656-1.097656-.007812l-2.101563 1.363281.785156-2.242188c.144532-.421875-.003906-.890625-.367187-1.148437L4.175781 7.019531l2.144531.007813c.429688 0 .8125-.277344.949219-.683594zm0 0"/>',
+	close: '<path fill="currentColor" d="M4.707 3.293 8 6.586l3.293-3.293a1 1 0 0 1 1.414 1.414L9.414 8l3.293 3.293a1 1 0 0 1-1.414 1.414L8 9.414l-3.293 3.293a1 1 0 0 1-1.414-1.414L6.586 8 3.293 4.707a1 1 0 0 1 1.414-1.414z"/>',
 	image: '<rect x="1.8" y="2.8" width="12.4" height="10.4" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3 12l3.6-4 2.6 2.6 1.6-1.6L13 11.4V12z" fill="currentColor"/><circle cx="10.6" cy="5.8" r="1.2" fill="currentColor"/>',
 };
 ICONS.gear = (() => {
@@ -411,71 +452,78 @@ const $ = (id) => document.getElementById(id);
 const q = (s) => document.querySelector(s);
 
 const FEEDS = [
-	{ id: 'tw', title: 'This Week in GNOME', av: 'TW', count: 1 },
-	{ id: 'hn', title: 'Hacker News', av: 'HN', count: 2, arts: [
-		['Show HN: A static site generator in 300 lines', '1m', 0],
-		['The unreasonable effectiveness of plain text', '48m', 0],
-		['Ask HN: How do you keep up with blogs in 2026?', '2h', 0],
-		['Understanding the Linux page cache', '5h', 1],
-		['Why we moved our CI back to bare metal', '1d', 1],
+	{ id: 'st', title: 'Starred', av: icon('star', 16), count: 1, tagged: [['st0', '#250 Sharper Icons', 'This Week in GNOME', '1w', 0, 1]] },
+	{ id: 'tw', title: 'This Week in GNOME', av: 'TW', count: 2, arts: [
+		['#251 Smoother Scrolling', '2h', 0],
+		['#250 Sharper Icons', '1w', 0],
+		['#249 Quieter Notifications', '2w', 1],
+		['#248 Faster Thumbnails', '3w', 1],
 	] },
 	{ id: 'pg', title: 'Planet GNOME', av: 'PG', count: 3, arts: [
-		['Building adaptive layouts with GTK 4 and libadwaita', '1h', 0],
-		['A closer look at the new Files search popover', '3h', 0],
-		['Notes from the GNOME design hackfest', '5h', 0],
-		['Profiling GNOME Shell with Sysprof', '2d', 1],
+		['Building adaptive layouts with libadwaita', '1h', 0],
+		['A closer look at the new Files search', '3h', 0],
+		['Notes from the design hackfest', '5h', 0],
 	] },
-	{ id: 'ph', title: 'Phoronix', av: 'PH', count: 1 },
-	{ id: 'ou', title: 'OMG! Ubuntu', av: 'OU', count: 0 },
+	{ id: 'gs', title: 'GNOME Shell &amp; Mutter', av: 'GS', count: 1 },
+	{ id: 'ou', title: 'OMG! Ubuntu', av: 'OU', count: 1 },
+	{ id: 'if', title: 'It\'s FOSS', av: 'IF', count: 1 },
 	{ id: 'be', title: 'blog.example.com', av: 'BE', count: 0 },
 ];
 
+// row id -> [read, starred] at the start, the scenes override some of them
+const ROWS = {};
+const ACTS = '<span class="acts"><span class="abtn hv bR"></span><span class="abtn hv bS"></span><span class="abtn hv b3">' + icon('close', 16) + '</span></span>';
+function arow(id, a) {
+	ROWS[id] = [a[2], 0];
+	return '<div class="awrap" id="w_' + id + '"><div class="item art hv" id="' + id + '"><div class="atitle rt">' + a[0] + '</div>'
+		+ '<div class="tail"><span class="trail"><span class="tstar">' + icon('star', 12) + '</span><span class="atime">' + a[1] + '</span></span>' + ACTS + '</div></div></div>';
+}
+// title, feed tag and time on two lines: the Starred group and the whole Minimal layout
+function trow(a) {
+	ROWS[a[0]] = [a[4], a[5]];
+	return '<div class="mwrap" id="w_' + a[0] + '"><div class="item mart hv" id="' + a[0] + '"><div class="mtitle rt">' + a[1] + '</div>'
+		+ '<div class="meta"><span class="tag">' + a[2] + '</span><span class="atime">' + a[3] + '</span>' + ACTS + '</div></div></div>';
+}
+
 let classicHtml = '';
 for (let f of FEEDS) {
-	classicHtml += '<div class="grp" id="g_' + f.id + '"><div class="item feed hv" id="f_' + f.id + '"><div class="avatar">' + f.av + '</div><div class="ftitle">' + f.title + '</div>'
-		+ (f.count ? '<div class="count hv" id="c_' + f.id + '">' + f.count + '</div>' : '')
+	classicHtml += '<div class="awrap" id="gw_' + f.id + '"><div class="grp" id="g_' + f.id + '"><div class="item feed hv" id="f_' + f.id + '"><div class="avatar">' + f.av + '</div><div class="ftitle">' + f.title + '</div>'
+		+ '<div class="count hv" id="c_' + f.id + '">' + f.count + '</div>'
 		+ '<div class="arrow" id="a_' + f.id + '">' + icon('chev', 16) + '</div></div>';
-	if (f.arts) {
-		classicHtml += '<div class="sub" id="s_' + f.id + '"><div>';
-		f.arts.forEach((a, i) => {
-			const id = f.id === 'hn' ? 'art' + i : f.id + 'a' + i;
-			classicHtml += '<div class="awrap" id="w_' + id + '"><div class="item art hv" id="' + id + '"><div class="atitle ' + (a[2] ? 'read' : 'unread') + '">' + a[0] + '</div><div class="atime">' + a[1] + '</div></div></div>';
-		});
-		classicHtml += '</div></div>';
-	}
-	classicHtml += '</div>';
+	if (f.arts || f.tagged)
+		classicHtml += '<div class="sub" id="s_' + f.id + '"><div>' + (f.tagged ? f.tagged.map(trow).join('') : f.arts.map((a, i) => arow(f.id + i, a)).join('')) + '</div></div>';
+	classicHtml += '</div></div>';
 }
 $('classic').innerHTML = classicHtml;
 
-const MIN_UNREAD = [
-	['Linux 7.1 lands with a reworked I/O scheduler', 'Phoronix', '1m', 'new'],
-	['#218 Faster Thumbnails', 'This Week in GNOME', '3m', 'new2'],
-	['Ask HN: How do you keep up with blogs in 2026?', 'Hacker News', '2h'],
-];
-const MIN_READ = [
-	['Show HN: A static site generator in 300 lines', 'Hacker News', '1m'],
-	['The unreasonable effectiveness of plain text', 'Hacker News', '48m'],
-	['Building adaptive layouts with GTK 4 and libadwaita', 'Planet GNOME', '1h'],
-	['A closer look at the new Files search popover', 'Planet GNOME', '3h'],
-	['Notes from the GNOME design hackfest', 'Planet GNOME', '5h'],
-];
-function mrow(a, cls, id) {
-	return '<div class="mwrap"' + (id ? ' id="' + id + '"' : '') + '><div class="item mart hv"><div class="mtitle ' + cls + '">' + a[0] + '</div><div class="meta"><span class="tag">' + a[1] + '</span><span class="atime">' + a[2] + '</span></div></div></div>';
-}
-let minHtml = '<div class="item sechdr hv"><span class="seclabel">UNREAD</span>' + icon('down', 16) + '</div>';
-MIN_UNREAD.forEach((a, i) => { minHtml += mrow(a, 'unread', a[3] ? 'm_' + a[3] : 'mu' + i); });
-minHtml += '<div class="item sechdr hv"><span class="seclabel">READ</span>' + icon('down', 16) + '</div>';
-MIN_READ.forEach((a, i) => { minHtml += mrow(a, 'read', 'mr' + i); });
-$('minimal').innerHTML = minHtml;
+const TW = 'This Week in GNOME', PG = 'Planet GNOME', OU = 'OMG! Ubuntu';
+const sec = (label, id) => '<div class="item sechdr hv"><span class="seclabel">' + label + '</span><span class="secline"></span>' + (id ? '<span class="gcount" id="' + id + '"></span>' : '') + icon('down', 16) + '</div>';
+$('minimal').innerHTML = sec('STARRED', 'secS') + trow(['ms0', '#250 Sharper Icons', TW, '1w', 0, 1])
+	+ sec('UNREAD', 'secU') + [
+		['mn0', '#252 Tidier Settings', TW, '1m', 0, 0],
+		['mn1', 'Five terminal tricks worth keeping', 'It\'s FOSS', '3m', 0, 0],
+		['mu0', 'A faster overview animation', 'GNOME Shell &amp; Mutter', '4h', 0, 0],
+		['mu1', 'What is new in Files', OU, '6h', 0, 0],
+	].map(trow).join('')
+	+ sec('READ') + [
+		['mr0', 'Ten GNOME extensions worth a try', OU, '25m', 1, 0],
+		['mr1', 'Building adaptive layouts with libadwaita', PG, '1h', 1, 0],
+		['mr2', '#251 Smoother Scrolling', TW, '2h', 1, 0],
+		['mr3', 'A closer look at the new Files search', PG, '3h', 1, 0],
+		['mr4', 'Notes from the design hackfest', PG, '5h', 1, 0],
+	].map(trow).join('');
+$('secS').textContent = '1';
 
 const SOURCES = [
 	['TW', 'This Week in GNOME', 'https://thisweek.gnome.org/index.xml', 'OK (RSS 2.0)'],
-	['HN', 'Hacker News', 'https://hnrss.org/frontpage', 'OK (RSS 2.0)'],
 	['PG', 'Planet GNOME', 'https://planet.gnome.org/atom.xml', 'OK (Atom)'],
-	['PH', 'Phoronix', 'https://www.phoronix.com/rss.php', 'OK (RSS 2.0)'],
+	['GS', 'GNOME Shell &amp; Mutter', 'https://blogs.gnome.org/shell-dev/feed/', 'OK (RSS 2.0)'],
 	['OU', 'OMG! Ubuntu', 'https://www.omgubuntu.co.uk/feed', 'OK (RSS 2.0)'],
+	['IF', 'It\'s FOSS', 'https://itsfoss.com/feed/', 'OK (RSS 2.0)'],
 	['BE', 'blog.example.com', 'https://blog.example.com/feed.xml', 'OK (RSS 2.0)'],
 ];
+// the first ones are there from the start, the rest comes with the OPML import
+const OWN_SOURCES = 3;
 let blHtml = '';
 SOURCES.forEach((s, i) => {
 	blHtml += '<div class="swrap" id="sw' + i + '"><div class="srow">'
@@ -490,22 +538,31 @@ $('blist').innerHTML = blHtml;
 
 fillIcons(document);
 
-// [in, out, feature, text, shown at the bottom]
-const CAPS = [
-	[2.9, 8.8, 'OPML import', 'Import and export your subscriptions'],
-	[11.2, 15.0, 'Notifications', 'Quick actions on every new article', 1],
-	[15.8, 17.25, 'Classic layout', 'Articles grouped by feed'],
-	[17.35, 20.55, 'One click to read', 'Opens in your default browser'],
-	[20.7, 22.75, 'Mark all as read', 'Two steps, no accidental clicks'],
-	[23.15, 25.55, 'Minimal layout', 'One timeline, unread first'],
-	[25.75, 28.4, 'Refresh', 'Live progress, broken feeds flagged'],
-	[29.1, 31.7, 'Source management', 'Add, reorder or remove feeds anytime'],
-	[33.1, 38.2, 'Light or dark', 'Follows your theme and accent color'],
-];
-$('caps').innerHTML = CAPS.map((c, i) => '<div class="cap' + (c[4] ? ' bottom' : '') + '" id="cap' + i + '"><span class="kicker">' + c[2] + '</span><p>' + c[3] + '</p></div>').join('');
+// the clicks that drive the scenes: what is new comes first, the older features after it
+const T_READ1 = 4.0, T_STAR = 6.3, T_STOPEN = 7.5, T_MORE1 = 9.6, T_SET = 11.7, T_COMBO = 13.3, T_PICK = 14.2;
+const T_TAB = 15.7, T_IMPORT = 16.7, T_FILE = 17.6, T_FOPEN = 18.3, T_PCLOSE = 21.0;
+const T_BANNER = 21.5, T_BEXP = 22.6, T_NMARK = 23.5;
+const T_PANEL = 25.0, T_PG = 25.8, T_ARM = 26.6, T_ALLREAD = 27.4;
+const T_MIN = 28.3, T_MORE2 = 30.9, T_REFRESH = 31.6, T_NEW = 32.6, T_DONE = 32.95;
+const T_CLASSIC = 34.3, T_LIGHT = 34.9, T_ACC1 = 36.3, T_ACC2 = 37.3, T_CARD = 39.3;
 
-const DURATION = 41.6;
-const MAX_BODY = 430;
+// [in, out, feature, text, shown at the bottom, new in this release]
+const CAPS = [
+	[2.7, 5.6, 'Hover buttons', 'Act on an article without opening it', 0, 1],
+	[5.9, 9.3, 'Starred articles', 'Saved in their own group, kept for good', 0, 1],
+	[9.8, 11.9, 'Compact header', 'Every action in one menu', 0, 1],
+	[12.5, 15.5, 'Article actions', 'Your hover buttons, your mouse clicks', 0, 1],
+	[16.1, 20.9, 'OPML import', 'Import and export your subscriptions'],
+	[21.7, 24.6, 'Notifications', 'Quick actions on every new article', 1],
+	[25.5, 28.1, 'Mark all as read', 'Two steps, no accidental clicks'],
+	[28.5, 30.7, 'Minimal layout', 'One timeline, unread first'],
+	[31.0, 34.1, 'Refresh', 'Live progress, broken feeds flagged'],
+	[34.6, 39.1, 'Light or dark', 'Follows your theme and accent color'],
+];
+$('caps').innerHTML = CAPS.map((c, i) => '<div class="cap' + (c[4] ? ' bottom' : '') + '" id="cap' + i + '">' + (c[5] ? '<span class="newtag">What is new</span>' : '') + '<span class="kicker">' + c[2] + '</span><p>' + c[3] + '</p></div>').join('');
+
+const DURATION = 41.4;
+const MAX_BODY = 440;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const seg = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
 const lerp = (a, b, k) => a + (b - a) * k;
@@ -524,28 +581,34 @@ function pos(el, ax = 0.5, ay = 0.5) {
 	return [x + el.offsetWidth * ax, y + el.offsetHeight * ay];
 }
 
-const CLICKS = [4.0, 5.1, 5.85, 10.35, 11.1, 13.7, 17.15, 19.6, 20.55, 21.5, 22.3, 25.85, 28.3, 30.4, 32.65];
+const CLICKS = [T_READ1, T_STAR, T_STOPEN, T_MORE1, T_SET, T_COMBO, T_PICK, T_TAB, T_IMPORT, T_FILE, T_FOPEN, T_NMARK, T_PANEL, T_PG, T_ARM, T_ALLREAD, T_MORE2, T_REFRESH];
+// the banner is centred with a transform that pos() does not see
+const onBanner = (el, ax, ay) => { const [x, y] = pos(el, ax, ay); return [x - 215, y]; };
 const PATH = [
-	{ at: 0, to: () => [760, 610] },
-	{ at: 3.9, dur: 0.8, to: () => pos($('importBtn'), 0.35, 0.75) },
-	{ at: 5.0, dur: 0.6, to: () => pos($('fSubs'), 0.3, 0.55) },
-	{ at: 5.7, dur: 0.55, to: () => pos($('fOpen'), 0.4, 0.7) },
-	{ at: 8.4, dur: 0.9, to: () => [560, 640] },
-	{ at: 10.2, dur: 0.8, to: () => pos($('rssBtn'), 0.62, 0.55) },
-	{ at: 11.0, dur: 0.6, to: () => pos($('f_hn'), 0.42, 0.5) },
-	{ at: 12.8, dur: 0.7, to: () => { const [x, y] = pos($('banner'), 0.62, 0.42); return [x - 215, y]; } },
-	{ at: 13.55, dur: 0.45, to: () => { const [x, y] = pos($('bMark'), 0.45, 0.6); return [x - 215, y]; } },
-	{ at: 17.0, dur: 0.8, to: () => pos($('art1'), 0.4, 0.5) },
-	{ at: 18.2, dur: 0.7, to: () => [880, 420] },
-	{ at: 19.45, dur: 0.6, to: () => pos($('rssBtn'), 0.62, 0.55) },
-	{ at: 20.4, dur: 0.6, to: () => pos($('f_pg'), 0.42, 0.5) },
-	{ at: 21.35, dur: 0.6, to: () => pos($('c_pg'), 0.22, 0.86) },
-	{ at: 23.1, dur: 0.6, to: () => [818, 330] },
-	{ at: 25.7, dur: 0.7, to: () => pos($('refreshBtn'), 0.3, 0.85) },
-	{ at: 28.15, dur: 0.8, to: () => pos($('failPill'), 0.5, 0.55) },
-	{ at: 30.2, dur: 1.0, to: () => pos(q('#sw5 .del'), 0.35, 0.75) },
-	{ at: 32.5, dur: 0.9, to: () => pos($('rssBtn'), 0.62, 0.55) },
-	{ at: 33.6, dur: 0.7, to: () => [830, 420] },
+	{ at: 0, to: () => [836, 420] },
+	{ at: 3.1, dur: 0.6, to: () => pos($('tw0'), 0.35, 0.5) },
+	{ at: T_READ1 - 0.1, dur: 0.55, to: () => pos(q('#tw0 .bR'), 0.5, 0.6) },
+	{ at: T_STAR - 0.15, dur: 0.7, to: () => pos(q('#tw1 .bS'), 0.5, 0.6) },
+	{ at: T_STOPEN - 0.15, dur: 0.6, to: () => pos($('f_st'), 0.42, 0.5) },
+	{ at: T_MORE1 - 0.15, dur: 0.8, to: () => pos($('moreBtn'), 0.5, 0.6) },
+	{ at: 10.6, dur: 0.6, to: () => pos($('om_restore'), 0.45, 0.5) },
+	{ at: T_SET - 0.15, dur: 0.6, to: () => pos($('om_settings'), 0.4, 0.5) },
+	{ at: T_COMBO - 0.15, dur: 0.9, to: () => pos($('cmb3'), 0.5, 0.55) },
+	{ at: T_PICK - 0.15, dur: 0.6, to: () => pos($('opt_dismiss'), 0.3, 0.5) },
+	{ at: T_TAB - 0.15, dur: 0.8, to: () => pos($('tabSrc'), 0.5, 0.6) },
+	{ at: T_IMPORT - 0.1, dur: 0.7, to: () => pos($('importBtn'), 0.35, 0.75) },
+	{ at: T_FILE - 0.1, dur: 0.6, to: () => pos($('fSubs'), 0.3, 0.55) },
+	{ at: T_FOPEN - 0.15, dur: 0.55, to: () => pos($('fOpen'), 0.4, 0.7) },
+	{ at: 20.6, dur: 0.9, to: () => [560, 640] },
+	{ at: T_BEXP, dur: 0.7, to: () => onBanner($('banner'), 0.62, 0.42) },
+	{ at: T_NMARK - 0.15, dur: 0.45, to: () => onBanner($('bMark'), 0.45, 0.6) },
+	{ at: T_PANEL - 0.15, dur: 0.8, to: () => pos($('rssBtn'), 0.62, 0.55) },
+	{ at: T_PG - 0.15, dur: 0.6, to: () => pos($('f_pg'), 0.42, 0.5) },
+	{ at: T_ARM - 0.15, dur: 0.6, to: () => pos($('c_pg'), 0.22, 0.86) },
+	{ at: T_MIN + 1.1, dur: 0.7, to: () => pos($('mu0'), 0.4, 0.5) },
+	{ at: T_MORE2 - 0.15, dur: 0.8, to: () => pos($('moreBtn'), 0.5, 0.6) },
+	{ at: T_REFRESH - 0.15, dur: 0.5, to: () => pos($('om_refresh'), 0.4, 0.5) },
+	{ at: 33.0, dur: 0.8, to: () => [836, 420] },
 ];
 
 function cursorAt(t) {
@@ -566,11 +629,10 @@ function cursorAt(t) {
 	return p;
 }
 
+// the scene starts and ends zoomed in on the popup, so the loop stays seamless under the title card
 const CAM = [
-	[0, 1, 640, 360], [15.3, 1, 640, 360], [16.1, 1.25, 1080, 280],
-	[17.2, 1.25, 1080, 280], [17.8, 1, 640, 360], [19.6, 1, 640, 360], [20.3, 1.25, 1080, 280],
-	[28.3, 1.25, 1080, 280], [29.1, 1, 640, 360],
-	[32.7, 1, 640, 360], [33.5, 1.25, 1080, 280],
+	[0, 1.25, 1080, 280], [T_SET - 0.1, 1.25, 1080, 280], [T_SET + 0.7, 1, 640, 360],
+	[T_PANEL, 1, 640, 360], [T_PANEL + 0.7, 1.25, 1080, 280],
 ];
 function camAt(t) {
 	let c = CAM[0];
@@ -588,7 +650,7 @@ function camAt(t) {
 	return [s, tx, ty];
 }
 
-const ACCENTS = [[0, '#3584e4'], [35.5, '#9141ac'], [36.5, '#3a944a']];
+const ACCENTS = [[0, '#3584e4'], [T_ACC1, '#9141ac'], [T_ACC2, '#3a944a']];
 function accentAt(t) {
 	let c = hex(ACCENTS[0][1]);
 	for (let i = 1; i < ACCENTS.length; i++) {
@@ -602,26 +664,49 @@ function accentAt(t) {
 
 const NAT = {};
 function measure() {
-	NAT.art = $('art1').offsetHeight;
+	NAT.art = $('tw0').offsetHeight;
 	NAT.nacts = $('nactsWrap').firstElementChild.offsetHeight;
-	NAT.mrow = $('m_new').firstElementChild.offsetHeight;
+	NAT.mrow = $('mn0').offsetHeight;
 	NAT.srow = $('sw0').firstElementChild.offsetHeight;
+	$('drop').style.top = ($('cmb3').offsetTop + $('cmb3').offsetHeight + 4) + 'px';
 }
 
 function setH(el, h) { el.style.height = h + 'px'; }
-function show(el, v) { el.style.display = v ? '' : 'none'; }
+function vis(el, v) { el.style.visibility = v ? 'visible' : 'hidden'; }
+// a window or popup that pops in; nested ones inherit the visibility of their parent
+function pop(el, k, from, nested) {
+	el.style.opacity = k;
+	el.style.transform = 'scale(' + (from + (1 - from) * k) + ')';
+	el.style.visibility = k > 0.001 ? (nested ? 'inherit' : 'visible') : 'hidden';
+}
+
+const rowKey = {};
+function syncRow(id, read, starred) {
+	const key = (read ? 1 : 0) + (starred ? 2 : 0);
+	if (rowKey[id] === key)
+		return;
+	rowKey[id] = key;
+	const el = $(id);
+	el.querySelector('.rt').classList.toggle('read', !!read);
+	el.querySelector('.rt').classList.toggle('unread', !read);
+	el.querySelector('.bR').innerHTML = icon(read ? 'mailUnread' : 'mailRead', 16);
+	el.querySelector('.bS').innerHTML = icon(starred ? 'star' : 'starOff', 16);
+	const small = el.querySelector('.tstar');
+	if (small)
+		small.style.display = starred ? '' : 'none';
+}
 
 function render(t) {
 	const root = document.documentElement.style;
 
 	// title card, same at both ends so the loop is seamless
-	const card = Math.max(1 - eio(seg(t, 2.0, 2.6)), eio(seg(t, 38.4, 39.1)));
+	const card = Math.max(1 - eio(seg(t, 1.7, 2.3)), eio(seg(t, T_CARD, T_CARD + 0.7)));
 	const cam = $('cam');
 	cam.style.filter = card > 0.001 ? 'blur(' + (16 * card).toFixed(2) + 'px)' : 'none';
 	$('card').style.opacity = card;
 	$('card').style.transform = 'scale(' + (1 + 0.04 * (1 - card)) + ')';
 
-	const lk = eio(seg(t, 34, 34.7));
+	const lk = eio(seg(t, T_LIGHT, T_LIGHT + 0.7));
 	$('wallLight').style.opacity = lk;
 	root.setProperty('--menu-bg', rgb(mix('#2e2e32', '#fafafb', lk)));
 	root.setProperty('--menu-fg', rgb(mix('#f6f6f7', '#2e2e33', lk)));
@@ -634,140 +719,136 @@ function render(t) {
 	// lighter on dark backgrounds, like the Adwaita accent text color
 	root.setProperty('--kick', rgb(acc.map(v => Math.round(lerp(v + (255 - v) * 0.35, v * 0.9, lk)))));
 
-	const pOpen = eout(seg(t, 2.4, 2.75)) * (1 - eio(seg(t, 8.9, 9.25)))
-		+ eout(seg(t, 28.7, 29.05)) * (1 - eio(seg(t, 31.5, 31.85)));
-	const prefs = $('prefs');
-	prefs.style.opacity = pOpen;
-	prefs.style.transform = 'scale(' + (0.94 + 0.06 * pOpen) + ')';
-	prefs.style.visibility = pOpen > 0.001 ? 'visible' : 'hidden';
+	// preferences: the new Actions page first, the OPML import on the Sources page after it
+	pop($('prefs'), eout(seg(t, T_SET + 0.1, T_SET + 0.45)) * (1 - eio(seg(t, T_PCLOSE, T_PCLOSE + 0.35))), 0.94);
+	const srcK = eio(seg(t, T_TAB, T_TAB + 0.25));
+	$('pg_act').style.opacity = 1 - srcK;
+	$('pg_src').style.opacity = srcK;
+	$('pg_act').style.visibility = srcK < 0.5 ? 'inherit' : 'hidden';
+	$('pg_src').style.visibility = srcK >= 0.5 ? 'inherit' : 'hidden';
+	$('tabAct').classList.toggle('sel', t < T_TAB);
+	$('tabSrc').classList.toggle('sel', t >= T_TAB);
 
-	const dOpen = eout(seg(t, 4.15, 4.4)) * (1 - seg(t, 5.85, 6.05));
-	const dlg = $('fdlg');
-	dlg.style.opacity = dOpen;
-	dlg.style.transform = 'scale(' + (0.95 + 0.05 * dOpen) + ')';
-	dlg.style.visibility = dOpen > 0.001 ? 'visible' : 'hidden';
+	pop($('drop'), eout(seg(t, T_COMBO, T_COMBO + 0.15)) * (1 - seg(t, T_PICK, T_PICK + 0.12)), 0.95, true);
+	const third = t >= T_PICK;
+	$('cmb3v').textContent = third ? 'Dismiss' : 'None';
+	$('resetRow').classList.toggle('off', !third);
+	$('menu').classList.toggle('three', third);
+
+	const dOpen = eout(seg(t, T_IMPORT + 0.15, T_IMPORT + 0.4)) * (1 - seg(t, T_FOPEN, T_FOPEN + 0.2));
+	pop($('fdlg'), dOpen, 0.95);
 	$('dim').style.opacity = dOpen;
-	$('fSubs').classList.toggle('sel', t >= 5.1);
+	$('fSubs').classList.toggle('sel', t >= T_FILE);
 
+	const imported = t >= T_FOPEN;
 	SOURCES.forEach((s, i) => {
 		const w = $('sw' + i);
-		const a = 6.1 + i * 0.12;
-		let h = eio(seg(t, a, a + 0.25));
-		let o = h;
-		if (i === 5) {
-			o *= 1 - eout(seg(t, 30.4, 30.54));
-			h *= 1 - eio(seg(t, 30.44, 30.74));
-		}
+		const own = i < OWN_SOURCES;
+		const a = T_FOPEN + 0.25 + (i - OWN_SOURCES) * 0.12;
+		const h = own ? 1 : eio(seg(t, a, a + 0.25));
 		setH(w, NAT.srow * h);
-		w.style.opacity = o;
+		w.style.opacity = h;
 		const pill = w.querySelector('.pill');
-		const second = t >= 28.7;
-		const done = second ? t >= 29.1 + i * 0.1 : t >= 6.9 + i * 0.15;
-		const failed = second && i === 5;
-		pill.textContent = done ? (failed ? '404 Not Found' : s[3]) : 'Checking…';
-		pill.className = 'pill' + (done ? (failed ? ' err' : ' ok') : '');
+		const done = own || t >= T_FOPEN + 1.0 + (i - OWN_SOURCES) * 0.2;
+		pill.textContent = done ? s[3] : 'Checking…';
+		pill.className = 'pill' + (done ? ' ok' : '');
 	});
-	const tk = eout(seg(t, 6.2, 6.5)) * (1 - seg(t, 8.3, 8.6));
+	const tk = eout(seg(t, T_FOPEN + 0.35, T_FOPEN + 0.65)) * (1 - seg(t, T_PCLOSE - 0.5, T_PCLOSE - 0.2));
 	$('toast').style.opacity = tk;
 	$('toast').style.transform = 'translate(-50%, ' + (20 * (1 - tk)) + 'px)';
 
-	const dotK = seg(t, 9.7, 10.0);
-	$('dot').style.transform = 'scale(' + (dotK > 0 ? eback(dotK) : 0) + ')';
-	$('dot').style.opacity = dotK > 0 ? 1 : 0;
-	$('rssBtn').style.gap = dotK > 0 ? '10px' : '0px';
-	$('dot').style.marginRight = dotK > 0 ? '-6px' : '-8px';
-
-	const bIn = eout(seg(t, 11.7, 12.15));
-	const bOut = ein(seg(t, 13.75, 14.1));
+	const bIn = eout(seg(t, T_BANNER, T_BANNER + 0.45));
+	const bOut = ein(seg(t, T_NMARK + 0.05, T_NMARK + 0.4));
 	const banner = $('banner');
 	banner.style.transform = 'translate(-50%, ' + (lerp(-150, 0, bIn) - 170 * bOut) + 'px)';
 	banner.style.opacity = bIn * (1 - bOut);
-	const bExp = eio(seg(t, 12.8, 13.1));
+	const bExp = eio(seg(t, T_BEXP, T_BEXP + 0.3));
 	setH($('nactsWrap'), NAT.nacts * bExp);
 	$('nactsWrap').style.opacity = bExp;
-	const arrived = t >= 11.8;
-	const markedInNotif = t >= 13.7;
 
-	const brP = eout(seg(t, 17.3, 17.6)) * (1 - eio(seg(t, 19.0, 19.3)));
-	const br = $('browser');
-	br.style.opacity = brP;
-	br.style.transform = 'scale(' + (0.95 + 0.05 * brP) + ')';
-	br.style.visibility = brP > 0.001 ? 'visible' : 'hidden';
-
-	const mOpen = eout(seg(t, 10.35, 10.57)) * (1 - seg(t, 17.15, 17.3)) + eout(seg(t, 19.6, 19.82)) * (1 - seg(t, 28.3, 28.46)) + eout(seg(t, 32.65, 32.87));
+	const mOpen = eout(seg(t, 2.0, 2.3)) * (1 - seg(t, T_SET, T_SET + 0.15)) + eout(seg(t, T_PANEL, T_PANEL + 0.22));
 	const menu = $('menu');
 	menu.style.opacity = mOpen;
 	menu.style.transform = 'translateY(' + (-10 * (1 - mOpen)) + 'px) scale(' + (0.97 + 0.03 * mOpen) + ')';
-	menu.style.visibility = mOpen > 0.001 ? 'visible' : 'hidden';
-	$('rssBtn').classList.toggle('active', (t >= 10.35 && t < 17.15) || (t >= 19.6 && t < 28.3) || t >= 32.65);
+	vis(menu, mOpen > 0.001);
+	$('rssBtn').classList.toggle('active', t < T_SET || t >= T_PANEL);
 
-	const hnP = eio(seg(t, 11.1, 11.4)) * (1 - eio(seg(t, 20.55, 20.85)));
-	const newRow = eio(seg(t, 11.8, 12.1));
-	setH($('w_art0'), NAT.art * newRow);
-	$('w_art0').style.opacity = newRow;
-	setH($('s_hn'), $('s_hn').firstElementChild.offsetHeight * hnP);
-	$('a_hn').style.transform = 'rotate(' + (90 * hnP) + 'deg)';
-	$('g_hn').classList.toggle('open', hnP > 0);
-	const art1Read = t >= 17.15;
-	FEEDS[1].arts.forEach((a, i) => {
-		const r = a[2] || (i === 1 && art1Read) || (i === 0 && markedInNotif);
-		$('art' + i).firstElementChild.className = 'atitle ' + (r ? 'read' : 'unread');
-	});
-	const cHn = $('c_hn');
-	cHn.textContent = art1Read ? '1' : arrived && !markedInNotif ? '3' : '2';
-	const pulse = (k) => 1 + 0.22 * Math.sin(Math.PI * k);
-	const pk = Math.max(seg(t, 11.8, 12.1), seg(t, 13.7, 14.0));
-	const pv = pk > 0 && pk < 1 ? pulse(pk) : 1;
-	cHn.style.transform = 'scale(' + pv + ')';
-	$('hBadge').style.transform = 'scale(' + pv + ')';
+	// the menu behind the "more" button of the header
+	const oOpen = eout(seg(t, T_MORE1, T_MORE1 + 0.18)) * (1 - seg(t, T_SET, T_SET + 0.12))
+		+ eout(seg(t, T_MORE2, T_MORE2 + 0.18)) * (1 - seg(t, T_REFRESH, T_REFRESH + 0.12));
+	pop($('omenu'), oOpen, 0.95, true);
+	$('moreBtn').classList.toggle('checked', oOpen > 0.5);
 
-	const pgP = eio(seg(t, 20.55, 20.85));
-	setH($('s_pg'), $('s_pg').firstElementChild.offsetHeight * pgP);
-	$('a_pg').style.transform = 'rotate(' + (90 * pgP) + 'deg)';
-	$('g_pg').classList.toggle('open', pgP > 0);
-	const pgAllRead = t >= 22.3;
-	const pgConfirm = t >= 21.5 && t < 22.3;
-	FEEDS[2].arts.forEach((a, i) => {
-		$('pga' + i).firstElementChild.className = 'atitle ' + (a[2] || pgAllRead ? 'read' : 'unread');
-	});
-	const cPg = $('c_pg');
-	show(cPg, !pgAllRead);
-	cPg.innerHTML = pgConfirm ? icon('check', 14) : '3';
-	show($('c_tw'), t >= 26.8);
-	show($('c_ph'), t >= 26.8);
-	const beGone = t >= 30.4;
-	show($('g_be'), !beGone);
+	// Classic layout: one group is open at a time, and all are closed when the popup opens again
+	const stIn = eio(seg(t, T_STAR + 0.15, T_STAR + 0.5));
+	const open = {
+		st: t < T_PANEL - 0.5 ? eio(seg(t, T_STOPEN, T_STOPEN + 0.3)) : 0,
+		tw: 1 - eio(seg(t, T_STOPEN, T_STOPEN + 0.3)),
+		pg: eio(seg(t, T_PG, T_PG + 0.3)),
+	};
+	for (const id in open) {
+		setH($('s_' + id), $('s_' + id).firstElementChild.offsetHeight * open[id]);
+		$('a_' + id).style.transform = 'rotate(' + (90 * open[id]) + 'deg)';
+		$('g_' + id).classList.toggle('open', open[id] > 0);
+	}
+	setH($('gw_st'), $('g_st').offsetHeight * stIn);
+	$('gw_st').style.opacity = stIn;
+	for (const id of ['ou', 'if', 'be'])
+		$('gw_' + id).style.display = imported ? '' : 'none';
 
-	$('hBadge').textContent = t < 11.8 ? 5 : t < 13.7 ? 6 : t < 17.15 ? 5 : t < 22.3 ? 4 : t < 26.8 ? 1 : 3;
+	const allRead = t >= T_ALLREAD;
+	const dyn = { tw0: [t >= T_READ1, 0], tw1: [0, t >= T_STAR], pg0: [allRead, 0], pg1: [allRead, 0], pg2: [allRead, 0] };
+	for (const id in ROWS)
+		syncRow(id, (dyn[id] || ROWS[id])[0], (dyn[id] || ROWS[id])[1]);
 
-	const mm = eio(seg(t, 22.9, 23.35)) * (t < 32.2 ? 1 : 0);
+	// hidden badges keep their place, the cursor still aims at them
+	const refreshed = t >= T_NEW;
+	$('c_tw').textContent = t >= T_READ1 && !refreshed ? 1 : 2;
+	$('c_pg').innerHTML = t >= T_ARM && !allRead ? icon('check', 14) : '3';
+	$('c_pg').style.visibility = allRead ? 'hidden' : 'inherit';
+	$('c_if').style.visibility = refreshed ? 'inherit' : 'hidden';
+	$('c_be').style.visibility = 'hidden';
+	const hBadge = $('hBadge');
+	hBadge.textContent = t < T_READ1 ? 6 : !imported ? 5 : !allRead ? 6 : refreshed ? 5 : 3;
+	const pk = Math.max(seg(t, T_READ1, T_READ1 + 0.3), seg(t, T_NEW, T_NEW + 0.3));
+	const pv = pk > 0 && pk < 1 ? 1 + 0.22 * Math.sin(Math.PI * pk) : 1;
+	$('c_tw').style.transform = 'scale(' + pv + ')';
+	hBadge.style.transform = 'scale(' + pv + ')';
+
+	const mm = eio(seg(t, T_MIN, T_MIN + 0.45)) * (1 - eio(seg(t, T_CLASSIC, T_CLASSIC + 0.45)));
 	const classic = $('classic'), minimal = $('minimal');
 	classic.style.opacity = 1 - mm;
 	minimal.style.opacity = mm;
-	classic.style.visibility = mm < 0.5 ? 'visible' : 'hidden';
-	minimal.style.visibility = mm >= 0.5 ? 'visible' : 'hidden';
+	classic.style.visibility = mm < 0.5 ? 'inherit' : 'hidden';
+	minimal.style.visibility = mm >= 0.5 ? 'inherit' : 'hidden';
 	classic.style.transform = 'translateX(' + (-24 * mm) + 'px)';
 	minimal.style.transform = 'translateX(' + (24 * (1 - mm)) + 'px)';
 
-	const nP = eio(seg(t, 26.8, 27.1));
-	setH($('m_new'), NAT.mrow * nP);
-	$('m_new').style.opacity = nP;
-	setH($('m_new2'), NAT.mrow * nP);
-	$('m_new2').style.opacity = nP;
+	const nP = eio(seg(t, T_NEW, T_NEW + 0.3));
+	for (const id of ['w_mn0', 'w_mn1']) {
+		setH($(id), NAT.mrow * nP);
+		$(id).style.opacity = nP;
+	}
+	$('secU').textContent = refreshed ? 4 : 2;
 
 	$('mbody').style.height = Math.min(MAX_BODY, lerp(classic.offsetHeight, minimal.offsetHeight, mm)) + 'px';
 	const sb = $('scrollbar');
 	sb.style.opacity = mm * 0.9;
 	sb.style.height = Math.round(MAX_BODY * MAX_BODY / minimal.offsetHeight) + 'px';
 
+	// an action that leaves the popup open confirms itself in the status line for two seconds
 	let sub = 'Updated at 19:42';
-	if (t >= 25.85 && t < 27.15)
-		sub = 'Updating… ' + Math.min(6, Math.floor(seg(t, 25.9, 27.05) * 6.999)) + '/6';
-	else if (t >= 27.15)
+	if (t >= T_REFRESH && t < T_DONE)
+		sub = 'Updating… ' + Math.min(6, Math.floor(seg(t, T_REFRESH + 0.05, T_DONE - 0.1) * 6.999)) + '/6';
+	else if (t >= T_DONE)
 		sub = 'Updated at 19:54';
+	for (const [at, text] of [[T_READ1, 'Marked as read'], [T_STAR, 'Article starred']]) {
+		if (t >= at && t < at + 2)
+			sub = text;
+	}
 	$('sub').textContent = sub;
-	const fp = seg(t, 27.15, 27.45);
-	$('failPill').style.display = fp > 0 && !beGone ? '' : 'none';
+	const fp = seg(t, T_DONE, T_DONE + 0.3);
+	$('failPill').style.display = fp > 0 ? '' : 'none';
 	$('failPill').style.transform = 'scale(' + eback(fp) + ')';
 	$('failPill').style.opacity = fp;
 
@@ -778,15 +859,15 @@ function render(t) {
 		el.style.opacity = inK * (1 - outK);
 		el.style.transform = 'translateY(calc(' + (c[4] ? '0px' : '-50%') + ' + ' + (14 * (1 - inK) - 10 * outK) + 'px))';
 	});
-	const bK = eio(seg(t, 10.7, 11.2) * (1 - seg(t, 15.0, 15.5)));
-	$('shade').style.opacity = eio(seg(t, 2.5, 3.0) * (1 - seg(t, 38.2, 38.8))) * (1 - bK);
+	const bK = eio(seg(t, T_BANNER - 0.5, T_BANNER) * (1 - seg(t, 24.6, 25.1)));
+	$('shade').style.opacity = eio(seg(t, 2.2, 2.7) * (1 - seg(t, T_CARD - 0.2, T_CARD + 0.4))) * (1 - bK);
 	$('shadeB').style.opacity = bK;
 
 	const [s, tx, ty] = camAt(t);
 	cam.style.transform = 'translate(' + tx.toFixed(2) + 'px,' + ty.toFixed(2) + 'px) scale(' + s.toFixed(4) + ')';
 
 	const [cx, cy] = cursorAt(t);
-	const cv = seg(t, 2.9, 3.15) * (1 - seg(t, 38, 38.3));
+	const cv = seg(t, 2.5, 2.75) * (1 - seg(t, T_CARD - 0.4, T_CARD - 0.1));
 	let press = 0, ring = 0, ringK = 0;
 	for (const c of CLICKS) {
 		if (t >= c - 0.06 && t < c + 0.1) press = 1;
@@ -809,10 +890,12 @@ function render(t) {
 		const hit = document.elementFromPoint(sx, sy);
 		cur.style.visibility = '';
 		rg.style.visibility = '';
-		const el = hit && hit.closest('.hv');
-		if (el) {
+		// a hover button sits inside its row and both are hovered, only the innermost one is pressed
+		let inner = true;
+		for (let el = hit && hit.closest('.hv'); el; el = el.parentElement.closest('.hv')) {
 			el.classList.add('hover');
-			if (press) el.classList.add('press');
+			if (press && inner) el.classList.add('press');
+			inner = false;
 		}
 	}
 }
