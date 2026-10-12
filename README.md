@@ -67,18 +67,6 @@ A couple of features depend on the GNOME Shell version, because they build on Sh
   <img width="1280" height="720" alt="RSS Feed extension demo" src="promo/media/rss-feed-promo.webp" />
 </p>
 
-<details>
-<summary><b>📸 Screenshots</b> (click to expand)</summary>
-
-<br>
-
-<img width="1485" height="1256" alt="RSS Feed Banner - 1" src="https://github.com/user-attachments/assets/219f55b3-aeae-418c-8d44-ee56500929c7" />
-<img width="1486" height="1254" alt="RSS Feed Banner - 2" src="https://github.com/user-attachments/assets/d9f39805-0f44-4c34-99d4-6cf9e613c324" />
-<img width="1491" height="1311" alt="RSS Feed Banner - 3" src="https://github.com/user-attachments/assets/5e71db3c-0181-4ca2-955d-79314c627cbd" />
-<img width="1491" height="1308" alt="RSS Feed Banner - 4" src="https://github.com/user-attachments/assets/13bbc53f-0963-4d36-aa33-ebcb1c6aad7b" />
-
-</details>
-
 ---
 
 ## Installation
