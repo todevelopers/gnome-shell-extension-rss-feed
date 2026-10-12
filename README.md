@@ -17,7 +17,7 @@
   <a href="https://ko-fi.com/tommygunx89"><img src="https://img.shields.io/badge/Support%20on-Ko--fi-FF5E5B?logo=ko-fi&amp;logoColor=white" alt="ko-fi"></a>
 </p>
 
-A modern GNOME Shell extension for following your favorite feeds right from the top bar. Run it as a panel widget, desktop notifications, or both. It has two layout modes and a fully editable list of RSS, Atom, and RDF sources.
+A modern GNOME Shell extension for following your favorite feeds right from the top bar. Run it as a panel widget, desktop notifications, or both. It has two layout modes, starred articles, configurable article actions, and a fully editable list of RSS, Atom, and RDF sources.
 
 ---
 
@@ -25,21 +25,25 @@ A modern GNOME Shell extension for following your favorite feeds right from the 
 
 Keeps your RSS feeds one click away - right in the GNOME top bar.
 
-- **Fully redesigned UI** - built from scratch for modern GNOME desktop
-- **Panel badge** shows a notification when you have unread articles
-- **Two layout modes** - Classic, per-feed submenus, or Minimal, a single chronological list mixing all sources
-- **Relative timestamps** on every article (2m, 4h, 3d) so you always know how fresh it is
-- **Mark as read** with a two-step confirmation button - no accidental clicks
-- **Native desktop notifications** for new articles, with optional grouping by source and lock screen delivery
-- **Flexible display modes** - run the panel widget and notifications together, notifications only, or widget only
-- **Handles large feeds** without freezing the Shell - chunked loading with a configurable item limit
-- **Light and dark theme ready** - adapts to your GNOME theme and accent color
-- **Full feed sources management** in preferences - add, remove, edit, and **Drag-and-drop** reordering of feed sources
 - **OPML import and export** - move your subscriptions in or out in one click, folder structure included
+- **Two layout modes** - Classic, per-feed submenus, or Minimal, a single chronological list mixing all sources
+- **Native desktop notifications** for new articles, with optional grouping by source and lock screen delivery
+- **Starred articles** - kept in their own group, even after they drop out of the feed or the feed is removed
+- **Configurable article actions** - up to three hover buttons per article and separate actions for the left, middle and right mouse button: open, mark as read or unread, star, dismiss, mark older as read, copy link
+- **Panel badge** shows a notification when you have unread articles
+- **Mark as read** with a two-step confirmation button - no accidental clicks
+- **Full feed sources management** in preferences - add, remove, edit, and **Drag-and-drop** reordering of feed sources
+- **Dismiss and restore** - hide articles you do not want to see and bring them all back from the header menu
+- **Article history** - articles stay stored after they drop out of the feed, up to a per-feed limit
+- **Flexible display modes** - run the panel widget and notifications together, notifications only, or widget only
 - **Failed feeds are retried automatically** - a "N failed" pill in the menu header takes you straight to the broken sources
-- **Keyboard accessible** - the whole panel menu can be operated without a mouse
+- **Keyboard accessible** - the whole panel menu can be operated without a mouse; Right arrow moves from an article to its buttons, and Escape first cancels a pending confirmation, then closes the header menu, then the popup
+- **Handles large feeds** without freezing the Shell - chunked loading with a configurable item limit
+- **Relative timestamps** on every article (2m, 4h, 3d) so you always know how fresh it is
+- **Light and dark theme ready** - adapts to your GNOME theme and accent color
 - Supports **RSS, Atom, RDF, and FeedBurner** - format is auto-detected
 - Configurable **refresh intervals** and article limits
+- **Read, starred and dismissed state** survives a restart of the Shell
 
 *See [CHANGELOG.md](CHANGELOG.md) for the detailed version description and full history.*
 
