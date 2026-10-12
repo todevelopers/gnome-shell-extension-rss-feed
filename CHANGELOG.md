@@ -1,6 +1,6 @@
 ## Changelog
 
-### v10.0 (unreleased beta)
+### v10.0 (12.10.2026)
 
 *Starred articles, configurable article actions, and a compact popup header*
 
@@ -25,6 +25,7 @@
 * bugfix: Lower case letters typed into the Avatar field of a source no longer end up in reverse order
 * bugfix: The avatar of a renamed source no longer switches to the initials of the feed's own title after a check
 * bugfix: The header status text no longer disappears after switching the display mode
+* bugfix: Popup layout and Escape on the confirm badge work on GNOME Shell 51
 * performance: Removing a source no longer downloads all other feeds again
 * performance: A feed whose content did not change since the last check is neither decoded nor parsed again
 * internal: Added unit tests for the feed poller, sources, store and repository
